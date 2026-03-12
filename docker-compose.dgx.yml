@@ -24,7 +24,7 @@ x-ngc-base: &ngc-base
 
 services:
   vllm:
-    <<: *ngc-base
+    image: nvcr.io/nvidia/vllm:${VLLM_TAG:-26.02-py3}
     container_name: sustainhub-vllm
     runtime: nvidia
     deploy:
@@ -42,17 +42,13 @@ services:
     environment:
       - HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
     command: >
-      bash -c "
-        pip install --no-cache-dir vllm &&
-        python3 -m vllm.entrypoints.openai.api_server
-          --model ${MODEL:-meta-llama/Llama-3.1-70B-Instruct}
-          --dtype auto
-          --max-model-len ${MAX_MODEL_LEN:-8192}
-          --gpu-memory-utilization ${GPU_MEM:-0.90}
-          --port 8000
-          --tensor-parallel-size 1
-          --trust-remote-code
-      "
+      vllm serve ${MODEL:-Qwen/Qwen2.5-7B-Instruct}
+        --dtype auto
+        --max-model-len ${MAX_MODEL_LEN:-8192}
+        --gpu-memory-utilization ${GPU_MEM:-0.90}
+        --port 8000
+        --tensor-parallel-size 1
+        --trust-remote-code
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/v1/models"]
       interval: 30s
