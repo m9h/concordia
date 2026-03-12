@@ -227,7 +227,7 @@ class ExperimentRunner:
     def __init__(
         self,
         level: ExperimentLevel,
-        num_agents: int = 4,
+        num_agents: int = 6,
         num_sprints: int = 3,
         seed: int = 42,
     ):
@@ -235,9 +235,12 @@ class ExperimentRunner:
         self.num_sprints = num_sprints
         self.rng = np.random.RandomState(seed)
 
-        # Create agents with different roles
-        role_names = ['contributor', 'innovator', 'knowledge_curator', 'maintainer']
-        agent_names = ['Priya', 'Anya', 'Elena', 'Raj']
+        # Create agents — deliberately imbalanced roles to create tension
+        # 2 contributors, 2 innovators, 1 curator, 1 maintainer
+        # → bug_fix and feature are over-represented, docs and review under-served
+        role_names = ['contributor', 'innovator', 'contributor', 'innovator',
+                      'knowledge_curator', 'maintainer']
+        agent_names = ['Priya', 'Anya', 'Marcus', 'Jordan', 'Elena', 'Raj']
         self.agents: list[aif.ActiveInferenceAgent] = []
 
         for i in range(min(num_agents, len(agent_names))):
@@ -255,11 +258,27 @@ class ExperimentRunner:
         self.true_health = 0  # 0=healthy, 1=stressed, 2=declining
         self.true_urgency = 0  # 0=balanced, 1=bugs, 2=docs, 3=review
 
+        # Stress schedule: stress hits at sprint 2 and 4
+        self.stress_sprints = {2, 4} if num_sprints >= 3 else set()
+
+        # Available tasks per sprint (not all types always available)
+        self.available_tasks: list[str] = list(aif.ACTIONS[:4])
+
         # Metrics tracking
         self.history: list[dict[str, Any]] = []
 
     def _get_reward(self, agent: aif.ActiveInferenceAgent, action: str) -> float:
-        """Compute reward for an action (RL-style)."""
+        """Compute reward for an action with stochastic success.
+
+        Matches Vidhi's original: 70% base success, +3 preferred, +1 other,
+        -1 failure, 0 skip. Stress degrades success probability.
+        """
+        if action == 'skip':
+            return 0.0
+
+        if action not in self.available_tasks:
+            return -0.5  # Task type not available this sprint
+
         preferred = {
             'contributor': 'bug_fix',
             'innovator': 'feature',
@@ -268,16 +287,29 @@ class ExperimentRunner:
         }
         is_preferred = (action == preferred.get(agent.role, ''))
 
-        # Project need: actions matching urgency are more valuable
+        # Success probability: 70% base, +15% if preferred, -20% if stressed
+        success_prob = 0.70
+        if is_preferred:
+            success_prob += 0.15
+        if self.true_health >= 2:  # declining
+            success_prob -= 0.20
+        elif self.true_health >= 1:  # stressed
+            success_prob -= 0.10
+        success_prob = np.clip(success_prob, 0.1, 0.95)
+
+        succeeded = self.rng.random() < success_prob
+
+        if not succeeded:
+            return -1.0
+
+        # Project need: actions matching urgency get bonus
         urgency_map = {1: 'bug_fix', 2: 'documentation', 3: 'code_review'}
         matches_need = (action == urgency_map.get(self.true_urgency, ''))
 
         if is_preferred:
             reward = 3.0
         elif matches_need:
-            reward = 2.0  # Bonus for addressing project needs
-        elif action == 'skip':
-            reward = 0.0
+            reward = 2.5  # Urgency bonus
         else:
             reward = 1.0
 
@@ -345,28 +377,50 @@ class ExperimentRunner:
         agent.gamma *= time_factor
         agent.gamma = np.clip(agent.gamma, 0.1, 10.0)
 
+    def _apply_stress_event(self, sprint: int) -> None:
+        """Apply stress events at scheduled sprints."""
+        if sprint not in self.stress_sprints:
+            return
+        # Stress: health degrades, urgency shifts to bugs
+        self.true_health = min(2, self.true_health + 1)
+        self.true_urgency = 1  # bugs become critical
+        # Remove one task type (simulating resource constraint)
+        scarce = self.rng.choice(['documentation', 'code_review'])
+        if scarce in self.available_tasks:
+            self.available_tasks.remove(scarce)
+
     def _simulate_environment_dynamics(self, actions: list[str]) -> None:
         """Update true hidden state based on collective actions."""
-        # Count action types
         action_counts = {}
         for a in actions:
             action_counts[a] = action_counts.get(a, 0) + 1
 
-        # Health improves if bug_fix or code_review done
-        if action_counts.get('bug_fix', 0) + action_counts.get('code_review', 0) >= 2:
-            self.true_health = max(0, self.true_health - 1)
-        elif action_counts.get('feature', 0) > action_counts.get('bug_fix', 0):
+        # Health requires active maintenance — needs both bug_fix AND code_review
+        maintenance = (action_counts.get('bug_fix', 0)
+                       + action_counts.get('code_review', 0))
+        growth = action_counts.get('feature', 0)
+
+        if maintenance >= 3:
+            self.true_health = max(0, self.true_health - 1)  # Healing
+        elif growth > maintenance:
+            # Growing without maintaining = technical debt
             self.true_health = min(2, self.true_health + 1)
 
-        # Urgency shifts based on neglected areas
-        if action_counts.get('bug_fix', 0) == 0:
-            self.true_urgency = 1  # bugs become critical
-        elif action_counts.get('documentation', 0) == 0:
-            self.true_urgency = 2  # docs neglected
-        elif action_counts.get('code_review', 0) == 0:
-            self.true_urgency = 3  # review backlog
+        # Urgency: whichever area is most neglected becomes urgent
+        area_counts = {
+            1: action_counts.get('bug_fix', 0),
+            2: action_counts.get('documentation', 0),
+            3: action_counts.get('code_review', 0),
+        }
+        # Find the most neglected area
+        min_area = min(area_counts, key=area_counts.get)
+        if area_counts[min_area] == 0:
+            self.true_urgency = min_area
         else:
             self.true_urgency = 0  # balanced
+
+        # Restore available tasks for next sprint (stress may remove again)
+        self.available_tasks = list(aif.ACTIONS[:4])
 
     def _generate_observation(self) -> str:
         """Generate an HI observation from true state."""
@@ -377,12 +431,17 @@ class ExperimentRunner:
 
     def run_sprint(self, sprint_num: int) -> dict[str, Any]:
         """Run one sprint through the experiment level's pipeline."""
+        # 0. Apply stress events before anything else
+        self._apply_stress_event(sprint_num)
+
         sprint_data = {
             'sprint': sprint_num,
             'level': self.level.level,
             'level_name': self.level.name,
             'true_health': aif.PROJECT_HEALTH_STATES[self.true_health],
             'true_urgency': aif.TASK_URGENCY_STATES[self.true_urgency],
+            'available_tasks': list(self.available_tasks),
+            'is_stress_sprint': sprint_num in self.stress_sprints,
         }
 
         # 1. Observation
@@ -408,8 +467,7 @@ class ExperimentRunner:
         for agent in self.agents:
             if self.level.use_efe_policy:
                 # Level 4+: EFE-based policy selection
-                action_idx, probs = agent.decide()
-                action = aif.ACTIONS[action_idx]
+                action, probs = agent.decide()  # returns (action_string, probs)
             elif self.level.use_epistemic_value:
                 # Level 2-3: Reward + epistemic bonus
                 best_score = -float('inf')
@@ -487,14 +545,14 @@ class ExperimentRunner:
 
         # Diversity: how many different action types were chosen?
         unique_actions = len(set(a for a in actions.values() if a != 'skip'))
-        diversity = unique_actions / len(aif.TASK_TYPES)
+        diversity = unique_actions / len(social_data.TASK_TYPES)
 
         # Coverage: were all task types addressed?
         task_types_covered = set()
         for a in actions.values():
-            if a in aif.TASK_TYPES[:4]:  # bug_fix, feature, documentation, code_review
+            if a in social_data.TASK_TYPES[:4]:  # bug_fix, feature, documentation, code_review
                 task_types_covered.add(a)
-        coverage = len(task_types_covered) / len(aif.TASK_TYPES[:4])
+        coverage = len(task_types_covered) / len(social_data.TASK_TYPES[:4])
 
         sprint_data['harmony_index'] = hi
         sprint_data['diversity'] = diversity
@@ -609,7 +667,7 @@ def main(argv):
 
         runner = ExperimentRunner(
             level=level,
-            num_agents=4,
+            num_agents=6,
             num_sprints=FLAGS.num_sprints,
             seed=FLAGS.seed,
         )

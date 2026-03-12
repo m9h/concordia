@@ -341,7 +341,7 @@ class Sequential(engine_lib.Engine):
                    verbose=verbose)
 
       # Sleep a bit to avoid hitting rate limits too fast
-      time.sleep(1.0)
+      time.sleep(0.1)  # Reduced from 1.0s for Vertex AI (2000+ RPM)
 
       steps += 1
       if log is not None and hasattr(game_master, 'get_last_log'):

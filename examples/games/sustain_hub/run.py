@@ -36,6 +36,7 @@ flags.DEFINE_bool('verbose', False, 'Whether to print detailed simulation logs.'
 flags.DEFINE_string('project', None, 'GCP Project ID for Vertex AI.')
 flags.DEFINE_string('location', 'us-central1', 'GCP Location for Vertex AI.')
 flags.DEFINE_bool('use_active_inference', True, 'Whether to use Active Inference agents.')
+flags.DEFINE_bool('fast', False, 'Skip conversation scenes, go straight to task decisions.')
 
 
 def main(argv):
@@ -99,6 +100,7 @@ def main(argv):
       skip_backstory=FLAGS.skip_backstory,
       verbose=FLAGS.verbose,
       use_active_inference=FLAGS.use_active_inference,
+      skip_conversation=FLAGS.fast,
   )
 
   # Print summary
@@ -135,6 +137,10 @@ def main(argv):
   with open(output_file, 'w') as f:
     json.dump(serializable_results, f, indent=2)
   print(f'\nResults saved to {output_file}')
+
+  # Also save to a fixed location for the live dashboard
+  with open('live_results.json', 'w') as f:
+    json.dump(serializable_results, f, indent=2)
 
   html_file = os.path.join(FLAGS.output_dir, 'simulation_log.html')
   html_content = results['structured_log'].to_html()
