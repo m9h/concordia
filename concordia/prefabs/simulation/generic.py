@@ -240,6 +240,7 @@ class Simulation(simulation_lib.Simulation):
       checkpoint_path: str | None = None,
       step_controller=None,
       step_callback=None,
+      force_steps: int = 0,
   ) -> structured_logging.SimulationLog:
     """Run the simulation.
 
@@ -256,6 +257,8 @@ class Simulation(simulation_lib.Simulation):
         are saved.
       step_controller: Optional step controller for step-by-step control.
       step_callback: Optional callback called after each step completes.
+      force_steps: Number of steps to force run even if termination is
+        requested.
 
     Returns:
       SimulationLog object with structured data. Use .to_html() for HTML output
@@ -300,6 +303,7 @@ class Simulation(simulation_lib.Simulation):
         checkpoint_callback=checkpoint_callback,
         step_controller=step_controller,
         step_callback=step_callback,
+        force_steps=force_steps,
     )
 
     # Build and return structured log

@@ -180,6 +180,8 @@ class GeminiModel(language_model.LanguageModel):
           )
       self._client = genai.Client(api_key=api_key)
 
+    if not model_name.startswith('models/'):
+      model_name = f'models/{model_name}'
     self._model_name = model_name
     self._safety_settings = list(safety_settings)
     self._sleep_periodically = sleep_periodically
@@ -228,21 +230,40 @@ class GeminiModel(language_model.LanguageModel):
         seed=seed,
     )
 
-    chat = self._client.chats.create(
-        model=self._model_name,
-        history=copy.deepcopy(DEFAULT_HISTORY),
-        config=config,
-    )
-    sample = chat.send_message(message=prompt)
+    # Directly call generate_content which is more robust across SDK versions
+    # Remove 'models/' prefix as the new SDK usually adds it automatically or expects just the ID
+    m_name = self._model_name
+    if m_name.startswith('models/'):
+      m_name = m_name.replace('models/', '', 1)
 
     try:
-      response = sample.candidates[0].content.parts[0].text
-    except (ValueError, IndexError, AttributeError) as e:
-      logging.error('An error occurred: %s', e)
+      sample = self._client.models.generate_content(
+          model=m_name,
+          contents=prompt,
+          config=config,
+      )
+    except Exception as e:
+      logging.warning('Failed to call model %s directly: %s', m_name, e)
+      # Fallback to prefix if the above still fails
+      m_name_with_prefix = f'models/{m_name}'
+      sample = self._client.models.generate_content(
+          model=m_name_with_prefix,
+          contents=prompt,
+          config=config,
+      )
+
+    try:
+      if sample.candidates and sample.candidates[0].content and sample.candidates[0].content.parts:
+        response = sample.candidates[0].content.parts[0].text
+      else:
+        logging.error('No candidates or content parts in model response. Safety filters might have blocked it.')
+        response = ''
+    except (ValueError, IndexError, AttributeError, TypeError) as e:
+      logging.error('An error occurred while parsing model response: %s', e)
       logging.debug('prompt: %s', prompt)
       logging.debug('sample: %s', sample)
       response = ''
-      response = self._strip_markdown(response)
+    response = self._strip_markdown(response)
     if self._measurements is not None:
       self._measurements.publish_datum(
           self._channel, {'raw_text_length': len(response)}
