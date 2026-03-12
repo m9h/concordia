@@ -1,0 +1,88 @@
+# docker-compose.dgx.yml — SustainHub on DGX Spark (Grace Blackwell)
+#
+# Usage:
+#   # Start vLLM server + runner:
+#   docker compose -f docker-compose.dgx.yml up -d
+#
+#   # Just the vLLM server:
+#   docker compose -f docker-compose.dgx.yml up -d vllm
+#
+#   # Run overnight batch:
+#   docker compose -f docker-compose.dgx.yml run runner
+#
+#   # Monitor vLLM:
+#   docker compose -f docker-compose.dgx.yml logs -f vllm
+#
+# Environment variables (set in .env or export):
+#   NGC_TAG          — NGC container version (default: 26.02-py3)
+#   HUGGING_FACE_HUB_TOKEN — for gated model access
+#   NGC_API_KEY      — for NIM containers (optional)
+#   MODEL            — model name (default: meta-llama/Llama-3.1-70B-Instruct)
+
+x-ngc-base: &ngc-base
+  image: nvcr.io/nvidia/pytorch:${NGC_TAG:-26.02-py3}
+
+services:
+  vllm:
+    image: nvcr.io/nvidia/vllm:${VLLM_TAG:-26.02-py3}
+    container_name: sustainhub-vllm
+    runtime: nvidia
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    shm_size: "16g"
+    ports:
+      - "${VLLM_PORT:-8000}:8000"
+    volumes:
+      - ${HOME}/.cache/huggingface:/root/.cache/huggingface
+    environment:
+      - HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    command: >
+      vllm serve ${MODEL:-Qwen/Qwen2.5-7B-Instruct}
+        --dtype auto
+        --max-model-len ${MAX_MODEL_LEN:-8192}
+        --gpu-memory-utilization ${GPU_MEM:-0.90}
+        --port 8000
+        --tensor-parallel-size 1
+        --trust-remote-code
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/v1/models"]
+      interval: 30s
+      timeout: 10s
+      retries: 20
+      start_period: 300s
+    restart: unless-stopped
+
+  runner:
+    build:
+      context: .
+      dockerfile: Dockerfile.runner
+    container_name: sustainhub-runner
+    depends_on:
+      vllm:
+        condition: service_healthy
+    volumes:
+      - ./results:/results
+    environment:
+      - VLLM_URL=http://vllm:8000/v1
+      - MODEL_NAME=${MODEL:-meta-llama/Llama-3.1-70B-Instruct}
+      - OUTPUT_DIR=/results
+    profiles:
+      - batch  # Only starts when explicitly requested
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.dashboard
+    container_name: sustainhub-dashboard
+    ports:
+      - "8501:8080"
+    volumes:
+      - ./results:/app/results
+      - ./live_results.json:/app/live_results.json
+      - ./precomputed_ladder_results.json:/app/precomputed_ladder_results.json
+    restart: unless-stopped

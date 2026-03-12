@@ -18,6 +18,7 @@
 from collections.abc import Mapping, Sequence
 import functools
 import re
+import time
 from typing import Any, Callable
 
 from absl import logging
@@ -233,6 +234,7 @@ class Sequential(engine_lib.Engine):
       step_callback: (
           Callable[[step_controller_lib.StepData], None] | None
       ) = None,
+      force_steps: int = 0,
   ):
     """Run a game loop."""
     if not game_masters:
@@ -244,7 +246,13 @@ class Sequential(engine_lib.Engine):
     if premise:
       premise = f'{EVENT_TAG} {premise}'
       game_master.observe(premise)
-    while not self.terminate(game_master, verbose) and steps < max_steps:
+
+    def _should_terminate():
+      if steps < force_steps:
+        return False
+      return self.terminate(game_master, verbose)
+
+    while not _should_terminate() and steps < max_steps:
       if step_controller is not None:
         if not step_controller.wait_for_step_permission():
           break
@@ -331,6 +339,9 @@ class Sequential(engine_lib.Engine):
       self.resolve(game_master=game_master,
                    putative_event=action,
                    verbose=verbose)
+
+      # Sleep a bit to avoid hitting rate limits too fast
+      time.sleep(0.1)  # Reduced from 1.0s for Vertex AI (2000+ RPM)
 
       steps += 1
       if log is not None and hasattr(game_master, 'get_last_log'):

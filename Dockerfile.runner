@@ -1,0 +1,25 @@
+# SustainHub Simulation Runner for DGX Spark (Grace Blackwell, aarch64)
+# Uses NVIDIA NGC PyTorch v26 container as base
+FROM nvcr.io/nvidia/pytorch:26.02-py3
+
+WORKDIR /app
+
+# Copy project and install Concordia + dependencies
+COPY . .
+RUN pip install --no-cache-dir -e '.[google,examples]' && \
+    pip install --no-cache-dir sentence-transformers requests
+
+# Default: run the overnight batch against a vLLM server
+# Override VLLM_URL to point at the DGX Spark's vLLM container
+ENV VLLM_URL="http://host.docker.internal:8000/v1"
+ENV MODEL_NAME="meta-llama/Llama-3.1-70B-Instruct"
+ENV OUTPUT_DIR="/results"
+
+CMD python bin/overnight_runner.py \
+    --mode=all \
+    --vllm_url=${VLLM_URL} \
+    --model_name=${MODEL_NAME} \
+    --output_dir=${OUTPUT_DIR} \
+    --num_sprints=10 \
+    --num_seeds=10 \
+    --num_concordia_runs=5
