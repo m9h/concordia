@@ -20,11 +20,15 @@ For in-process vLLM, see concordia.contrib.language_models.vllm.
 """
 
 from collections.abc import Collection, Sequence
-import requests
-import json
 from typing import Any, Mapping
+
+import requests
+
 from concordia.language_model import language_model
 from concordia.utils import sampling
+
+_MAX_MULTIPLE_CHOICE_ATTEMPTS = 5
+
 
 class VLLMModel(language_model.LanguageModel):
   """Adapter for vLLM's OpenAI-compatible API."""
@@ -58,7 +62,7 @@ class VLLMModel(language_model.LanguageModel):
         "stop": list(terminators) if terminators else None,
         "seed": seed,
     }
-    
+
     response = requests.post(self._api_url, json=payload, timeout=timeout)
     response.raise_for_status()
     result = response.json()
@@ -71,10 +75,42 @@ class VLLMModel(language_model.LanguageModel):
       *,
       seed: int | None = None,
   ) -> tuple[int, str, Mapping[str, Any]]:
-    # Use standard sampling helper to extract a valid choice from the model's text response
-    return sampling.sample_choice(
-        self,
-        prompt,
-        responses,
-        seed=seed,
+    augmented_prompt = (
+        prompt
+        + '\nRespond EXACTLY with one of the following strings:\n'
+        + '\n'.join(responses)
+        + '.'
+    )
+
+    for attempts in range(_MAX_MULTIPLE_CHOICE_ATTEMPTS):
+      temperature = sampling.dynamically_adjust_temperature(
+          attempts, _MAX_MULTIPLE_CHOICE_ATTEMPTS
+      )
+      answer = self.sample_text(
+          augmented_prompt,
+          max_tokens=256,
+          temperature=temperature,
+          seed=seed,
+      ).strip()
+
+      # Try exact match first
+      for idx, response in enumerate(responses):
+        if answer == response or answer.startswith(response):
+          return idx, responses[idx], {}
+
+      # Try fuzzy match — check if any response is contained in the answer
+      for idx, response in enumerate(responses):
+        if response.lower() in answer.lower():
+          return idx, responses[idx], {}
+
+      # Try extracting a parenthesized choice like (a) or (b)
+      extracted = sampling.extract_choice_response(answer)
+      if extracted is not None:
+        for idx, response in enumerate(responses):
+          option_letter = chr(ord('a') + idx)
+          if extracted.lower() == option_letter:
+            return idx, responses[idx], {}
+
+    raise language_model.InvalidResponseError(
+        f'Too many multiple choice attempts. Last answer: {answer}'
     )
