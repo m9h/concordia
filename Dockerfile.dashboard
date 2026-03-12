@@ -1,0 +1,21 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# Install dashboard dependencies only
+COPY requirements-dashboard.txt .
+RUN pip install --no-cache-dir -r requirements-dashboard.txt
+
+# Copy dashboard and pre-computed data
+COPY hackathon_dashboard.py .
+COPY precomputed_ladder_results.json .
+COPY live_results.json .
+COPY .streamlit/ .streamlit/
+
+EXPOSE 8080
+
+CMD ["streamlit", "run", "hackathon_dashboard.py", \
+     "--server.port=8080", \
+     "--server.address=0.0.0.0", \
+     "--server.headless=true", \
+     "--browser.gatherUsageStats=false"]
