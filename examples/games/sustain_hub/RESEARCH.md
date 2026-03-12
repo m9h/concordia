@@ -125,24 +125,95 @@ resolve uncertainty about the project state).
   - Applied here as meta-optimization: an AI agent modifies the simulation
     design itself, measuring SustainScore as the evaluation metric
 
+## Experiment Ladder
+
+The experiment ladder (`experiments.py`) progressively adds active inference
+concepts to a pure RL baseline. Each level introduces exactly one new concept
+so we can measure its individual contribution.
+
+```
+python -m examples.games.sustain_hub.experiments --level=all --num_sprints=5
+```
+
+### Level 0: Pure RL Baseline
+- **What**: Reward-driven task selection (preferred = +3, other = +1)
+- **RL analog**: Q-learning / SARSA with fixed policy
+- **AIF mechanism**: None
+- **Expected behavior**: Agents always pick preferred tasks (greedy)
+
+### Level 1: + Prediction Error
+- **What**: Track surprise = -log P(observation | beliefs)
+- **RL analog**: TD error δ = r + γV(s') - V(s)
+- **AIF mechanism**: Free energy F measures model-world mismatch
+- **Expected behavior**: Agents notice when outcomes don't match expectations
+
+### Level 2: + Epistemic Value
+- **What**: Actions that reduce uncertainty get a bonus
+- **RL analog**: ε-greedy → UCB (principled exploration)
+- **AIF mechanism**: Epistemic value = expected information gain
+- **Expected behavior**: Agents occasionally explore non-preferred tasks
+
+### Level 3: + Belief Updating
+- **What**: Maintain and update beliefs about hidden project state
+- **RL analog**: State estimation (Kalman filter)
+- **AIF mechanism**: Q(s) ∝ P(o|s) × P(s) via variational message passing
+- **Expected behavior**: Agents form accurate models of project health
+
+### Level 4: + Expected Free Energy Policy
+- **What**: Single objective combining reward + info gain
+- **RL analog**: Q-value → negative EFE
+- **AIF mechanism**: G(π) = -pragmatic - epistemic; P(π) = σ(-G + ln E)
+- **Expected behavior**: Balanced exploitation/exploration without ad-hoc tuning
+
+### Level 5: + Habit Learning
+- **What**: Dirichlet concentration parameters accumulate across sprints
+- **RL analog**: Q-value accumulation across episodes
+- **AIF mechanism**: E(a) += η × outcome_valence
+- **Expected behavior**: Agents develop persistent preferences that evolve
+
+### Level 6: + Precision Dynamics
+- **What**: γ (confidence) adapts based on prediction error history
+- **RL analog**: Temperature annealing in softmax policy
+- **AIF mechanism**: Low PE → high γ → exploit; High PE → low γ → explore
+- **Expected behavior**: Agents become more decisive as they learn, but
+  stress events trigger re-exploration
+
+### Level 7: + LLM-as-Node (Full Hybrid)
+- **What**: LLM generates probability distributions that feed into
+  Bayesian inference (RxInfer pattern)
+- **RL analog**: No RL analog — this is beyond RL
+- **AIF mechanism**: LLM → distribution → factor graph → VMP → policy
+- **Expected behavior**: Rich semantic understanding + principled inference
+
+### What to Look For
+
+As levels increase, we expect to see:
+1. **Coverage increases**: Agents stop always picking preferred tasks
+2. **Strategy diversity increases**: Agents change behavior across sprints
+3. **HI stabilizes**: Less variance in Harmony Index across runs
+4. **Stress recovery improves**: Agents adapt faster after disruptions
+5. **Emergent specialization**: Agents naturally divide labor based on beliefs
+
+The comparison table at the end shows how each concept contributes.
+
 ## Implementation Plan
 
-### Phase 1: Current (LLM-only)
-- [x] LLM agents with natural language decision-making
-- [x] Episodic memory via Concordia's memory components
-- [x] Harmony Index and Resilience Quotient metrics
+### Phase 1: Standalone AIF (current)
+- [x] `active_inference.py` — POMDP with A/B/C/D/E matrices
+- [x] `experiments.py` — 8-level experiment ladder
+- [ ] Run full ladder and analyze results
 
-### Phase 2: Active Inference Module
-- [x] `active_inference.py` — standalone POMDP with A/B/C/D/E matrices
-- [ ] Integration with Concordia agent components
+### Phase 2: Concordia Integration
+- [ ] Wire AIF agents into Concordia's entity_agent system
 - [ ] LLM + AIF hybrid: `format_aif_context_for_llm()` feeds AIF state
   into LLM prompts as "[Internal Assessment]" context
-- [ ] Validate on simple scenarios (4 agents, 1 sprint)
+- [ ] Validate: standalone vs Concordia-integrated produce similar patterns
 
-### Phase 3: Learning Across Sprints
-- [ ] Dirichlet parameter updates (D-matrix learning)
-- [ ] Habit accumulation (E-vector learning across sprints)
-- [ ] Compare learning curves: LLM-only vs AIF vs hybrid
+### Phase 3: LLM-as-Node
+- [ ] Implement LLMPrior/LLMObservation nodes in Python
+- [ ] Replace hardcoded A-matrix with LLMObservation
+- [ ] Replace D-matrix priors with LLMPrior
+- [ ] Compare learning curves: standalone AIF vs LLM+AIF hybrid
 
 ### Phase 4: Scaling
 - [ ] Local model backend (Qwen 2.5-7B via vLLM/SGLang on DGX Spark)
