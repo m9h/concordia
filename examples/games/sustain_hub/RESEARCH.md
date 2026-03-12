@@ -327,6 +327,175 @@ about project health. Dirichlet learning refines these across sprints.
 **Phase 4**: Full factor graph with message passing. Multiple LLM nodes
 feeding into variational inference. This is the "RxInfer in Python" vision.
 
+## JaxMARL Bridge: Fast GABM ↔ Slow LLM
+
+### The Speed Gap
+
+| System | Speed | Per experiment | Use for |
+|--------|-------|---------------|---------|
+| **JaxMARL on GPU** | ~10⁶ env steps/sec | Milliseconds | Parameter sweep, policy search |
+| **Concordia + LLM** | ~200 API calls/sprint | 5-15 minutes | Validation, qualitative analysis |
+
+This is a **10⁵-10⁶×** speed difference. The solution: multi-fidelity optimization.
+
+### Architecture: GPU-Accelerated Agent-Based Model (GABM)
+
+```
+JaxMARL (GPU, fast)          Concordia (LLM, slow)
+┌─────────────────┐         ┌─────────────────┐
+│ SustainHub env   │         │ SustainHub sim  │
+│ as MARL problem  │         │ with LLM agents │
+│                  │         │                 │
+│ State: (health,  │  best   │ Full natural    │
+│  urgency, roles) │ params  │ language sprint │
+│ Actions: tasks   │────────→│ planning and    │
+│ Rewards: HI      │         │ decision-making │
+│                  │         │                 │
+│ AIF agents with  │         │ Level 7: LLM    │
+│ A/B/C/D/E in JAX │         │ as factor graph │
+│                  │  valid- │ node (RxInfer)  │
+│ Levels 0-6 run   │←────── │                 │
+│ here at 10⁶x     │  ation │ Qualitative     │
+│ speed             │        │ insights        │
+└─────────────────┘         └─────────────────┘
+```
+
+### Why JaxMARL?
+
+- **Vectorized environments**: All agents step simultaneously in JAX
+- **Batched episodes**: Run 1000s of SustainHub episodes in parallel on one GPU
+- **Dictionary-based API**: `{agent_name: action}` matches our structure
+- **Existing algorithms**: IPPO, MAPPO, QMIX ready to benchmark against AIF
+- **JAX → active_inference.py port**: NumPy → JAX is near-trivial
+  (`np.array` → `jnp.array`, add `@jax.jit`)
+
+### The Bridge: `active_inference.py` in JAX
+
+The A/B/C/D/E matrices are already pure NumPy. A JAX port enables:
+
+```python
+import jax.numpy as jnp
+from jax import vmap, jit
+
+# Vectorize over N_BATCH environments × N_AGENTS agents
+batched_decide = vmap(vmap(select_action, in_axes=(None,None,None,None,None,0,None,None)),
+                      in_axes=(None,None,None,None,None,0,None,None))
+
+# Run 1000 environments × 4 agents in one GPU call
+actions, probs = batched_decide(A, B, C, D, E, beliefs_batch, gamma, alpha)
+```
+
+This lets us:
+1. Run experiment ladder levels 0-6 at GPU speed (seconds, not minutes)
+2. Sweep AIF hyperparameters (gamma, alpha, learning_rate) over 10,000 configs
+3. Find optimal A/B/C/D/E matrices that maximize SustainScore
+4. Feed best configs into Level 7 (LLM validation)
+
+### Connecting JaxMARL to Active Inference
+
+JaxMARL environments use this API:
+```python
+obs, state = env.reset(key)
+actions = {agent: policy(obs[agent]) for agent in env.agents}
+obs, state, reward, done, infos = env.step(key, state, actions)
+```
+
+Our active inference agents become the `policy`:
+```python
+def aif_policy(obs, beliefs, A, B, C, D, E, gamma, alpha):
+    # 1. Update beliefs from observation
+    beliefs = update_beliefs(A, beliefs, obs)
+    # 2. Select action via EFE
+    action, probs = select_action(A, B, C, D, E, beliefs, gamma, alpha)
+    return action, beliefs
+```
+
+### What JaxMARL Benchmarks Give Us
+
+| JaxMARL Algorithm | What it tells us about SustainHub |
+|------------------|----------------------------------|
+| **IPPO** (Independent PPO) | Baseline: what if agents don't coordinate? |
+| **MAPPO** (Multi-Agent PPO) | Upper bound: centralized training, decentralized execution |
+| **QMIX** | How much does factored Q-values help vs full joint? |
+| **AIF (ours)** | How does active inference compare to MARL algorithms? |
+
+### Implementation Path
+
+1. **Port SustainHub as JaxMARL environment** (`sustain_hub_env.py`)
+   - State: project_health × task_urgency
+   - Observations: per-agent partial observations
+   - Actions: task selection
+   - Rewards: SustainHub payoff structure
+2. **Port `active_inference.py` to JAX** (`active_inference_jax.py`)
+   - `@jax.jit` all core functions
+   - `vmap` over agents and environments
+3. **Run benchmarks**: IPPO vs MAPPO vs QMIX vs AIF levels 0-6
+4. **Validate winners**: Feed best configs into Concordia + LLM (Level 7)
+
+### Phase Transition Detection: When to Switch from System 1 → System 2
+
+The JAX inner loop should run autonomously until it detects a **phase
+transition** — a structural break indicating the RL agents' learned model
+of the world is failing. Only then does it pause and invoke Concordia.
+
+| Trigger | What it detects | Implementation |
+|---------|----------------|----------------|
+| **Policy Entropy Spike** | Agents lost confidence (H(π) → high) | `H = -Σ π(a|s) log π(a|s)` — rolling average across agents |
+| **TD-Error Volatility** | "Surprise" — outcomes deviate from expectations | `Var(δ_t)` over rolling window; spike = model mismatch |
+| **Critical Slowing Down** | System approaching collapse | Lag-1 autocorrelation or rolling variance of HI expanding |
+| **CUSUM Changepoint** | Structural break in a metric | Cumulative sum of deviations from expected mean breaches threshold |
+| **WeightWatcher α shift** | Network weight structure reorganized | HT-RMT spectral analysis on DRL weight matrices (requires deep nets) |
+
+In active inference terms, these triggers are all forms of **precision
+collapse** — the agent's confidence in its generative model drops below
+a threshold, signaling that the "fast" System 1 model is no longer adequate
+and the "slow" System 2 (LLM reasoning) must intervene.
+
+```python
+# JAX pseudocode for policy entropy trigger
+@jax.jit
+def should_wake_concordia(policy_probs, threshold=1.5):
+    entropy = -jnp.sum(policy_probs * jnp.log(policy_probs + 1e-8), axis=-1)
+    mean_entropy = jnp.mean(entropy)
+    return mean_entropy > threshold
+```
+
+### Prior Art: Dual-Process Social Simulations
+
+| Framework | Fast Layer | Slow Layer | Bridge Mechanism |
+|-----------|-----------|-----------|-----------------|
+| **AgentTorch** | Tensor-based ABM (millions of agents) | LLM plug-in for adaptive behavior | Scale-aware activation |
+| **Hawkes-Guided LLM** | Hawkes process (statistical timing) | LLM for contextual action content | Point-process triggers |
+| **SimFleet Cognitive** | Standard ABM (physics/movement) | LLM for end-of-day reflection | Episodic memory bridge |
+| **MARS** | RL policy (System 1) | Tool-using LLM (System 2) | GRPO concurrent optimization |
+| **SustainHub (ours)** | JaxMARL (POMDP + AIF in JAX) | Concordia (LLM + memory + governance) | State translator + phase triggers |
+
+### State Translation Layer
+
+The bridge between System 1 (JAX) and System 2 (Concordia):
+
+**Bottom-Up (JAX → Concordia)**:
+JAX tensor `{agent_rewards, task_completion, HI, burnout}` →
+Natural language Sprint Report injected into Concordia context window →
+Triggers Community Retrospective scene
+
+**Top-Down (Concordia → JAX)**:
+Concordia agents debate and vote on policy →
+Structured JSON output parsed →
+Updated reward weights in JAX environment
+(e.g., "Maintenance Premium" → `REWARD_NONPREFERRED_SUCCESS = 2.5`)
+
+### Reference
+
+- **JaxMARL**: https://github.com/FLAIROx/JaxMARL
+  - 11 environments, 8 algorithms, all GPU-accelerated
+  - Dictionary-based API matches SustainHub structure
+  - SMAX (StarCraft II alternative) shows the vectorization approach
+- **AgentTorch**: https://github.com/AgentTorch/AgentTorch
+  - Tensor-based ABM scaling to millions of agents
+- **GABM concept**: GPU-Accelerated Agent-Based Models for social simulation
+  at population scale
+
 ## Other Relevant Resources
 
 - **RxInfer.jl source**: https://github.com/ReactiveBayes/RxInfer.jl
