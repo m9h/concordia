@@ -37,6 +37,7 @@ flags.DEFINE_string('project', None, 'GCP Project ID for Vertex AI.')
 flags.DEFINE_string('location', 'us-central1', 'GCP Location for Vertex AI.')
 flags.DEFINE_bool('use_active_inference', True, 'Whether to use Active Inference agents.')
 flags.DEFINE_bool('fast', False, 'Skip conversation scenes, go straight to task decisions.')
+flags.DEFINE_string('vllm_url', None, 'vLLM API base URL (e.g. http://localhost:8000/v1).')
 
 
 def main(argv):
@@ -48,12 +49,25 @@ def main(argv):
 
   if FLAGS.use_mock:
     model = mock_model.MockModel()
+  elif FLAGS.vllm_url:
+    from concordia.contrib.language_models import vllm_remote
+    model = vllm_remote.VLLMModel(
+        model_name=FLAGS.model_name,
+        api_base=FLAGS.vllm_url,
+    )
+    model = retry_wrapper.RetryLanguageModel(
+        model,
+        retry_tries=5,
+        retry_delay=2.0,
+        backoff_factor=1.5,
+    )
   else:
     api_key = FLAGS.api_key or os.environ.get('GEMINI_API_KEY', '')
     if not api_key and not FLAGS.project:
-      print('Error: GEMINI_API_KEY not found. Use --use_mock for testing or --project for Vertex.')
+      print('Error: GEMINI_API_KEY not found. Use --use_mock for testing, '
+            '--project for Vertex, or --vllm_url for local vLLM.')
       return
-    
+
     model = gemini_model.GeminiModel(
         model_name=FLAGS.model_name,
         api_key=api_key if not FLAGS.project else None,
@@ -85,7 +99,9 @@ def main(argv):
   print(f'Community Size: {FLAGS.community_size}')
   print(f'Stress scenarios: {FLAGS.enable_stress}')
   print(f'Active Inference: {FLAGS.use_active_inference}')
-  if FLAGS.project:
+  if FLAGS.vllm_url:
+    print(f'Backend: vLLM ({FLAGS.vllm_url})')
+  elif FLAGS.project:
     print(f'Backend: Vertex AI (Project: {FLAGS.project})')
   else:
     print('Backend: AI Studio')

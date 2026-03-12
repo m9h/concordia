@@ -1,0 +1,242 @@
+{
+  "scores": {
+    "Sam": 7.0,
+    "Omar": 11.0,
+    "Raj": 7.0,
+    "Lin": 15.0,
+    "Zoe": 15.0,
+    "Jordan": 11.0,
+    "Priya": 11.0,
+    "Xavier": 15.0
+  },
+  "harmony_index": 0.8600000000000001,
+  "resilience_quotient": 1.0,
+  "sprint_history": [
+    {
+      "joint_action": {
+        "Sam": "Fix: Incorrect timezone handling in the scheduler module.",
+        "Omar": "Docs: Update the architecture decision records.",
+        "Raj": "Review: Evaluate the WebSocket PR for security and performance.",
+        "Lin": "Review: Evaluate the WebSocket PR for security and performance.",
+        "Zoe": "Feature: Implement full-text search across project documents.",
+        "Jordan": "Feature: Add dark mode toggle with persistent user preference.",
+        "Priya": "Fix: Incorrect timezone handling in the scheduler module.",
+        "Xavier": "Fix: Incorrect timezone handling in the scheduler module."
+      },
+      "scores": {
+        "Sam": 3.0,
+        "Omar": 3.0,
+        "Raj": 3.0,
+        "Lin": 3.0,
+        "Zoe": 3.0,
+        "Jordan": -1.0,
+        "Priya": 3.0,
+        "Xavier": 3.0
+      },
+      "harmony_index": 0.9,
+      "policy": "None"
+    },
+    {
+      "joint_action": {
+        "Sam": "Fix: Memory leak in the connection pool when idle timeout expires.",
+        "Omar": "Docs: Create migration guide from v1 to v2.",
+        "Raj": "Review: Evaluate the WebSocket PR for security and performance.",
+        "Lin": "Review: Evaluate the WebSocket PR for security and performance.",
+        "Zoe": "Feature: Implement full-text search across project documents.",
+        "Jordan": "Feature: Add dark mode toggle with persistent user preference.",
+        "Priya": "Fix: Incorrect timezone handling in the scheduler module.",
+        "Xavier": "Fix: Memory leak in the connection pool when idle timeout expires."
+      },
+      "scores": {
+        "Sam": 3.0,
+        "Omar": -1.0,
+        "Raj": 3.0,
+        "Lin": 3.0,
+        "Zoe": 3.0,
+        "Jordan": 3.0,
+        "Priya": 3.0,
+        "Xavier": 3.0
+      },
+      "harmony_index": 0.9,
+      "policy": "None"
+    },
+    {
+      "joint_action": {
+        "Sam": "Fix: Null pointer exception when user profile has no avatar.",
+        "Omar": "Docs: Update the architecture decision records.",
+        "Raj": "Review: Evaluate the WebSocket PR for security and performance.",
+        "Lin": "Review: Evaluate the WebSocket PR for security and performance.",
+        "Zoe": "Feature: Implement full-text search across project documents.",
+        "Jordan": "Feature: Add dark mode toggle with persistent user preference.",
+        "Priya": "Fix: Null pointer exception when user profile has no avatar.",
+        "Xavier": "Fix: Memory leak in the connection pool when idle timeout expires."
+      },
+      "scores": {
+        "Sam": 3.0,
+        "Omar": 3.0,
+        "Raj": 3.0,
+        "Lin": 3.0,
+        "Zoe": 3.0,
+        "Jordan": 3.0,
+        "Priya": 3.0,
+        "Xavier": 3.0
+      },
+      "harmony_index": 0.9333333333333333,
+      "policy": "None"
+    },
+    {
+      "joint_action": {
+        "Sam": "Fix: Memory leak in the connection pool when idle timeout expires.",
+        "Omar": "Docs: Update the architecture decision records.",
+        "Raj": "Review: Evaluate the WebSocket PR for security and performance.",
+        "Lin": "Review: Evaluate the WebSocket PR for security and performance.",
+        "Zoe": "Feature: Implement full-text search across project documents.",
+        "Jordan": "Feature: Add dark mode toggle with persistent user preference.",
+        "Priya": "Fix: Incorrect timezone handling in the scheduler module.",
+        "Xavier": "Fix: Memory leak in the connection pool when idle timeout expires."
+      },
+      "scores": {
+        "Sam": -1.0,
+        "Omar": 3.0,
+        "Raj": -1.0,
+        "Lin": 3.0,
+        "Zoe": 3.0,
+        "Jordan": 3.0,
+        "Priya": -1.0,
+        "Xavier": 3.0
+      },
+      "harmony_index": 0.875,
+      "policy": "None"
+    },
+    {
+      "joint_action": {
+        "Sam": "Fix: Null pointer exception when user profile has no avatar.",
+        "Omar": "Docs: Update the architecture decision records.",
+        "Raj": "Review: Evaluate the WebSocket PR for security and performance.",
+        "Lin": "Review: Evaluate the WebSocket PR for security and performance.",
+        "Zoe": "Feature: Implement full-text search across project documents.",
+        "Jordan": "Feature: Add dark mode toggle with persistent user preference.",
+        "Priya": "Fix: Incorrect timezone handling in the scheduler module.",
+        "Xavier": "Fix: Memory leak in the connection pool when idle timeout expires."
+      },
+      "scores": {
+        "Sam": -1.0,
+        "Omar": 3.0,
+        "Raj": -1.0,
+        "Lin": 3.0,
+        "Zoe": 3.0,
+        "Jordan": 3.0,
+        "Priya": 3.0,
+        "Xavier": 3.0
+      },
+      "harmony_index": 0.8600000000000001,
+      "policy": "None"
+    }
+  ],
+  "narrative_history": [
+    {},
+    {},
+    {},
+    {},
+    {}
+  ],
+  "final_policy": "None",
+  "player_roles": {
+    "Sam": "Contributor",
+    "Omar": "Knowledge Curator",
+    "Raj": "Maintainer",
+    "Lin": "Maintainer",
+    "Zoe": "Innovator",
+    "Jordan": "Innovator",
+    "Priya": "Contributor",
+    "Xavier": "Contributor"
+  },
+  "stress_schedule": {
+    "2": "contributor_dropout",
+    "3": "task_overload"
+  },
+  "dropout_name": "Priya",
+  "relational_matrix": {
+    "Sam": {
+      "Sam": 1.0,
+      "Omar": 0.3,
+      "Raj": 0.7,
+      "Lin": 0.7,
+      "Zoe": 0.5,
+      "Jordan": 0.3,
+      "Priya": 0.7,
+      "Xavier": 0.7
+    },
+    "Omar": {
+      "Sam": 0.3,
+      "Omar": 1.0,
+      "Raj": 0.7,
+      "Lin": 0.3,
+      "Zoe": 0.3,
+      "Jordan": 0.3,
+      "Priya": 0.7,
+      "Xavier": 0.3
+    },
+    "Raj": {
+      "Sam": 0.7,
+      "Omar": 0.7,
+      "Raj": 1.0,
+      "Lin": 0.8,
+      "Zoe": 0.2,
+      "Jordan": 0.1,
+      "Priya": 0.3,
+      "Xavier": 0.3
+    },
+    "Lin": {
+      "Sam": 0.7,
+      "Omar": 0.3,
+      "Raj": 0.8,
+      "Lin": 1.0,
+      "Zoe": 0.1,
+      "Jordan": 0.2,
+      "Priya": 0.3,
+      "Xavier": 0.7
+    },
+    "Zoe": {
+      "Sam": 0.5,
+      "Omar": 0.3,
+      "Raj": 0.2,
+      "Lin": 0.1,
+      "Zoe": 1.0,
+      "Jordan": 0.8,
+      "Priya": 0.3,
+      "Xavier": 0.3
+    },
+    "Jordan": {
+      "Sam": 0.3,
+      "Omar": 0.3,
+      "Raj": 0.1,
+      "Lin": 0.2,
+      "Zoe": 0.8,
+      "Jordan": 1.0,
+      "Priya": 0.3,
+      "Xavier": 0.5
+    },
+    "Priya": {
+      "Sam": 0.7,
+      "Omar": 0.7,
+      "Raj": 0.3,
+      "Lin": 0.3,
+      "Zoe": 0.3,
+      "Jordan": 0.3,
+      "Priya": 1.0,
+      "Xavier": 0.7
+    },
+    "Xavier": {
+      "Sam": 0.7,
+      "Omar": 0.3,
+      "Raj": 0.3,
+      "Lin": 0.7,
+      "Zoe": 0.3,
+      "Jordan": 0.5,
+      "Priya": 0.7,
+      "Xavier": 1.0
+    }
+  },
+  "seed": 825592599263564393
+}
