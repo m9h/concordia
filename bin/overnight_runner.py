@@ -76,7 +76,9 @@ def run_concordia_sim(seed: int, num_sprints: int, community_size: int,
                       project: str | None = None,
                       model_name: str = "gemini-2.0-flash") -> dict:
     """Run a full Concordia simulation."""
-    sim_dir = os.path.join(output_dir, f"concordia_seed_{seed}")
+    # Use model short name in directory to avoid path issues
+    model_short = model_name.split("/")[-1]
+    sim_dir = os.path.join(output_dir, f"{model_short}_seed_{seed}")
     os.makedirs(sim_dir, exist_ok=True)
 
     cmd = [
@@ -215,6 +217,8 @@ def main():
     parser.add_argument("--num_concordia_runs", type=int, default=5)
     parser.add_argument("--community_size", type=int, default=8)
     parser.add_argument("--model_name", default="gemini-2.0-flash")
+    parser.add_argument("--model_sweep", default=None,
+                        help="Comma-separated model names for model comparison sweep")
 
     # Backend selection (mutually exclusive in practice)
     parser.add_argument("--vllm_url", default=None,
@@ -239,8 +243,20 @@ def main():
         all_results.extend(ladder_results)
 
     if args.mode in ("concordia", "all"):
-        concordia_results = run_concordia_batch(args)
-        all_results.extend(concordia_results)
+        # Model sweep: run Concordia sims for each model
+        if args.model_sweep:
+            models = [m.strip() for m in args.model_sweep.split(",")]
+        else:
+            models = [args.model_name]
+
+        for model_name in models:
+            print(f"\n>>> Model: {model_name}")
+            args.model_name = model_name
+            concordia_results = run_concordia_batch(args)
+            # Tag each result with the model name
+            for r in concordia_results:
+                r["model_name"] = model_name
+            all_results.extend(concordia_results)
 
     total_time = time.time() - t0
 
