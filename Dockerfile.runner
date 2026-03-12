@@ -1,6 +1,6 @@
 # SustainHub Simulation Runner for DGX Spark (Grace Blackwell, aarch64)
 # Uses NVIDIA NGC PyTorch v26 container as base
-FROM nvcr.io/nvidia/pytorch:26.01-py3
+FROM nvcr.io/nvidia/pytorch:26.02-py3
 
 WORKDIR /app
 

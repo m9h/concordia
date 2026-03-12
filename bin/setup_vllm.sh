@@ -20,7 +20,7 @@ MODEL="${MODEL:-meta-llama/Llama-3.1-70B-Instruct}"
 PORT="${PORT:-8000}"
 GPU_MEM="${GPU_MEM:-0.90}"
 MAX_MODEL_LEN="${MAX_MODEL_LEN:-8192}"
-NGC_TAG="${NGC_TAG:-26.01-py3}"
+NGC_TAG="${NGC_TAG:-26.02-py3}"
 
 echo "============================================"
 echo "vLLM Server Setup (DGX Spark)"
@@ -37,7 +37,7 @@ if [ "$1" = "--docker" ]; then
 
     echo "Building vLLM image from NGC v26 base..."
     docker build -t sustainhub-vllm-server -f - . <<'DOCKERFILE'
-FROM nvcr.io/nvidia/pytorch:26.01-py3
+FROM nvcr.io/nvidia/pytorch:26.02-py3
 RUN pip install --no-cache-dir vllm
 DOCKERFILE
 

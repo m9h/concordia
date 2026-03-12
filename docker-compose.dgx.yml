@@ -14,13 +14,13 @@
 #   docker compose -f docker-compose.dgx.yml logs -f vllm
 #
 # Environment variables (set in .env or export):
-#   NGC_TAG          — NGC container version (default: 26.01-py3)
+#   NGC_TAG          — NGC container version (default: 26.02-py3)
 #   HUGGING_FACE_HUB_TOKEN — for gated model access
 #   NGC_API_KEY      — for NIM containers (optional)
 #   MODEL            — model name (default: meta-llama/Llama-3.1-70B-Instruct)
 
 x-ngc-base: &ngc-base
-  image: nvcr.io/nvidia/pytorch:${NGC_TAG:-26.01-py3}
+  image: nvcr.io/nvidia/pytorch:${NGC_TAG:-26.02-py3}
 
 services:
   vllm:
