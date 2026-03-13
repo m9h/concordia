@@ -208,14 +208,31 @@ def build_C_matrix(role_preference: str = 'bug_fix') -> list[np.ndarray]:
     From Smith et al.: "C vectors encode prior preferences over outcomes.
     Higher values indicate more preferred observations."
 
-    The role_preference parameter allows role-specific reward shaping
-    without changing the core active inference math.
+    The role_preference parameter biases task-outcome preferences toward
+    the agent's preferred task type. Agents whose preferred task is a
+    maintenance action (bug_fix, code_review) have a stronger aversion to
+    failure (they care more about project health), while agents preferring
+    growth actions (feature, documentation) have a stronger preference for
+    success (they value visible output).
     """
     # All agents prefer high HI
     C1 = np.array([2.0, 0.0, -2.0])  # high=preferred, low=aversive
 
-    # All agents prefer task success
+    # Base task outcome preferences
     C2 = np.array([2.0, 0.0, -2.0])  # success=preferred, failure=aversive
+
+    # Role-specific bias on task outcome preferences
+    maintenance_roles = {'bug_fix', 'code_review'}
+    growth_roles = {'feature', 'documentation'}
+
+    if role_preference in maintenance_roles:
+        # Maintenance-oriented: stronger aversion to failure (project risk)
+        C2[2] -= 1.0  # failure more aversive: -2 → -3
+        C1[2] -= 0.5  # also more sensitive to low HI
+    elif role_preference in growth_roles:
+        # Growth-oriented: stronger preference for success (visible output)
+        C2[0] += 1.0  # success more attractive: 2 → 3
+        C1[0] += 0.5  # also value high HI more (visible progress)
 
     return [C1, C2]
 
@@ -526,9 +543,17 @@ class ActiveInferenceAgent:
         self.learning_rate = learning_rate
 
         # Build generative model
+        role_to_preferred_task = {
+            'contributor': 'bug_fix',
+            'innovator': 'feature',
+            'knowledge_curator': 'documentation',
+            'maintainer': 'code_review',
+        }
         self.A = build_A_matrix()
         self.B = build_B_matrix()
-        self.C = build_C_matrix(role_preference=role)
+        self.C = build_C_matrix(
+            role_preference=role_to_preferred_task.get(role, 'bug_fix')
+        )
         self.D = build_D_matrix(health_prior=health_prior)
         self.E = build_E_matrix(role=role)
 
@@ -591,6 +616,179 @@ class ActiveInferenceAgent:
 # =============================================================================
 # LLM + Active Inference Hybrid
 # =============================================================================
+
+# =============================================================================
+# LLM-as-Node: LLM integration points for the AIF factor graph (Level 7)
+# =============================================================================
+
+def llm_generate_health_prior(
+    model: Any,
+    agent_name: str,
+    agent_role: str,
+    agent_backstory: str,
+) -> np.ndarray:
+    """Use the LLM to generate an informed D-matrix prior from backstory.
+
+    Instead of a fixed 'uncertain'/'optimistic'/'pessimistic' prior, the LLM
+    reads the agent's backstory and personality to infer how they would initially
+    assess the project's health. This makes each agent's prior genuinely
+    individual.
+
+    Args:
+        model: A language model implementing sample_choice().
+        agent_name: The agent's name.
+        agent_role: The agent's role (e.g. 'contributor').
+        agent_backstory: The agent's full backstory text.
+
+    Returns:
+        D1: A normalized probability distribution over health states
+            [healthy, stressed, declining].
+    """
+    prompt = (
+        f"You are assessing the mindset of {agent_name}, a {agent_role} in an "
+        f"open-source project called SustainHub.\n\n"
+        f"Backstory: {agent_backstory}\n\n"
+        f"Based on this person's background and personality, what would be "
+        f"their initial gut assessment of the project's health before seeing "
+        f"any data? Consider: optimists who trust the community might lean "
+        f"'healthy'; burned-out or skeptical people might lean 'stressed' or "
+        f"'declining'; newcomers or uncertain people might be neutral.\n\n"
+        f"Rate the project health as one of: healthy, stressed, declining"
+    )
+
+    try:
+        idx, _, _ = model.sample_choice(
+            prompt,
+            ['healthy', 'stressed', 'declining'],
+        )
+    except Exception:
+        # Fallback to uncertain prior on any LLM error
+        return np.array([1.0, 1.0, 1.0]) / 3.0
+
+    # Map LLM choice to a prior distribution (concentrated but not degenerate)
+    prior_map = {
+        0: np.array([4.0, 1.5, 0.5]),  # healthy
+        1: np.array([1.0, 4.0, 1.0]),  # stressed
+        2: np.array([0.5, 1.5, 4.0]),  # declining
+    }
+    D1 = prior_map[idx]
+    D1 = D1 / D1.sum()
+    return D1
+
+
+def llm_interpret_sprint(
+    model: Any,
+    sprint_num: int,
+    actions: dict[str, str],
+    rewards: dict[str, float],
+    hi_observation: str,
+    true_health_label: str,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Use the LLM to interpret sprint results as observation biases.
+
+    After each sprint, the LLM reads a narrative summary of what happened
+    and produces soft estimates of project health and task completion quality.
+    These are blended with the hardcoded observation to produce a richer signal.
+
+    Args:
+        model: A language model implementing sample_choice().
+        sprint_num: Current sprint number.
+        actions: Dict mapping agent_name -> action taken.
+        rewards: Dict mapping agent_name -> reward received.
+        hi_observation: The hardcoded HI observation string ('high'/'medium'/'low').
+        true_health_label: Label of true health state (for narrative only).
+
+    Returns:
+        hi_bias: Probability distribution over HI observations [high, medium, low].
+        task_bias: Probability distribution over task observations [success, partial, failure].
+    """
+    # Build a sprint narrative for the LLM
+    total_reward = sum(rewards.values())
+    num_agents = len(actions)
+    action_summary = ', '.join(
+        f"{name}: {act}" for name, act in actions.items()
+    )
+    reward_summary = ', '.join(
+        f"{name}: {r:+.1f}" for name, r in rewards.items()
+    )
+
+    health_prompt = (
+        f"Sprint {sprint_num} just finished in the SustainHub project.\n\n"
+        f"Actions taken: {action_summary}\n"
+        f"Scores received: {reward_summary}\n"
+        f"Total team score: {total_reward:+.1f} (out of max {num_agents * 3.0:.0f})\n"
+        f"Observed harmony index: {hi_observation}\n\n"
+        f"Based on this sprint's results, how would you rate the project's "
+        f"overall health? Consider: did the team cover diverse needs, or did "
+        f"they cluster on preferred tasks? Were scores generally positive?\n\n"
+        f"Rate the project health as: high, medium, or low"
+    )
+
+    task_prompt = (
+        f"Sprint {sprint_num} just finished in the SustainHub project.\n\n"
+        f"Actions taken: {action_summary}\n"
+        f"Scores received: {reward_summary}\n\n"
+        f"Based on the scores and action choices, how would you rate the "
+        f"overall task completion quality this sprint?\n\n"
+        f"Rate task completion as: success, partial, or failure"
+    )
+
+    # Query LLM for health assessment
+    try:
+        hi_idx, _, _ = model.sample_choice(
+            health_prompt, ['high', 'medium', 'low']
+        )
+    except Exception:
+        hi_idx = HI_OBSERVATIONS.index(hi_observation)  # fallback
+
+    # Query LLM for task assessment
+    try:
+        task_idx, _, _ = model.sample_choice(
+            task_prompt, ['success', 'partial', 'failure']
+        )
+    except Exception:
+        task_idx = 0  # fallback to success
+
+    # Convert to soft distributions (concentrated around chosen category)
+    def _choice_to_dist(idx: int, n: int, concentration: float = 3.0) -> np.ndarray:
+        dist = np.ones(n) * 0.5
+        dist[idx] = concentration
+        return dist / dist.sum()
+
+    hi_bias = _choice_to_dist(hi_idx, NUM_HI_OBS)
+    task_bias = _choice_to_dist(task_idx, NUM_TASK_OBS)
+
+    return hi_bias, task_bias
+
+
+def blend_observations(
+    hardcoded_obs_idx: int,
+    llm_bias: np.ndarray,
+    num_categories: int,
+    mixing_weight: float = 0.3,
+) -> int:
+    """Blend a hardcoded observation with an LLM-derived bias.
+
+    Args:
+        hardcoded_obs_idx: Index of the observation from the generative model.
+        llm_bias: LLM-derived probability distribution over observations.
+        num_categories: Number of observation categories.
+        mixing_weight: How much to weight the LLM (0.0 = ignore LLM, 1.0 = only LLM).
+
+    Returns:
+        Blended observation index (sampled from the mixed distribution).
+    """
+    # One-hot for the hardcoded observation
+    hardcoded_dist = np.zeros(num_categories)
+    hardcoded_dist[hardcoded_obs_idx] = 1.0
+
+    # Blend
+    blended = (1.0 - mixing_weight) * hardcoded_dist + mixing_weight * llm_bias
+    blended = blended / blended.sum()
+
+    # Sample from blended distribution
+    return int(np.random.choice(num_categories, p=blended))
+
 
 def format_aif_context_for_llm(agent: ActiveInferenceAgent) -> str:
     """Format active inference state as context for LLM prompting.

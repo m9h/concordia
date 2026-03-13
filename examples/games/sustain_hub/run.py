@@ -36,6 +36,10 @@ flags.DEFINE_bool('verbose', False, 'Whether to print detailed simulation logs.'
 flags.DEFINE_string('project', None, 'GCP Project ID for Vertex AI.')
 flags.DEFINE_string('location', 'us-central1', 'GCP Location for Vertex AI.')
 flags.DEFINE_bool('use_active_inference', True, 'Whether to use Active Inference agents.')
+flags.DEFINE_bool(
+    'inject_aif_context', None,
+    'Inject structured AIF beliefs into LLM prompts. '
+    'Defaults to True when --use_active_inference is True.')
 flags.DEFINE_bool('fast', False, 'Skip conversation scenes, go straight to task decisions.')
 flags.DEFINE_string('vllm_url', None, 'vLLM API base URL (e.g. http://localhost:8000/v1).')
 
@@ -99,6 +103,8 @@ def main(argv):
   print(f'Community Size: {FLAGS.community_size}')
   print(f'Stress scenarios: {FLAGS.enable_stress}')
   print(f'Active Inference: {FLAGS.use_active_inference}')
+  inject_ctx = FLAGS.inject_aif_context if FLAGS.inject_aif_context is not None else FLAGS.use_active_inference
+  print(f'Inject AIF Context: {inject_ctx}')
   if FLAGS.vllm_url:
     print(f'Backend: vLLM ({FLAGS.vllm_url})')
   elif FLAGS.project:
@@ -117,6 +123,7 @@ def main(argv):
       verbose=FLAGS.verbose,
       use_active_inference=FLAGS.use_active_inference,
       skip_conversation=FLAGS.fast,
+      inject_aif_context=FLAGS.inject_aif_context,
   )
 
   # Print summary

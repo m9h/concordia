@@ -43,6 +43,7 @@ import types
 from typing import Any, Callable, Mapping, Sequence
 
 from absl import logging
+from examples.games.sustain_hub import active_inference as aif
 from examples.games.sustain_hub import social_data
 from examples.games.sustain_hub import tools as sustain_tools
 from concordia.agents import entity_agent_with_logging
@@ -147,11 +148,15 @@ class ActiveInferenceSituationPerception(
           memory_component.DEFAULT_MEMORY_COMPONENT_KEY
       ),
       num_memories_to_retrieve: int = 25,
+      aif_agent: aif.ActiveInferenceAgent | None = None,
+      inject_aif_context: bool = True,
   ):
     super().__init__('\nQuestion: How does the agent perceive their situation through the lens of Active Inference?\nAnswer')
     self._model = model
     self._memory_component_key = memory_component_key
     self._num_memories_to_retrieve = num_memories_to_retrieve
+    self._aif_agent = aif_agent
+    self._inject_aif_context = inject_aif_context
 
   def _make_pre_act_value(self) -> str:
     agent_name = self.get_entity().name
@@ -199,12 +204,19 @@ class ActiveInferenceSituationPerception(
 
     result = f"{agent_name} is currently {final_perception} (Uncertainty Score: {uncertainty_score}/10)"
 
+    # Inject structured AIF beliefs into the prompt if available
+    aif_context = ''
+    if self._inject_aif_context and self._aif_agent is not None:
+      aif_context = aif.format_aif_context_for_llm(self._aif_agent)
+      result = f"{result}\n\n{aif_context}"
+
     self._logging_channel({
         'Key': self.get_pre_act_label(),
         'Pragmatic Assessment': pragmatic,
         'Epistemic Assessment': epistemic,
         'Uncertainty Score': uncertainty_score,
         'Strategy': result,
+        'AIF Context': aif_context,
     })
 
     return result
@@ -229,6 +241,8 @@ class SustainHubEntity(basic.Entity):
           model=model,
           num_memories_to_retrieve=self.params.get(
               'situation_perception_history_length', 25),
+          aif_agent=self.params.get('aif_agent', None),
+          inject_aif_context=self.params.get('inject_aif_context', True),
       )
       agent._context_components['SituationPerception'] = situation_perception
       situation_perception.set_entity(agent)
@@ -1063,6 +1077,7 @@ def run_simulation(
     verbose: bool = False,
     use_active_inference: bool = True,
     skip_conversation: bool = False,
+    inject_aif_context: bool | None = None,
 ) -> dict[str, Any]:
   """Run the SustainHub simulation.
 
@@ -1074,11 +1089,22 @@ def run_simulation(
     enable_stress: Whether to include stress scenarios (dropout, overload).
     agents_to_use: Optional subset of agent names from AGENT_PROFILES.
     community_size: If agents_to_use is None, how many to sample from profiles.
+    skip_backstory: Skip formative memory initialization (faster).
+    verbose: Enable verbose logging.
+    use_active_inference: Use Active Inference perception components.
+    skip_conversation: Skip conversation scenes.
+    inject_aif_context: Inject structured Active Inference beliefs
+        (Bayesian health estimate, urgency, habits) into LLM prompts.
+        Defaults to True when use_active_inference is True.
 
   Returns:
     Dictionary containing simulation results, scores, harmony index history,
     and the structured log.
   """
+  # Default inject_aif_context to True when use_active_inference is True
+  if inject_aif_context is None:
+    inject_aif_context = use_active_inference
+
   seed = seed if seed is not None else random.getrandbits(63)
   rng = random.Random(seed)
 
@@ -1160,6 +1186,20 @@ def run_simulation(
   for name in people:
     player_tools[name].extend(common_tools)
 
+  # Create Active Inference agents (one per player) for hybrid reasoning
+  aif_agents: dict[str, aif.ActiveInferenceAgent] = {}
+  if use_active_inference and inject_aif_context:
+    for name in people:
+      role = player_roles[name]
+      aif_agents[name] = aif.ActiveInferenceAgent(
+          name=name,
+          role=role.name.lower(),
+          gamma=1.0,
+          alpha=16.0,
+          learning_rate=0.1,
+          health_prior='uncertain',
+      )
+
   # Load prefabs
   prefabs = {
       **helper_functions.get_package_classes(entity_prefabs),
@@ -1200,6 +1240,8 @@ def run_simulation(
                 "goal": goal,
                 "tools": player_tools[name],
                 "use_active_inference": use_active_inference,
+                "aif_agent": aif_agents.get(name),
+                "inject_aif_context": inject_aif_context,
             },
         )
     )

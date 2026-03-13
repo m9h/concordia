@@ -40,13 +40,56 @@ import os
 import subprocess
 import sys
 import time
+import urllib.request
+import urllib.error
+
+
+def check_vllm_health(url: str) -> bool:
+    """Check if vLLM is reachable by hitting its /v1/models endpoint.
+
+    Returns True if the server responds with HTTP 200.
+    """
+    models_url = url.rstrip("/") + "/models"
+    try:
+        req = urllib.request.Request(models_url, method="GET")
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            return resp.status == 200
+    except (urllib.error.URLError, OSError):
+        return False
+
+
+def _check_cached(output_dir: str, force: bool) -> dict | None:
+    """Return loaded results.json if it exists and force is False, else None."""
+    if force:
+        return None
+    results_path = os.path.join(output_dir, "results.json")
+    if os.path.exists(results_path):
+        try:
+            with open(results_path) as f:
+                return json.load(f)
+        except (json.JSONDecodeError, OSError):
+            return None
+    return None
 
 
 def run_ladder_experiment(level: int, seed: int, num_sprints: int,
-                          output_dir: str) -> dict:
+                          output_dir: str, force: bool = False) -> dict:
     """Run a single standalone experiment ladder level."""
     level_dir = os.path.join(output_dir, f"level_{level}_seed_{seed}")
     os.makedirs(level_dir, exist_ok=True)
+
+    cached = _check_cached(level_dir, force)
+    if cached is not None:
+        return {
+            "type": "ladder",
+            "level": level,
+            "seed": seed,
+            "duration_s": 0,
+            "returncode": 0,
+            "output_dir": level_dir,
+            "stderr": "",
+            "status": "cached",
+        }
 
     cmd = [
         sys.executable, "-m", "examples.games.sustain_hub.experiments",
@@ -74,12 +117,25 @@ def run_ladder_experiment(level: int, seed: int, num_sprints: int,
 def run_concordia_sim(seed: int, num_sprints: int, community_size: int,
                       output_dir: str, vllm_url: str | None = None,
                       project: str | None = None,
-                      model_name: str = "gemini-2.0-flash") -> dict:
+                      model_name: str = "gemini-2.0-flash",
+                      force: bool = False) -> dict:
     """Run a full Concordia simulation."""
     # Use model short name in directory to avoid path issues
     model_short = model_name.split("/")[-1]
     sim_dir = os.path.join(output_dir, f"{model_short}_seed_{seed}")
     os.makedirs(sim_dir, exist_ok=True)
+
+    cached = _check_cached(sim_dir, force)
+    if cached is not None:
+        return {
+            "type": "concordia",
+            "seed": seed,
+            "duration_s": 0,
+            "returncode": 0,
+            "output_dir": sim_dir,
+            "stderr": "",
+            "status": "cached",
+        }
 
     cmd = [
         sys.executable, "-m", "examples.games.sustain_hub.run",
@@ -136,6 +192,7 @@ def run_ladder_batch(args):
                     seed=seed,
                     num_sprints=args.num_sprints,
                     output_dir=os.path.join(args.output_dir, "ladder"),
+                    force=args.force,
                 )
                 futures[future] = (level, seed)
 
@@ -143,7 +200,10 @@ def run_ladder_batch(args):
             level, seed = futures[future]
             try:
                 result = future.result()
-                status = "OK" if result["returncode"] == 0 else "FAIL"
+                if result.get("status") == "cached":
+                    status = "CACHED"
+                else:
+                    status = "OK" if result["returncode"] == 0 else "FAIL"
                 print(f"  L{level} seed={seed}: {status} "
                       f"({result['duration_s']}s)")
                 results.append(result)
@@ -183,8 +243,12 @@ def run_concordia_batch(args):
                 vllm_url=args.vllm_url,
                 project=args.project,
                 model_name=args.model_name,
+                force=args.force,
             )
-            status = "OK" if result["returncode"] == 0 else "FAIL"
+            if result.get("status") == "cached":
+                status = "CACHED"
+            else:
+                status = "OK" if result["returncode"] == 0 else "FAIL"
             print(f"  Sim {i+1}: {status} ({result['duration_s']}s)")
             results.append(result)
         except subprocess.TimeoutExpired:
@@ -220,6 +284,9 @@ def main():
     parser.add_argument("--model_sweep", default=None,
                         help="Comma-separated model names for model comparison sweep")
 
+    parser.add_argument("--force", action="store_true",
+                        help="Re-run experiments even if results.json exists")
+
     # Backend selection (mutually exclusive in practice)
     parser.add_argument("--vllm_url", default=None,
                         help="vLLM API base URL (e.g. http://localhost:8000/v1)")
@@ -242,6 +309,13 @@ def main():
         ladder_results = run_ladder_batch(args)
         all_results.extend(ladder_results)
 
+    if args.mode in ("concordia", "all") and args.vllm_url:
+        print(f"Checking vLLM health at {args.vllm_url} ...")
+        if not check_vllm_health(args.vllm_url):
+            print("ERROR: vLLM is not reachable. Aborting.", file=sys.stderr)
+            sys.exit(1)
+        print("  vLLM is healthy.")
+
     if args.mode in ("concordia", "all"):
         # Model sweep: run Concordia sims for each model
         if args.model_sweep:
@@ -261,11 +335,17 @@ def main():
     total_time = time.time() - t0
 
     # Save manifest
+    cached_count = sum(1 for r in all_results if r.get("status") == "cached")
     manifest = {
         "total_duration_s": round(total_time, 1),
         "total_runs": len(all_results),
-        "successes": sum(1 for r in all_results if r.get("returncode") == 0),
-        "failures": sum(1 for r in all_results if r.get("returncode", -1) != 0),
+        "successes": sum(1 for r in all_results
+                         if r.get("returncode") == 0
+                         and r.get("status") != "cached"),
+        "cached": cached_count,
+        "failures": sum(1 for r in all_results
+                        if r.get("returncode", -1) != 0
+                        and r.get("status") != "cached"),
         "results": all_results,
     }
     manifest_path = os.path.join(args.output_dir, "manifest.json")
@@ -274,7 +354,8 @@ def main():
 
     print(f"\n{'=' * 60}")
     print(f"DONE in {total_time/60:.1f} minutes")
-    print(f"  Successes: {manifest['successes']}/{manifest['total_runs']}")
+    print(f"  Successes: {manifest['successes']}/{manifest['total_runs']}"
+          f"  Cached: {manifest['cached']}")
     print(f"  Manifest: {manifest_path}")
     print("=" * 60)
 

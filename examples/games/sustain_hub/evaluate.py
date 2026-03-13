@@ -35,6 +35,9 @@ flags.DEFINE_string('description', '', 'Experiment description for results.tsv.'
 flags.DEFINE_string('output_dir', '/tmp/sustain_hub_autoresearch', 'Output directory.')
 flags.DEFINE_integer('tier', 1, 'Experiment tier: 1=fast (4 agents, 1 sprint), '
                      '2=medium (8 agents, 3 sprints), 3=full (16 agents, 5 sprints).')
+flags.DEFINE_string('vllm_url', None, 'vLLM API base URL (e.g. http://localhost:8000/v1).')
+flags.DEFINE_string('model_name', None, 'Model name to use with vLLM or Vertex AI.')
+flags.DEFINE_bool('use_mock', False, 'Use mock model instead of a real LLM.')
 
 TIER_CONFIGS = {
     1: {'num_sprints': 1, 'community_size': 4, 'enable_stress': False},
@@ -127,6 +130,12 @@ def run_once(run_id: int) -> dict:
     ]
     if not tier['enable_stress']:
         cmd.append('--noenable_stress')
+    if FLAGS.vllm_url:
+        cmd.append(f'--vllm_url={FLAGS.vllm_url}')
+    if FLAGS.model_name:
+        cmd.append(f'--model_name={FLAGS.model_name}')
+    if FLAGS.use_mock:
+        cmd.append('--use_mock')
 
     t0 = time.time()
     result = subprocess.run(cmd, capture_output=True, text=True, timeout=900)
