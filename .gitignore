@@ -28,3 +28,4 @@ __pycache__/
 .pytype
 results.tsv
 uv.lock
+live_results.json
