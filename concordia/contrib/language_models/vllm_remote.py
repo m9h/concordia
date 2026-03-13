@@ -15,6 +15,7 @@
 """VLLM Remote Language Model adapter.
 
 Connects to a vLLM server running the OpenAI-compatible API over HTTP.
+Supports both /v1/completions (text) and /v1/chat/completions (chat) endpoints.
 Use this when vLLM runs as a separate service (e.g. on DGX Spark).
 For in-process vLLM, see concordia.contrib.language_models.vllm.
 """
@@ -29,6 +30,11 @@ from concordia.utils import sampling
 
 _MAX_MULTIPLE_CHOICE_ATTEMPTS = 5
 
+_DEFAULT_SYSTEM_PROMPT = (
+    'You are a participant in a collaborative project simulation. '
+    'Answer concisely.'
+)
+
 
 class VLLMModel(language_model.LanguageModel):
   """Adapter for vLLM's OpenAI-compatible API."""
@@ -36,10 +42,27 @@ class VLLMModel(language_model.LanguageModel):
   def __init__(
       self,
       model_name: str,
-      api_base: str = "http://localhost:8000/v1",
+      api_base: str = 'http://localhost:8000/v1',
+      use_chat: bool = True,
+      system_prompt: str | None = None,
   ):
     self._model_name = model_name
-    self._api_url = f"{api_base}/completions"
+    self._api_base = api_base.rstrip('/')
+    self._use_chat = use_chat
+    self._system_prompt = (
+        system_prompt if system_prompt is not None else _DEFAULT_SYSTEM_PROMPT
+    )
+    # Request stats
+    self._total_requests = 0
+    self._total_tokens = 0
+    self._total_errors = 0
+
+  def stats(self) -> dict[str, int]:
+    return {
+        'total_requests': self._total_requests,
+        'total_tokens': self._total_tokens,
+        'total_errors': self._total_errors,
+    }
 
   def sample_text(
       self,
@@ -53,20 +76,82 @@ class VLLMModel(language_model.LanguageModel):
       timeout: float = language_model.DEFAULT_TIMEOUT_SECONDS,
       seed: int | None = None,
   ) -> str:
-    payload = {
-        "model": self._model_name,
-        "prompt": prompt,
-        "max_tokens": max_tokens,
-        "temperature": temperature,
-        "top_p": top_p,
-        "stop": list(terminators) if terminators else None,
-        "seed": seed,
-    }
+    if self._use_chat:
+      return self._sample_text_chat(
+          prompt, max_tokens=max_tokens, terminators=terminators,
+          temperature=temperature, top_p=top_p, top_k=top_k,
+          timeout=timeout, seed=seed,
+      )
+    return self._sample_text_completions(
+        prompt, max_tokens=max_tokens, terminators=terminators,
+        temperature=temperature, top_p=top_p, top_k=top_k,
+        timeout=timeout, seed=seed,
+    )
 
-    response = requests.post(self._api_url, json=payload, timeout=timeout)
-    response.raise_for_status()
+  def _sample_text_chat(
+      self, prompt, *, max_tokens, terminators, temperature, top_p, top_k,
+      timeout, seed,
+  ) -> str:
+    messages = []
+    if self._system_prompt:
+      messages.append({'role': 'system', 'content': self._system_prompt})
+    messages.append({'role': 'user', 'content': prompt})
+
+    payload = {
+        'model': self._model_name,
+        'messages': messages,
+        'max_tokens': max_tokens,
+        'temperature': temperature,
+        'top_p': top_p,
+        'stop': list(terminators) if terminators else None,
+        'seed': seed,
+    }
+    if top_k != language_model.DEFAULT_TOP_K:
+      payload['top_k'] = top_k
+
+    url = f'{self._api_base}/chat/completions'
+    try:
+      response = requests.post(url, json=payload, timeout=timeout)
+      response.raise_for_status()
+    except Exception:
+      self._total_errors += 1
+      raise
+
     result = response.json()
-    return result["choices"][0]["text"]
+    self._total_requests += 1
+    usage = result.get('usage', {})
+    self._total_tokens += usage.get('total_tokens', 0)
+    return result['choices'][0]['message']['content']
+
+  def _sample_text_completions(
+      self, prompt, *, max_tokens, terminators, temperature, top_p, top_k,
+      timeout, seed,
+  ) -> str:
+    payload = {
+        'model': self._model_name,
+        'prompt': prompt,
+        'max_tokens': max_tokens,
+        'temperature': temperature,
+        'top_p': top_p,
+        'stop': list(terminators) if terminators else None,
+        'seed': seed,
+    }
+    if top_k != language_model.DEFAULT_TOP_K:
+      payload['top_k'] = top_k
+
+    url = f'{self._api_base}/completions'
+    try:
+      response = requests.post(url, json=payload, timeout=timeout)
+      response.raise_for_status()
+    except Exception:
+      self._total_errors += 1
+      raise
+
+    result = response.json()
+    self._total_requests += 1
+    usage = result.get('usage', {})
+    self._total_tokens += usage.get('total_tokens', 0)
+    return result['choices'][0]['text']
 
   def sample_choice(
       self,

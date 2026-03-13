@@ -42,6 +42,8 @@ flags.DEFINE_bool(
     'Defaults to True when --use_active_inference is True.')
 flags.DEFINE_bool('fast', False, 'Skip conversation scenes, go straight to task decisions.')
 flags.DEFINE_string('vllm_url', None, 'vLLM API base URL (e.g. http://localhost:8000/v1).')
+flags.DEFINE_bool('vllm_chat', True, 'Use chat completions API (vs. text completions).')
+flags.DEFINE_string('vllm_system_prompt', None, 'System prompt for vLLM chat mode.')
 
 
 def main(argv):
@@ -57,6 +59,8 @@ def main(argv):
     model = vllm_remote.VLLMModel(
         model_name=FLAGS.model_name,
         api_base=FLAGS.vllm_url,
+        use_chat=FLAGS.vllm_chat,
+        system_prompt=FLAGS.vllm_system_prompt,
     )
     model = retry_wrapper.RetryLanguageModel(
         model,
