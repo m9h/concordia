@@ -57,7 +57,7 @@ ROLE_PREFERRED_TASKS = {
 # Preferred task: +3 success, -1 failure
 # Non-preferred task: +1 success, -1 failure
 # Skipped task: 0
-REWARD_PREFERRED_SUCCESS = 4.0
+REWARD_PREFERRED_SUCCESS = 3.0
 REWARD_PREFERRED_FAILURE = -1.0
 REWARD_NONPREFERRED_SUCCESS = 1.0
 REWARD_NONPREFERRED_FAILURE = -1.0
