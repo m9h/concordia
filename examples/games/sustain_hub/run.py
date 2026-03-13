@@ -43,7 +43,6 @@ flags.DEFINE_string('vllm_url', None, 'vLLM API base URL (e.g. http://localhost:
 def main(argv):
   del argv  # Unused.
 
-  from concordia.contrib.language_models.google import gemini_model
   from concordia.language_model import retry_wrapper
   from concordia.testing import mock_model
 
@@ -62,6 +61,7 @@ def main(argv):
         backoff_factor=1.5,
     )
   else:
+    from concordia.contrib.language_models.google import gemini_model
     api_key = FLAGS.api_key or os.environ.get('GEMINI_API_KEY', '')
     if not api_key and not FLAGS.project:
       print('Error: GEMINI_API_KEY not found. Use --use_mock for testing, '

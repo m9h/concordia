@@ -1,0 +1,845 @@
+#!/usr/bin/env python3
+"""Karpathy-style autoresearch loop for SustainHub optimization.
+
+Autonomously iterates over simulation parameter variations, commits each
+hypothesis, runs a Tier 1/2/3 experiment, and keeps or reverts based on
+SustainScore improvement.
+
+Usage:
+  # Mock mode (no LLM, fast testing of the loop itself):
+  uv run python bin/autoresearch.py --tier=1
+
+  # Against a local vLLM server:
+  uv run python bin/autoresearch.py --tier=1 --vllm_url=http://localhost:8000/v1
+
+  # Dry run (show variations without executing):
+  uv run python bin/autoresearch.py --dry_run
+
+  # Resume from a previous run:
+  uv run python bin/autoresearch.py --tier=1 --results_file=results.tsv
+"""
+
+import datetime
+import json
+import os
+import re
+import subprocess
+import sys
+import time
+
+from absl import app
+from absl import flags
+
+FLAGS = flags.FLAGS
+
+flags.DEFINE_string('vllm_url', None,
+                    'vLLM API base URL. If omitted, --use_mock is passed.')
+flags.DEFINE_string('model_name', 'Qwen/Qwen2.5-7B-Instruct',
+                    'Model name for LLM-backed runs.')
+flags.DEFINE_integer('tier', 1,
+                     'Experiment tier: 1=fast (4 agents, 1 sprint), '
+                     '2=medium (3 averaged runs), 3=full (16 agents, 5 sprints).')
+flags.DEFINE_integer('max_iterations', 50,
+                     'Maximum number of hypothesis iterations.')
+flags.DEFINE_string('results_file', 'results.tsv',
+                    'Path to the tab-separated results log.')
+flags.DEFINE_bool('dry_run', False,
+                  'Show what each variation would change without executing.')
+flags.DEFINE_integer('start_layer', 1,
+                     'Which variation layer to start from (1-4).')
+flags.DEFINE_bool('skip_baseline', False,
+                  'Skip initial baseline measurement.')
+
+# ---------------------------------------------------------------------------
+# Paths (relative to repo root)
+# ---------------------------------------------------------------------------
+
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SUSTAIN_DIR = os.path.join(REPO_ROOT, 'examples', 'games', 'sustain_hub')
+SOCIAL_DATA_PATH = os.path.join(SUSTAIN_DIR, 'social_data.py')
+SIMULATION_PATH = os.path.join(SUSTAIN_DIR, 'simulation.py')
+SCENARIO_CONFIG_PATH = os.path.join(SUSTAIN_DIR, 'scenario_config.py')
+TOOLS_PATH = os.path.join(SUSTAIN_DIR, 'tools.py')
+
+TIER_CONFIGS = {
+    1: {'num_sprints': 1, 'community_size': 4, 'runs': 1},
+    2: {'num_sprints': 3, 'community_size': 8, 'runs': 3},
+    3: {'num_sprints': 5, 'community_size': 16, 'runs': 1},
+}
+
+
+# ===================================================================
+# File helpers
+# ===================================================================
+
+def read_file(path: str) -> str:
+    with open(path, 'r') as f:
+        return f.read()
+
+
+def write_file(path: str, content: str) -> None:
+    with open(path, 'w') as f:
+        f.write(content)
+
+
+def replace_in_file(path: str, old: str, new: str) -> bool:
+    """Replace *old* with *new* in *path*. Returns True if a substitution was made."""
+    content = read_file(path)
+    if old not in content:
+        return False
+    write_file(path, content.replace(old, new))
+    return True
+
+
+def replace_block(path: str, pattern: str, replacement: str) -> bool:
+    """Regex-based block replacement. Returns True if a substitution was made."""
+    content = read_file(path)
+    new_content, count = re.subn(pattern, replacement, content, count=1, flags=re.DOTALL)
+    if count == 0:
+        return False
+    write_file(path, new_content)
+    return True
+
+
+# ===================================================================
+# Git helpers
+# ===================================================================
+
+def git(*args: str, check: bool = True) -> subprocess.CompletedProcess:
+    return subprocess.run(
+        ['git'] + list(args),
+        capture_output=True, text=True, cwd=REPO_ROOT, check=check,
+    )
+
+
+def git_is_clean() -> bool:
+    r = git('status', '--porcelain')
+    return r.stdout.strip() == ''
+
+
+def git_commit(message: str) -> str:
+    """Stage in-scope files, commit, return short hash."""
+    for p in [SOCIAL_DATA_PATH, SIMULATION_PATH, SCENARIO_CONFIG_PATH, TOOLS_PATH]:
+        git('add', p, check=False)
+    git('commit', '-m', message, check=True)
+    r = git('rev-parse', '--short=7', 'HEAD')
+    return r.stdout.strip()
+
+
+def git_revert() -> None:
+    """Revert the last commit (hard reset HEAD~1)."""
+    git('reset', '--hard', 'HEAD~1')
+
+
+def git_short_hash() -> str:
+    r = git('rev-parse', '--short=7', 'HEAD')
+    return r.stdout.strip()
+
+
+# ===================================================================
+# Experiment runner
+# ===================================================================
+
+def run_experiment(tier: int) -> dict:
+    """Run one or more simulations and return averaged metrics.
+
+    Returns a dict with keys: sustain_score, harmony_index,
+    resilience_quotient, fairness, strategy_diversity, stress_validity,
+    duration, status.
+    """
+    cfg = TIER_CONFIGS[tier]
+    num_runs = cfg['runs']
+    all_metrics: list[dict] = []
+
+    for run_idx in range(num_runs):
+        out_dir = f'/tmp/sustain_hub_autoresearch/run_{run_idx}_{int(time.time())}'
+        cmd = [
+            sys.executable, '-m', 'examples.games.sustain_hub.run',
+            f'--num_sprints={cfg["num_sprints"]}',
+            f'--community_size={cfg["community_size"]}',
+            '--skip_backstory',
+            '--fast',
+            f'--output_dir={out_dir}',
+        ]
+
+        if FLAGS.vllm_url:
+            cmd.extend([
+                f'--model_name={FLAGS.model_name}',
+                f'--vllm_url={FLAGS.vllm_url}',
+            ])
+        else:
+            cmd.append('--use_mock')
+
+        if cfg['num_sprints'] < 3:
+            cmd.append('--noenable_stress')
+
+        t0 = time.time()
+        try:
+            result = subprocess.run(
+                cmd, capture_output=True, text=True, timeout=900,
+                cwd=REPO_ROOT,
+            )
+            duration = time.time() - t0
+        except subprocess.TimeoutExpired:
+            print(f'  [run {run_idx}] TIMEOUT after 900s')
+            all_metrics.append(_zero_metrics(900.0))
+            continue
+
+        if result.returncode != 0:
+            tail = (result.stderr or result.stdout or 'no output')[-500:]
+            print(f'  [run {run_idx}] CRASH ({duration:.0f}s): {tail[:200]}')
+            all_metrics.append(_zero_metrics(duration))
+            continue
+
+        results_path = os.path.join(out_dir, 'results.json')
+        if not os.path.exists(results_path):
+            print(f'  [run {run_idx}] no results.json')
+            all_metrics.append(_zero_metrics(duration))
+            continue
+
+        with open(results_path) as f:
+            data = json.load(f)
+
+        metrics = _compute_sustain_score(data)
+        metrics['duration'] = duration
+        metrics['status'] = 'ok'
+        all_metrics.append(metrics)
+        print(f'  [run {run_idx}] SS={metrics["sustain_score"]:.4f} '
+              f'HI={metrics["harmony_index"]:.4f} ({duration:.0f}s)')
+
+    ok = [m for m in all_metrics if m['status'] == 'ok']
+    if not ok:
+        return _zero_metrics(sum(m['duration'] for m in all_metrics))
+
+    def avg(key):
+        return sum(m[key] for m in ok) / len(ok)
+
+    return {
+        'sustain_score': avg('sustain_score'),
+        'harmony_index': avg('harmony_index'),
+        'resilience_quotient': avg('resilience_quotient'),
+        'fairness': avg('fairness'),
+        'strategy_diversity': avg('strategy_diversity'),
+        'stress_validity': avg('stress_validity'),
+        'duration': sum(m['duration'] for m in all_metrics),
+        'status': 'ok',
+    }
+
+
+def _zero_metrics(duration: float = 0.0) -> dict:
+    return {
+        'sustain_score': 0.0,
+        'harmony_index': 0.0,
+        'resilience_quotient': 0.0,
+        'fairness': 0.0,
+        'strategy_diversity': 0.0,
+        'stress_validity': 0.0,
+        'duration': duration,
+        'status': 'crash',
+    }
+
+
+def _compute_sustain_score(data: dict) -> dict:
+    """Compute the composite SustainScore from results.json data.
+
+    Mirrors evaluate.py's compute_sustain_score.
+    """
+    hi = data.get('harmony_index', 0.0)
+    rq = data.get('resilience_quotient', 0.0)
+    scores = data.get('scores', {})
+    sprint_history = data.get('sprint_history', [])
+
+    # Fairness (1 - Gini of agent scores)
+    fairness = _compute_fairness(scores)
+
+    # Strategy diversity
+    strategy_div = _compute_strategy_diversity(sprint_history)
+
+    # Stress validity
+    stress_validity = 1.0 if data.get('dropout_name') else 0.5
+
+    sustain_score = hi * (1 + rq) * fairness * strategy_div * stress_validity
+
+    return {
+        'sustain_score': sustain_score,
+        'harmony_index': hi,
+        'resilience_quotient': rq,
+        'fairness': fairness,
+        'strategy_diversity': strategy_div,
+        'stress_validity': stress_validity,
+    }
+
+
+def _compute_fairness(scores: dict) -> float:
+    if not scores:
+        return 1.0
+    values = sorted(scores.values())
+    n = len(values)
+    if n <= 1:
+        return 1.0
+    min_val = min(values)
+    shifted = [v - min_val for v in values]
+    total = sum(shifted)
+    if total == 0:
+        return 1.0
+    cumulative = 0.0
+    gini_sum = 0.0
+    for v in shifted:
+        cumulative += v
+        gini_sum += cumulative
+    gini = (2 * gini_sum) / (n * total) - (n + 1) / n
+    return max(0.0, 1.0 - gini)
+
+
+def _compute_strategy_diversity(sprint_history: list) -> float:
+    if len(sprint_history) < 2:
+        return 1.0
+    agents = set()
+    for sprint in sprint_history:
+        agents.update(sprint.get('joint_action', {}).keys())
+    if not agents:
+        return 0.0
+    changers = 0
+    for agent in agents:
+        tasks = []
+        for sprint in sprint_history:
+            task = sprint.get('joint_action', {}).get(agent)
+            if task:
+                tasks.append(task)
+        if len(tasks) >= 2 and len(set(tasks)) > 1:
+            changers += 1
+    return changers / len(agents)
+
+
+# ===================================================================
+# Results logging
+# ===================================================================
+
+TSV_HEADER = (
+    'timestamp\tcommit\tsustain_score\tharmony_index\tresilience_quotient'
+    '\tfairness\tstrategy_div\tstress_validity\tstatus\thypothesis\n'
+)
+
+
+def init_results_file(path: str) -> None:
+    if not os.path.exists(path):
+        with open(path, 'w') as f:
+            f.write(TSV_HEADER)
+
+
+def append_result(path: str, commit: str, metrics: dict,
+                  status: str, hypothesis: str) -> None:
+    ts = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    with open(path, 'a') as f:
+        f.write(
+            f'{ts}\t{commit}\t{metrics["sustain_score"]:.4f}'
+            f'\t{metrics["harmony_index"]:.4f}'
+            f'\t{metrics["resilience_quotient"]:.4f}'
+            f'\t{metrics["fairness"]:.4f}'
+            f'\t{metrics["strategy_diversity"]:.4f}'
+            f'\t{metrics["stress_validity"]:.4f}'
+            f'\t{status}\t{hypothesis}\n'
+        )
+
+
+def read_best_score(path: str) -> float:
+    """Read the best sustain_score from results.tsv among kept entries."""
+    if not os.path.exists(path):
+        return 0.0
+    best = 0.0
+    with open(path, 'r') as f:
+        for line in f:
+            if line.startswith('timestamp') or line.startswith('#'):
+                continue
+            parts = line.strip().split('\t')
+            if len(parts) < 9:
+                continue
+            try:
+                score = float(parts[2])
+                entry_status = parts[8]
+                if entry_status == 'keep' or entry_status == 'baseline':
+                    best = max(best, score)
+            except (ValueError, IndexError):
+                continue
+    return best
+
+
+def already_tested(path: str, hypothesis: str) -> bool:
+    """Check if a hypothesis description has already been tested."""
+    if not os.path.exists(path):
+        return False
+    with open(path, 'r') as f:
+        for line in f:
+            parts = line.strip().split('\t')
+            if len(parts) >= 10 and parts[9] == hypothesis:
+                return True
+    return False
+
+
+# ===================================================================
+# Variation registry
+# ===================================================================
+# Each variation is (hypothesis_description, apply_fn, revert_fn).
+# apply_fn modifies in-scope files and returns True if change was applied.
+# revert_fn is not needed because we git-reset on failure.
+
+def _build_variations() -> list[tuple[str, callable]]:
+    """Build the ordered list of (hypothesis, apply_function) variations."""
+    variations: list[tuple[str, callable]] = []
+
+    # -----------------------------------------------------------------
+    # Layer 1: Prompt Engineering
+    # -----------------------------------------------------------------
+
+    # --- CALL_TO_SPEECH variations ---
+    # Each resets to original first (git revert handles this), then applies new text.
+    # We use replace_block with regex to match multi-line Python string blocks.
+
+    _CALL_TO_SPEECH_RE = r'CALL_TO_SPEECH = \(\n.*?\n\)'
+
+    variations.append((
+        'L1: CALL_TO_SPEECH - add explicit trade-off framing',
+        lambda: replace_block(
+            SOCIAL_DATA_PATH,
+            _CALL_TO_SPEECH_RE,
+            'CALL_TO_SPEECH = (\n'
+            '    "What does {name} say during the sprint planning discussion? "\n'
+            '    "Consider the trade-off: taking your preferred task earns more, "\n'
+            '    "but neglected areas hurt the whole project. You can advocate "\n'
+            '    "for tasks, offer to help others, raise concerns, or negotiate."\n'
+            ')',
+        ),
+    ))
+
+    variations.append((
+        'L1: CALL_TO_SPEECH - add social pressure and past outcomes reference',
+        lambda: replace_block(
+            SOCIAL_DATA_PATH,
+            _CALL_TO_SPEECH_RE,
+            'CALL_TO_SPEECH = (\n'
+            '    "What does {name} say during the sprint planning discussion? "\n'
+            '    "Remember: last sprint some areas were neglected and the team "\n'
+            '    "noticed. Others are watching what you choose. Speak up about "\n'
+            '    "who should take what, offer help, or raise concerns."\n'
+            ')',
+        ),
+    ))
+
+    variations.append((
+        'L1: CALL_TO_SPEECH - concise action-oriented prompt',
+        lambda: replace_block(
+            SOCIAL_DATA_PATH,
+            _CALL_TO_SPEECH_RE,
+            'CALL_TO_SPEECH = (\n'
+            '    "{name}, the team needs to divide tasks fairly. What do you "\n'
+            '    "propose? Name a specific task you will take and explain why "\n'
+            '    "it is the best use of your skills for the project right now."\n'
+            ')',
+        ),
+    ))
+
+    # --- DECISION_PREMISE variations ---
+
+    _DECISION_PREMISE_RE = r'DECISION_PREMISE = \(\n.*?\n\)'
+
+    variations.append((
+        'L1: DECISION_PREMISE - add coverage awareness',
+        lambda: replace_block(
+            SOCIAL_DATA_PATH,
+            _DECISION_PREMISE_RE,
+            'DECISION_PREMISE = (\n'
+            '    "{name} must choose a task for this sprint. Think carefully: "\n'
+            '    "which task types are already covered by others, and which are "\n'
+            '    "neglected? Picking a neglected area helps the project even if "\n'
+            '    "it is not your specialty. Weigh personal reward against "\n'
+            '    "collective need."\n'
+            ')',
+        ),
+    ))
+
+    variations.append((
+        'L1: DECISION_PREMISE - emphasize long-term project health',
+        lambda: replace_block(
+            SOCIAL_DATA_PATH,
+            _DECISION_PREMISE_RE,
+            'DECISION_PREMISE = (\n'
+            '    "{name} must choose a task. The Harmony Index reflects the "\n'
+            '    "project\'s long-term sustainability -- if it drops below 0.6, "\n'
+            '    "the project is at risk. Balance your strengths against what "\n'
+            '    "the project desperately needs right now."\n'
+            ')',
+        ),
+    ))
+
+    # --- SPRINT_PREMISES variations ---
+    # Match the first sprint premise tuple in SPRINT_PREMISES list
+
+    _SPRINT_PREMISE_1_RE = (
+        r'("Sprint \{sprint_num\} begins\. The community health dashboard shows "\s*\n'
+        r'\s*"\{health_status\}\. There are \{num_tasks\} tasks waiting: \{task_summary\}\. "\s*\n'
+        r'\s*"Some tasks are urgent but unglamorous; others are exciting but can wait\.")'
+    )
+
+    variations.append((
+        'L1: SPRINT_PREMISES - add urgency and accountability framing',
+        lambda: replace_block(
+            SOCIAL_DATA_PATH,
+            _SPRINT_PREMISE_1_RE,
+            '"Sprint {sprint_num} begins. The community health dashboard shows "\n'
+            '        "{health_status}. There are {num_tasks} tasks waiting: {task_summary}. "\n'
+            '        "The maintainers have flagged that unaddressed bug fixes and docs "\n'
+            '        "are causing user churn. Every contributor\'s choices will be visible to the team."',
+        ),
+    ))
+
+    # -----------------------------------------------------------------
+    # Layer 2: Reward Shaping
+    # -----------------------------------------------------------------
+
+    reward_ratios = [
+        ('4:1', '4.0', '1.0'),
+        ('2:1', '2.0', '1.0'),
+        ('1.5:1', '1.5', '1.0'),
+        ('1:1', '1.0', '1.0'),
+        ('3:2', '3.0', '2.0'),
+    ]
+
+    for label, pref, nonpref in reward_ratios:
+        # We always start from the default values since git revert restores them
+        variations.append((
+            f'L2: Reward ratio {label} (preferred={pref}, nonpreferred={nonpref})',
+            _make_reward_variation(pref, nonpref),
+        ))
+
+    # Failure penalty variations
+    variations.append((
+        'L2: Softer failure penalty (-0.5 instead of -1.0)',
+        lambda: _apply_failure_penalty('-0.5'),
+    ))
+    variations.append((
+        'L2: Harsher failure penalty (-2.0 instead of -1.0)',
+        lambda: _apply_failure_penalty('-2.0'),
+    ))
+
+    # -----------------------------------------------------------------
+    # Layer 3: Simulation Mechanics
+    # -----------------------------------------------------------------
+
+    # HI alpha variations
+    for alpha_val in ['0.4', '0.5', '0.7', '0.8']:
+        variations.append((
+            f'L3: HI formula alpha={alpha_val} (default 0.6)',
+            _make_alpha_variation(alpha_val),
+        ))
+
+    # Coverage bonus: add a bonus when all task types are covered
+    variations.append((
+        'L3: Add coverage bonus (+0.5 to all agents when all 4 task types covered)',
+        _apply_coverage_bonus,
+    ))
+
+    # Overload penalty variation
+    variations.append((
+        'L3: Increase overload penalty (0.2 per extra person instead of 0.1)',
+        lambda: replace_in_file(
+            SIMULATION_PATH,
+            'overload_penalty = max(0.0, (num_on_task - 2) * 0.1)',
+            'overload_penalty = max(0.0, (num_on_task - 2) * 0.2)',
+        ),
+    ))
+
+    variations.append((
+        'L3: Remove overload penalty entirely',
+        lambda: replace_in_file(
+            SIMULATION_PATH,
+            'overload_penalty = max(0.0, (num_on_task - 2) * 0.1)',
+            'overload_penalty = 0.0  # disabled',
+        ),
+    ))
+
+    # -----------------------------------------------------------------
+    # Layer 4: Agent Design (backstory emphasis)
+    # -----------------------------------------------------------------
+
+    # Backstory replacements use regex to match the multi-line Python strings.
+    # Each pattern captures the full backstory block for one character.
+
+    variations.append((
+        'L4: Priya backstory - emphasize mentoring and collective responsibility',
+        lambda: replace_block(
+            SOCIAL_DATA_PATH,
+            r'("Priya has been contributing to open-source projects for six years\. ".*?"project\'s long-term health depends on steady, unglamorous work\.")',
+            '"Priya has been contributing to open-source projects for six years. "\n'
+            '            "She deeply believes that the project only survives if everyone "\n'
+            '            "sometimes sacrifices their preferred work for the collective good. "\n'
+            '            "She actively mentors newcomers and lobbies the team to cover "\n'
+            '            "neglected areas like documentation and bug fixes before features."',
+        ),
+    ))
+
+    variations.append((
+        'L4: Anya backstory - increase willingness to do non-preferred tasks',
+        lambda: replace_block(
+            SOCIAL_DATA_PATH,
+            r'("Anya is a machine-learning researcher at a university who ".*?"championed the new plugin architecture that others now rely on\.")',
+            '"Anya is a machine-learning researcher who contributes to "\n'
+            '            "SustainHub. While she prefers feature work, she has recently "\n'
+            '            "realized that the project cannot grow without solid foundations. "\n'
+            '            "She has started volunteering for bug fixes and reviews when "\n'
+            '            "she sees those areas are neglected, setting an example for others."',
+        ),
+    ))
+
+    variations.append((
+        'L4: Raj backstory - less burnout framing, more leadership emphasis',
+        lambda: replace_block(
+            SOCIAL_DATA_PATH,
+            r'("Raj is one of the original maintainers of SustainHub\. He has ".*?"reviews under pressure, which he privately regrets\.")',
+            '"Raj is one of the original maintainers of SustainHub. He has "\n'
+            '            "mass merge authority and is responsible for release management. "\n'
+            '            "He leads by example: when he sees neglected areas, he takes "\n'
+            '            "them on himself and encourages others to do the same. He "\n'
+            '            "prioritizes project health over personal convenience."',
+        ),
+    ))
+
+    return variations
+
+
+def _make_reward_variation(pref: str, nonpref: str):
+    """Factory for reward-ratio variations."""
+    def apply_fn():
+        content = read_file(SOCIAL_DATA_PATH)
+        content = re.sub(
+            r'REWARD_PREFERRED_SUCCESS = [\d.]+',
+            f'REWARD_PREFERRED_SUCCESS = {pref}',
+            content,
+        )
+        content = re.sub(
+            r'REWARD_NONPREFERRED_SUCCESS = [\d.]+',
+            f'REWARD_NONPREFERRED_SUCCESS = {nonpref}',
+            content,
+        )
+        write_file(SOCIAL_DATA_PATH, content)
+        return True
+    return apply_fn
+
+
+def _apply_failure_penalty(penalty: str):
+    content = read_file(SOCIAL_DATA_PATH)
+    content = re.sub(
+        r'REWARD_PREFERRED_FAILURE = -[\d.]+',
+        f'REWARD_PREFERRED_FAILURE = {penalty}',
+        content,
+    )
+    content = re.sub(
+        r'REWARD_NONPREFERRED_FAILURE = -[\d.]+',
+        f'REWARD_NONPREFERRED_FAILURE = {penalty}',
+        content,
+    )
+    write_file(SOCIAL_DATA_PATH, content)
+    return True
+
+
+def _make_alpha_variation(alpha_val: str):
+    """Factory for HI alpha variations."""
+    def apply_fn():
+        return replace_in_file(
+            SIMULATION_PATH,
+            'alpha: float = 0.6',
+            f'alpha: float = {alpha_val}',
+        )
+    return apply_fn
+
+
+def _apply_coverage_bonus():
+    """Add a coverage bonus in the payoff engine's action_to_scores."""
+    target = (
+        "    # Record sprint results\n"
+        "    self._sprint_history.append({"
+    )
+    replacement = (
+        "    # Coverage bonus: reward all agents when all 4 task types are addressed\n"
+        "    addressed_types = set()\n"
+        "    for t in joint_action.values():\n"
+        "      tt = self._task_type_map.get(t, 'unknown')\n"
+        "      if tt != 'unknown':\n"
+        "        addressed_types.add(tt)\n"
+        "    if len(addressed_types) >= 4:\n"
+        "      for player in scores:\n"
+        "        scores[player] += 0.5\n"
+        "        self._cumulative_scores[player] += 0.5\n"
+        "\n"
+        "    # Record sprint results\n"
+        "    self._sprint_history.append({"
+    )
+    return replace_in_file(SIMULATION_PATH, target, replacement)
+
+
+# ===================================================================
+# Main loop
+# ===================================================================
+
+def print_banner(msg: str) -> None:
+    print(f'\n{"=" * 60}')
+    print(f'  {msg}')
+    print(f'{"=" * 60}')
+
+
+def main(argv):
+    del argv
+
+    results_path = os.path.join(REPO_ROOT, FLAGS.results_file)
+    init_results_file(results_path)
+
+    # Verify git state
+    if not git_is_clean():
+        # Try to stash or warn
+        print('WARNING: Working tree is not clean. Attempting to continue...')
+        r = git('status', '--porcelain')
+        print(r.stdout[:500])
+
+    # Build variation list
+    all_variations = _build_variations()
+
+    # Filter by start_layer
+    if FLAGS.start_layer > 1:
+        filtered = []
+        for h, fn in all_variations:
+            layer_num = int(h[1]) if h[0] == 'L' and h[1].isdigit() else 0
+            if layer_num >= FLAGS.start_layer:
+                filtered.append((h, fn))
+        all_variations = filtered
+
+    print_banner('SustainHub Autoresearch Loop')
+    print(f'  Tier:           {FLAGS.tier} ({TIER_CONFIGS[FLAGS.tier]})')
+    print(f'  Variations:     {len(all_variations)}')
+    print(f'  Max iterations: {FLAGS.max_iterations}')
+    print(f'  Results file:   {results_path}')
+    print(f'  LLM backend:    {"vLLM @ " + FLAGS.vllm_url if FLAGS.vllm_url else "mock"}')
+    print(f'  Dry run:        {FLAGS.dry_run}')
+
+    if FLAGS.dry_run:
+        print('\n--- Variation Registry ---')
+        for i, (hyp, _) in enumerate(all_variations):
+            print(f'  [{i+1:3d}] {hyp}')
+        print(f'\nTotal: {len(all_variations)} variations.')
+        return
+
+    # -----------------------------------------------------------------
+    # Step 0: Baseline
+    # -----------------------------------------------------------------
+    best_score = read_best_score(results_path)
+
+    if not FLAGS.skip_baseline and best_score == 0.0:
+        print_banner('Running baseline (no changes)')
+        baseline_metrics = run_experiment(FLAGS.tier)
+        best_score = baseline_metrics['sustain_score']
+        commit_hash = git_short_hash()
+        append_result(results_path, commit_hash, baseline_metrics,
+                      'baseline', 'baseline (no changes)')
+        print(f'  Baseline SustainScore: {best_score:.4f}')
+    else:
+        print(f'  Resuming with best score: {best_score:.4f}')
+
+    # -----------------------------------------------------------------
+    # Main loop
+    # -----------------------------------------------------------------
+    iteration = 0
+    kept = 0
+    reverted = 0
+
+    for hyp_desc, apply_fn in all_variations:
+        if iteration >= FLAGS.max_iterations:
+            break
+
+        # Skip already-tested hypotheses (resume support)
+        if already_tested(results_path, hyp_desc):
+            print(f'\n  [skip] Already tested: {hyp_desc}')
+            continue
+
+        iteration += 1
+        print_banner(f'Iteration {iteration}/{FLAGS.max_iterations}')
+        print(f'  Hypothesis: {hyp_desc}')
+        print(f'  Best so far: {best_score:.4f}')
+
+        # Step 1: Verify clean state
+        if not git_is_clean():
+            print('  ERROR: working tree dirty, reverting...')
+            git('checkout', '--', '.')
+            if not git_is_clean():
+                print('  FATAL: cannot clean working tree. Stopping.')
+                break
+
+        # Step 2: Apply variation
+        try:
+            result = apply_fn()
+            if result is False:
+                print('  Variation could not be applied (pattern not found). Skipping.')
+                append_result(results_path, git_short_hash(), _zero_metrics(),
+                              'skip', hyp_desc)
+                continue
+        except Exception as e:
+            print(f'  ERROR applying variation: {e}')
+            git('checkout', '--', '.')
+            append_result(results_path, git_short_hash(), _zero_metrics(),
+                          'error', hyp_desc)
+            continue
+
+        # Step 3: Commit
+        try:
+            commit_msg = f'autoresearch: {hyp_desc}'
+            commit_hash = git_commit(commit_msg)
+            print(f'  Committed: {commit_hash}')
+        except subprocess.CalledProcessError as e:
+            print(f'  ERROR committing: {e.stderr[:200] if e.stderr else e}')
+            git('checkout', '--', '.')
+            continue
+
+        # Step 4: Run experiment
+        print(f'  Running Tier {FLAGS.tier} experiment...')
+        t0 = time.time()
+        try:
+            metrics = run_experiment(FLAGS.tier)
+        except Exception as e:
+            print(f'  EXPERIMENT CRASHED: {e}')
+            metrics = _zero_metrics(time.time() - t0)
+
+        score = metrics['sustain_score']
+        delta = score - best_score
+        duration = metrics.get('duration', 0.0)
+
+        # Step 5: Decide keep or revert
+        if score > best_score:
+            status = 'keep'
+            best_score = score
+            kept += 1
+            decision = f'KEEP (delta=+{delta:.4f})'
+        else:
+            status = 'revert'
+            reverted += 1
+            decision = f'REVERT (delta={delta:.4f})'
+            git_revert()
+
+        # Step 6: Log
+        append_result(results_path, commit_hash, metrics, status, hyp_desc)
+
+        print(f'  Score:    {score:.4f}  (best: {best_score:.4f})')
+        print(f'  Delta:    {delta:+.4f}')
+        print(f'  Decision: {decision}')
+        print(f'  Duration: {duration:.0f}s')
+        print(f'  Running tally: {kept} kept, {reverted} reverted')
+
+    # -----------------------------------------------------------------
+    # Summary
+    # -----------------------------------------------------------------
+    print_banner('Autoresearch Complete')
+    print(f'  Iterations:  {iteration}')
+    print(f'  Kept:        {kept}')
+    print(f'  Reverted:    {reverted}')
+    print(f'  Best score:  {best_score:.4f}')
+    print(f'  Results:     {results_path}')
+
+
+if __name__ == '__main__':
+    app.run(main)
