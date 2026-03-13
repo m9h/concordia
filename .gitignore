@@ -26,3 +26,5 @@ __pycache__/
 
 # Type checking
 .pytype
+results.tsv
+uv.lock
