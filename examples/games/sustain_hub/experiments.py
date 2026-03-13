@@ -82,6 +82,12 @@ flags.DEFINE_string(
 flags.DEFINE_bool(
     'use_mock', False,
     'Use a mock LLM for testing Level 7 without a real model.')
+flags.DEFINE_bool(
+    'ostrom', False,
+    'Run Ostrom comparison: Level 4 with vs. without Ostrom priors.')
+flags.DEFINE_string(
+    'ostrom_principles', None,
+    'Comma-separated Ostrom principles to test (default: all 8).')
 
 
 # =============================================================================
@@ -871,8 +877,95 @@ def ladder_results_to_evaluate_schema(ladder_result: dict) -> dict:
     }
 
 
+def apply_ostrom_to_runner(
+    runner: 'ExperimentRunner',
+    principles: list[str] | None = None,
+) -> None:
+    """Apply Ostrom priors to all agents in an experiment runner."""
+    for agent in runner.agents:
+        aif.apply_ostrom_priors(agent, principles)
+
+
+def run_ostrom_comparison(
+    num_sprints: int,
+    seed: int,
+    principles: list[str] | None = None,
+) -> tuple[dict, dict]:
+    """Run Level 4 (EFE) with and without Ostrom priors.
+
+    Returns (baseline_result, ostrom_result).
+    """
+    level = EXPERIMENT_LEVELS[4]  # Level 4: Expected Free Energy
+
+    # Baseline
+    runner_base = ExperimentRunner(
+        level=level,
+        num_agents=6,
+        num_sprints=num_sprints,
+        seed=seed,
+    )
+    result_base = runner_base.run()
+
+    # With Ostrom priors
+    runner_ostrom = ExperimentRunner(
+        level=level,
+        num_agents=6,
+        num_sprints=num_sprints,
+        seed=seed,
+    )
+    apply_ostrom_to_runner(runner_ostrom, principles)
+    result_ostrom = runner_ostrom.run()
+
+    return result_base, result_ostrom
+
+
+def print_ostrom_comparison(
+    result_base: dict, result_ostrom: dict,
+) -> None:
+    """Print a comparison table for Ostrom priors."""
+    print(f"\n{'=' * 60}")
+    print('OSTROM PRIORS COMPARISON (Level 4: EFE)')
+    print(f"{'=' * 60}")
+    metrics = [
+        ('Mean HI', 'mean_hi'),
+        ('Coverage', 'mean_coverage'),
+        ('Diversity', 'mean_diversity'),
+        ('Strategy Div', 'strategy_diversity'),
+    ]
+    print(f"  {'Metric':<18} {'Baseline':>10} {'Ostrom':>10} {'Delta':>10}")
+    print(f"  {'-' * 48}")
+    for label, key in metrics:
+        base_val = result_base.get(key, 0.0)
+        ostrom_val = result_ostrom.get(key, 0.0)
+        delta = ostrom_val - base_val
+        pct = (delta / base_val * 100) if base_val != 0 else 0.0
+        print(f"  {label:<18} {base_val:>10.4f} {ostrom_val:>10.4f} {delta:>+10.4f} ({pct:+.1f}%)")
+
+
 def main(argv):
     del argv
+
+    # Handle Ostrom comparison mode
+    if FLAGS.ostrom:
+        principles = None
+        if FLAGS.ostrom_principles:
+            principles = [p.strip() for p in FLAGS.ostrom_principles.split(',')]
+        result_base, result_ostrom = run_ostrom_comparison(
+            num_sprints=FLAGS.num_sprints,
+            seed=FLAGS.seed,
+            principles=principles,
+        )
+        print_ostrom_comparison(result_base, result_ostrom)
+        # Save results
+        os.makedirs(FLAGS.output_dir, exist_ok=True)
+        ostrom_file = os.path.join(FLAGS.output_dir, 'ostrom_comparison.json')
+        with open(ostrom_file, 'w') as f:
+            json.dump({
+                'baseline': result_base,
+                'ostrom': result_ostrom,
+            }, f, indent=2, default=str)
+        print(f'\nOstrom comparison saved to {ostrom_file}')
+        return
 
     # Parse level specification
     if FLAGS.level.lower() == 'all':

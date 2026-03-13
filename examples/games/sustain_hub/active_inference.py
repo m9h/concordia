@@ -822,6 +822,179 @@ def format_aif_context_for_llm(agent: ActiveInferenceAgent) -> str:
 
 
 # =============================================================================
+# Ostrom Design Principles as Bayesian Priors
+# =============================================================================
+
+OSTROM_PRINCIPLES = [
+    'clear_boundaries',        # 1. Clearly defined boundaries
+    'congruent_rules',         # 2. Rules match local conditions
+    'collective_choice',       # 3. Those affected participate in rule-making
+    'monitoring',              # 4. Monitors accountable to appropriators
+    'graduated_sanctions',     # 5. Graduated sanctions for violations
+    'conflict_resolution',     # 6. Low-cost conflict resolution
+    'self_governance',         # 7. Right to organize recognized by authorities
+    'nested_enterprises',      # 8. Nested governance for larger systems
+]
+
+
+def build_ostrom_priors(
+    principles: Sequence[str] | None = None,
+) -> dict[str, dict[str, Any]]:
+    """Build matrix modifiers encoding Ostrom's Design Principles.
+
+    Each principle maps to specific modifications of the A/B/C/D/E matrices.
+    When applied to an ActiveInferenceAgent, these encode the hypothesis that
+    Ostrom's empirical governance principles correspond to Bayesian priors
+    that minimize social free energy.
+
+    Args:
+        principles: Which principles to include. If None, all 8 are used.
+
+    Returns:
+        Dict mapping principle_name -> dict of matrix modifiers.
+        Each modifier dict has keys like 'D_health_shift', 'C_hi_boost', etc.
+    """
+    if principles is None:
+        principles = OSTROM_PRINCIPLES
+
+    modifiers = {}
+    for p in principles:
+        if p not in OSTROM_PRINCIPLES:
+            raise ValueError(f'Unknown Ostrom principle: {p}')
+
+        mod: dict[str, Any] = {}
+
+        if p == 'clear_boundaries':
+            # Agents with clear boundary awareness have more precise observations
+            # (better A matrix) — they can distinguish health states more reliably
+            mod['A_precision_boost'] = 0.3
+
+        elif p == 'congruent_rules':
+            # Rules matching local conditions → better transition model
+            # The B matrix more accurately predicts state changes
+            mod['B_precision_boost'] = 0.2
+
+        elif p == 'collective_choice':
+            # Participation in rule-making → preference for high HI
+            # Agents care more about community outcomes
+            mod['C_hi_boost'] = 0.5
+
+        elif p == 'monitoring':
+            # Monitoring → sharper observation model (A matrix)
+            # and aversion to low HI (detected problems get fixed)
+            mod['A_precision_boost'] = 0.2
+            mod['C_low_hi_aversion'] = -0.5
+
+        elif p == 'graduated_sanctions':
+            # Graduated sanctions → stronger habit toward cooperative actions
+            # and aversion to skipping
+            mod['E_skip_penalty'] = -0.5
+            mod['E_coop_boost'] = 0.3
+
+        elif p == 'conflict_resolution':
+            # Conflict resolution → more exploratory (lower precision, gamma)
+            # because agents trust the system to recover from mistakes
+            mod['gamma_reduction'] = -0.5
+
+        elif p == 'self_governance':
+            # Self-governance → stronger D prior toward healthy state
+            # (belief that community can manage itself)
+            mod['D_health_shift'] = np.array([0.3, 0.0, -0.2])
+
+        elif p == 'nested_enterprises':
+            # Nested governance → better B matrix for stress recovery
+            # (stressed → healthy transitions more probable)
+            mod['B_recovery_boost'] = 0.3
+
+        modifiers[p] = mod
+
+    return modifiers
+
+
+def apply_ostrom_priors(
+    agent: 'ActiveInferenceAgent',
+    principles: Sequence[str] | None = None,
+) -> None:
+    """Apply Ostrom-derived priors to an ActiveInferenceAgent in-place.
+
+    This is the key function for the Ostrom-Bayesian hypothesis test:
+    agents with Ostrom priors should show better long-term cooperation
+    and resilience, even if short-term HI dips due to exploration.
+
+    Args:
+        agent: The agent to modify.
+        principles: Which principles to apply. None = all 8.
+    """
+    modifiers = build_ostrom_priors(principles)
+
+    for _principle_name, mod in modifiers.items():
+
+        # A matrix precision boosts: sharpen observation model
+        if 'A_precision_boost' in mod:
+            boost = mod['A_precision_boost']
+            for m in range(len(agent.A)):
+                # Increase diagonal entries (correct observations)
+                for i in range(min(agent.A[m].shape[0], agent.A[m].shape[1])):
+                    agent.A[m][i, i] += boost
+                # Renormalize columns
+                for col in range(agent.A[m].shape[1]):
+                    agent.A[m][:, col] /= agent.A[m][:, col].sum()
+
+        # B matrix precision boosts: better state predictions
+        if 'B_precision_boost' in mod:
+            boost = mod['B_precision_boost']
+            for f in range(len(agent.B)):
+                for a in range(agent.B[f].shape[2]):
+                    for i in range(min(agent.B[f].shape[0], agent.B[f].shape[1])):
+                        agent.B[f][i, i, a] += boost
+                    for col in range(agent.B[f].shape[1]):
+                        agent.B[f][:, col, a] /= agent.B[f][:, col, a].sum()
+
+        # B matrix recovery boost: stressed→healthy more probable
+        if 'B_recovery_boost' in mod:
+            boost = mod['B_recovery_boost']
+            for f in range(len(agent.B)):
+                if agent.B[f].shape[0] >= 2:
+                    for a in range(agent.B[f].shape[2]):
+                        # stressed (1) → healthy (0) transition
+                        agent.B[f][0, 1, a] += boost
+                        for col in range(agent.B[f].shape[1]):
+                            agent.B[f][:, col, a] /= agent.B[f][:, col, a].sum()
+
+        # C matrix boosts
+        if 'C_hi_boost' in mod:
+            agent.C[0][0] += mod['C_hi_boost']  # prefer high HI more
+        if 'C_low_hi_aversion' in mod:
+            agent.C[0][-1] += mod['C_low_hi_aversion']  # avert low HI more
+
+        # D matrix health shift
+        if 'D_health_shift' in mod:
+            shift = mod['D_health_shift']
+            agent.D[0] = agent.D[0] + shift[:len(agent.D[0])]
+            agent.D[0] = np.maximum(agent.D[0], 0.01)
+            agent.D[0] /= agent.D[0].sum()
+
+        # E matrix (habit) adjustments
+        if 'E_skip_penalty' in mod:
+            skip_idx = ACTIONS.index('skip')
+            agent.E[skip_idx] += mod['E_skip_penalty']
+            agent.E = np.maximum(agent.E, 0.01)
+            agent.E /= agent.E.sum()
+        if 'E_coop_boost' in mod:
+            boost = mod['E_coop_boost']
+            coop_actions = ['bug_fix', 'code_review', 'documentation']
+            for act in coop_actions:
+                if act in ACTIONS:
+                    agent.E[ACTIONS.index(act)] += boost
+            agent.E = np.maximum(agent.E, 0.01)
+            agent.E /= agent.E.sum()
+
+        # Gamma adjustment
+        if 'gamma_reduction' in mod:
+            agent.gamma = max(0.5, agent.gamma + mod['gamma_reduction'])
+
+
+# =============================================================================
 # Utility Functions
 # =============================================================================
 
