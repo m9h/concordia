@@ -867,44 +867,44 @@ def build_ostrom_priors(
         if p == 'clear_boundaries':
             # Agents with clear boundary awareness have more precise observations
             # (better A matrix) — they can distinguish health states more reliably
-            mod['A_precision_boost'] = 0.3
+            mod['A_precision_boost'] = 0.02
 
         elif p == 'congruent_rules':
             # Rules matching local conditions → better transition model
             # The B matrix more accurately predicts state changes
-            mod['B_precision_boost'] = 0.2
+            mod['B_precision_boost'] = 0.02
 
         elif p == 'collective_choice':
             # Participation in rule-making → preference for high HI
             # Agents care more about community outcomes
-            mod['C_hi_boost'] = 0.5
+            mod['C_hi_boost'] = 0.05
 
         elif p == 'monitoring':
             # Monitoring → sharper observation model (A matrix)
             # and aversion to low HI (detected problems get fixed)
-            mod['A_precision_boost'] = 0.2
-            mod['C_low_hi_aversion'] = -0.5
+            mod['A_precision_boost'] = 0.02
+            mod['C_low_hi_aversion'] = -0.05
 
         elif p == 'graduated_sanctions':
             # Graduated sanctions → stronger habit toward cooperative actions
             # and aversion to skipping
-            mod['E_skip_penalty'] = -0.5
-            mod['E_coop_boost'] = 0.3
+            mod['E_skip_penalty'] = -0.03
+            mod['E_coop_boost'] = 0.03
 
         elif p == 'conflict_resolution':
             # Conflict resolution → more exploratory (lower precision, gamma)
             # because agents trust the system to recover from mistakes
-            mod['gamma_reduction'] = -0.5
+            mod['gamma_reduction'] = -0.05
 
         elif p == 'self_governance':
             # Self-governance → stronger D prior toward healthy state
             # (belief that community can manage itself)
-            mod['D_health_shift'] = np.array([0.3, 0.0, -0.2])
+            mod['D_health_shift'] = np.array([0.03, 0.0, -0.02])
 
         elif p == 'nested_enterprises':
             # Nested governance → better B matrix for stress recovery
             # (stressed → healthy transitions more probable)
-            mod['B_recovery_boost'] = 0.3
+            mod['B_recovery_boost'] = 0.03
 
         modifiers[p] = mod
 
@@ -991,7 +991,7 @@ def apply_ostrom_priors(
 
         # Gamma adjustment
         if 'gamma_reduction' in mod:
-            agent.gamma = max(0.5, agent.gamma + mod['gamma_reduction'])
+            agent.gamma = max(0.3, agent.gamma + mod['gamma_reduction'])
 
 
 # =============================================================================

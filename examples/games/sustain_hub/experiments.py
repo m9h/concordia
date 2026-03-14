@@ -83,6 +83,10 @@ flags.DEFINE_bool(
     'use_mock', False,
     'Use a mock LLM for testing Level 7 without a real model.')
 flags.DEFINE_bool(
+    'enable_stress', False,
+    'Enable stress events (contributor dropout at sprint 2, security crisis '
+    'at sprint 4) to test resilience.')
+flags.DEFINE_bool(
     'ostrom', False,
     'Run Ostrom comparison: Level 4 with vs. without Ostrom priors.')
 flags.DEFINE_string(
@@ -270,9 +274,11 @@ class ExperimentRunner:
         num_sprints: int = 3,
         seed: int = 42,
         llm_model: Any = None,
+        enable_stress: bool = False,
     ):
         self.level = level
         self.num_sprints = num_sprints
+        self.enable_stress = enable_stress
         self.rng = np.random.RandomState(seed)
 
         # LLM model for Level 7 (None for levels 0-6)
@@ -335,8 +341,13 @@ class ExperimentRunner:
         self.true_health = 0  # 0=healthy, 1=stressed, 2=declining
         self.true_urgency = 0  # 0=balanced, 1=bugs, 2=docs, 3=review
 
-        # Stress schedule: stress hits at sprint 2 and 4
-        self.stress_sprints = {2, 4} if num_sprints >= 3 else set()
+        # Stress schedule: stress hits at sprint 2 and 4 (only if enabled)
+        self.stress_sprints: set[int] = set()
+        if enable_stress:
+            if num_sprints >= 3:
+                self.stress_sprints.add(2)
+            if num_sprints >= 5:
+                self.stress_sprints.add(4)
 
         # Available tasks per sprint (not all types always available)
         self.available_tasks: list[str] = list(aif.ACTIONS[:4])
@@ -890,6 +901,7 @@ def run_ostrom_comparison(
     num_sprints: int,
     seed: int,
     principles: list[str] | None = None,
+    enable_stress: bool = False,
 ) -> tuple[dict, dict]:
     """Run Level 4 (EFE) with and without Ostrom priors.
 
@@ -903,6 +915,7 @@ def run_ostrom_comparison(
         num_agents=6,
         num_sprints=num_sprints,
         seed=seed,
+        enable_stress=enable_stress,
     )
     result_base = runner_base.run()
 
@@ -912,6 +925,7 @@ def run_ostrom_comparison(
         num_agents=6,
         num_sprints=num_sprints,
         seed=seed,
+        enable_stress=enable_stress,
     )
     apply_ostrom_to_runner(runner_ostrom, principles)
     result_ostrom = runner_ostrom.run()
@@ -954,6 +968,7 @@ def main(argv):
             num_sprints=FLAGS.num_sprints,
             seed=FLAGS.seed,
             principles=principles,
+            enable_stress=FLAGS.enable_stress,
         )
         print_ostrom_comparison(result_base, result_ostrom)
         # Save results
