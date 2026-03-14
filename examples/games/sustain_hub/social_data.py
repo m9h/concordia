@@ -363,6 +363,53 @@ STRESS_SCENARIOS = {
         "onboarding and mentorship. Helping them now means less time for "
         "your own tasks, but ignoring them risks losing future contributors."
     ),
+    "funding_cut": (
+        "SustainHub's primary sponsor has reduced funding by 60%. The team "
+        "must now decide: cut features, reduce quality standards, or find "
+        "ways to do more with less. There is real tension about priorities."
+    ),
+    "fork_threat": (
+        "A group of frustrated contributors has publicly discussed forking "
+        "the project. They claim the maintainers are ignoring community "
+        "input. Doing documentation and reviews to address their concerns "
+        "would help, but takes time away from feature work."
+    ),
+    "dependency_crisis": (
+        "A critical upstream dependency has been deprecated with no "
+        "migration path. Bug fixes and code reviews are urgently needed to "
+        "replace it. Anyone who skips this sprint is leaving the burden to "
+        "others, and the project may not survive another sprint without a fix."
+    ),
+}
+
+# Stress mechanic modifiers: how each stress type changes the reward structure
+STRESS_MECHANICS = {
+    "contributor_dropout": {
+        "coverage_penalty": -1.5,
+        "skip_penalty": -2.0,
+    },
+    "task_overload": {
+        "nonpreferred_bonus": 1.0,
+        "overload_threshold": 1,
+    },
+    "newcomer_influx": {
+        "doc_review_bonus": 1.5,
+        "feature_penalty": -0.5,
+    },
+    "funding_cut": {
+        "reward_multiplier": 0.5,
+        "skip_penalty": -1.0,
+    },
+    "fork_threat": {
+        "doc_review_bonus": 2.0,
+        "feature_penalty": -1.0,
+    },
+    "dependency_crisis": {
+        "bugfix_bonus": 2.0,
+        "review_bonus": 1.0,
+        "skip_penalty": -3.0,
+        "feature_penalty": -1.5,
+    },
 }
 
 # =============================================================================
