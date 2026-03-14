@@ -23,6 +23,7 @@ from examples.games.sustain_hub import simulation
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string('model_name', 'gemini-2.0-flash', 'Name of the LLM to use.')
+flags.DEFINE_integer('seed', 42, 'Random seed for reproducibility.')
 flags.DEFINE_string('api_key', None, 'API key (or set GEMINI_API_KEY env var).')
 flags.DEFINE_string(
     'output_dir', '/tmp/sustain_hub_results', 'Directory for output files.'
@@ -121,6 +122,7 @@ def main(argv):
       model=model,
       embedder=embedder,
       num_sprints=FLAGS.num_sprints,
+      seed=FLAGS.seed,
       enable_stress=FLAGS.enable_stress,
       community_size=FLAGS.community_size,
       skip_backstory=FLAGS.skip_backstory,

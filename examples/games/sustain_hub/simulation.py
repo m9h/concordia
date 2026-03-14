@@ -1120,6 +1120,7 @@ def run_simulation(
     inject_aif_context = use_active_inference
 
   seed = seed if seed is not None else random.getrandbits(63)
+  random.seed(seed)
   rng = random.Random(seed)
 
   # Select agents
