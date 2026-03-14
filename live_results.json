@@ -1,67 +1,242 @@
 {
   "scores": {
-    "Xavier": 3.0,
-    "Chen": 1.0,
-    "Anya": 3.0,
-    "Priya": 0.0
+    "Raj": 13.0,
+    "Hiroshi": 7.0,
+    "Marcus": 3.0,
+    "Yuki": 7.0,
+    "Elena": 5.0,
+    "Chen": 7.0,
+    "Priya": 13.0,
+    "Heidi": 15.0
   },
-  "harmony_index": 0.7666666666666667,
+  "harmony_index": 0.75,
   "resilience_quotient": 1.0,
   "sprint_history": [
     {
       "joint_action": {
-        "Xavier": "Fix: Incorrect timezone handling in the scheduler module.",
-        "Chen": "Docs: Add API reference for the new plugin architecture.",
-        "Anya": "Feature: Add dark mode toggle with persistent user preference.",
-        "Priya": "Skip this sprint"
+        "Raj": "Review: Evaluate the dependency update PR for breaking changes.",
+        "Hiroshi": "Fix: Authentication token refresh fails silently after 24 hours.",
+        "Marcus": "Fix: Authentication token refresh fails silently after 24 hours.",
+        "Yuki": "Review: Evaluate the dependency update PR for breaking changes.",
+        "Elena": "Docs: Document the CI/CD pipeline and release process.",
+        "Chen": "Review: Evaluate the dependency update PR for breaking changes.",
+        "Priya": "Fix: Authentication token refresh fails silently after 24 hours.",
+        "Heidi": "Docs: Document the CI/CD pipeline and release process."
       },
       "scores": {
-        "Xavier": 3.0,
-        "Chen": 1.0,
-        "Anya": 3.0,
-        "Priya": 0.0
+        "Raj": 3.0,
+        "Hiroshi": 3.0,
+        "Marcus": -1.0,
+        "Yuki": -1.0,
+        "Elena": 3.0,
+        "Chen": -1.0,
+        "Priya": 3.0,
+        "Heidi": 3.0
       },
-      "harmony_index": 0.7666666666666667,
+      "harmony_index": 0.7,
+      "policy": "None"
+    },
+    {
+      "joint_action": {
+        "Raj": "Review: Evaluate the dependency update PR for breaking changes.",
+        "Hiroshi": "Review: Evaluate the dependency update PR for breaking changes.",
+        "Marcus": "Fix: Authentication token refresh fails silently after 24 hours.",
+        "Yuki": "Review: Evaluate the dependency update PR for breaking changes.",
+        "Elena": "Docs: Document the CI/CD pipeline and release process.",
+        "Chen": "Review: Evaluate the dependency update PR for breaking changes.",
+        "Priya": "Fix: Authentication token refresh fails silently after 24 hours.",
+        "Heidi": "Docs: Document the CI/CD pipeline and release process."
+      },
+      "scores": {
+        "Raj": 3.0,
+        "Hiroshi": -1.0,
+        "Marcus": 3.0,
+        "Yuki": 3.0,
+        "Elena": 3.0,
+        "Chen": -1.0,
+        "Priya": 3.0,
+        "Heidi": 3.0
+      },
+      "harmony_index": 0.75,
+      "policy": "None"
+    },
+    {
+      "joint_action": {
+        "Raj": "Review: Evaluate the dependency update PR for breaking changes.",
+        "Hiroshi": "Fix: Authentication token refresh fails silently after 24 hours.",
+        "Marcus": "Fix: Null pointer exception when user profile has no avatar.",
+        "Yuki": "Review: Evaluate the dependency update PR for breaking changes.",
+        "Elena": "Docs: Rewrite the quickstart guide for new contributors.",
+        "Chen": "Review: Evaluate the dependency update PR for breaking changes.",
+        "Priya": "Fix: Race condition in the event dispatcher under high concurrency.",
+        "Heidi": "Docs: Document the CI/CD pipeline and release process."
+      },
+      "scores": {
+        "Raj": 3.0,
+        "Hiroshi": 3.0,
+        "Marcus": -1.0,
+        "Yuki": -1.0,
+        "Elena": -1.0,
+        "Chen": 3.0,
+        "Priya": 3.0,
+        "Heidi": 3.0
+      },
+      "harmony_index": 0.7333333333333334,
+      "policy": "None"
+    },
+    {
+      "joint_action": {
+        "Raj": "Feature: Implement WebSocket support for real-time notifications.",
+        "Hiroshi": "Feature: Implement WebSocket support for real-time notifications.",
+        "Marcus": "Fix: Authentication token refresh fails silently after 24 hours.",
+        "Yuki": "Review: Evaluate the dependency update PR for breaking changes.",
+        "Elena": "Fix: Null pointer exception when user profile has no avatar.",
+        "Chen": "Review: Evaluate the dependency update PR for breaking changes.",
+        "Priya": "Fix: Null pointer exception when user profile has no avatar.",
+        "Heidi": "Docs: Rewrite the quickstart guide for new contributors."
+      },
+      "scores": {
+        "Raj": 1.0,
+        "Hiroshi": 1.0,
+        "Marcus": -1.0,
+        "Yuki": 3.0,
+        "Elena": -1.0,
+        "Chen": 3.0,
+        "Priya": 3.0,
+        "Heidi": 3.0
+      },
+      "harmony_index": 0.725,
+      "policy": "None"
+    },
+    {
+      "joint_action": {
+        "Raj": "Review: Evaluate the dependency update PR for breaking changes.",
+        "Hiroshi": "Feature: Implement WebSocket support for real-time notifications.",
+        "Marcus": "Fix: Null pointer exception when user profile has no avatar.",
+        "Yuki": "Review: Evaluate the dependency update PR for breaking changes.",
+        "Elena": "Fix: Null pointer exception when user profile has no avatar.",
+        "Chen": "Review: Evaluate the dependency update PR for breaking changes.",
+        "Priya": "Feature: Implement WebSocket support for real-time notifications.",
+        "Heidi": "Docs: Document the CI/CD pipeline and release process."
+      },
+      "scores": {
+        "Raj": 3.0,
+        "Hiroshi": 1.0,
+        "Marcus": 3.0,
+        "Yuki": 3.0,
+        "Elena": 1.0,
+        "Chen": 3.0,
+        "Priya": 1.0,
+        "Heidi": 3.0
+      },
+      "harmony_index": 0.75,
       "policy": "None"
     }
   ],
   "narrative_history": [
+    {},
+    {},
+    {},
+    {},
     {}
   ],
   "final_policy": "None",
   "player_roles": {
-    "Xavier": "Contributor",
+    "Raj": "Maintainer",
+    "Hiroshi": "Contributor",
+    "Marcus": "Contributor",
+    "Yuki": "Maintainer",
+    "Elena": "Knowledge Curator",
     "Chen": "Maintainer",
-    "Anya": "Innovator",
-    "Priya": "Contributor"
+    "Priya": "Contributor",
+    "Heidi": "Knowledge Curator"
   },
-  "stress_schedule": {},
-  "dropout_name": null,
+  "stress_schedule": {
+    "2": "contributor_dropout",
+    "3": "task_overload"
+  },
+  "dropout_name": "Priya",
   "relational_matrix": {
-    "Xavier": {
-      "Xavier": 1.0,
+    "Raj": {
+      "Raj": 1.0,
+      "Hiroshi": 0.7,
+      "Marcus": 0.5,
+      "Yuki": 0.7,
+      "Elena": 0.5,
+      "Chen": 0.7,
+      "Priya": 0.5,
+      "Heidi": 0.7
+    },
+    "Hiroshi": {
+      "Raj": 0.7,
+      "Hiroshi": 1.0,
+      "Marcus": 0.7,
+      "Yuki": 0.7,
+      "Elena": 0.5,
       "Chen": 0.5,
-      "Anya": 0.3,
-      "Priya": 0.7
+      "Priya": 1.0,
+      "Heidi": 0.7
+    },
+    "Marcus": {
+      "Raj": 0.5,
+      "Hiroshi": 0.7,
+      "Marcus": 1.0,
+      "Yuki": 0.5,
+      "Elena": 0.5,
+      "Chen": 0.7,
+      "Priya": 1.0,
+      "Heidi": 0.5
+    },
+    "Yuki": {
+      "Raj": 0.7,
+      "Hiroshi": 0.7,
+      "Marcus": 0.5,
+      "Yuki": 1.0,
+      "Elena": 0.3,
+      "Chen": 0.8,
+      "Priya": 0.5,
+      "Heidi": 0.3
+    },
+    "Elena": {
+      "Raj": 0.5,
+      "Hiroshi": 0.5,
+      "Marcus": 0.5,
+      "Yuki": 0.3,
+      "Elena": 1.0,
+      "Chen": 0.5,
+      "Priya": 0.3,
+      "Heidi": 0.7
     },
     "Chen": {
-      "Xavier": 0.5,
+      "Raj": 0.7,
+      "Hiroshi": 0.5,
+      "Marcus": 0.7,
+      "Yuki": 0.8,
+      "Elena": 0.5,
       "Chen": 1.0,
-      "Anya": 0.2,
-      "Priya": 0.5
-    },
-    "Anya": {
-      "Xavier": 0.3,
-      "Chen": 0.2,
-      "Anya": 1.0,
-      "Priya": 0.5
+      "Priya": 0.3,
+      "Heidi": 0.3
     },
     "Priya": {
-      "Xavier": 0.7,
-      "Chen": 0.5,
-      "Anya": 0.5,
-      "Priya": 1.0
+      "Raj": 0.5,
+      "Hiroshi": 1.0,
+      "Marcus": 1.0,
+      "Yuki": 0.5,
+      "Elena": 0.3,
+      "Chen": 0.3,
+      "Priya": 1.0,
+      "Heidi": 0.7
+    },
+    "Heidi": {
+      "Raj": 0.7,
+      "Hiroshi": 0.7,
+      "Marcus": 0.5,
+      "Yuki": 0.3,
+      "Elena": 0.7,
+      "Chen": 0.3,
+      "Priya": 0.7,
+      "Heidi": 1.0
     }
   },
-  "seed": 7714652898019986165
+  "seed": 8565610467818984104
 }
