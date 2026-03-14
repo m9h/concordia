@@ -418,9 +418,10 @@ CONVERSATION_PREMISE = (
 )
 
 DECISION_PREMISE = (
-    "{name} must now choose which task to work on this sprint. "
-    "They should weigh their own strengths and preferences against "
-    "the project's most urgent needs."
+    "{name} must choose a task. The Harmony Index reflects the "
+    "project's long-term sustainability -- if it drops below 0.6, "
+    "the project is at risk. Balance your strengths against what "
+    "the project desperately needs right now."
 )
 
 CALL_TO_SPEECH = (
