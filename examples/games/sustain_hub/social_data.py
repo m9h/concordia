@@ -425,9 +425,9 @@ DECISION_PREMISE = (
 
 CALL_TO_SPEECH = (
     "What does {name} say during the sprint planning discussion? "
-    "Consider the trade-off: taking your preferred task earns more, "
-    "but neglected areas hurt the whole project. You can advocate "
-    "for tasks, offer to help others, raise concerns, or negotiate."
+    "Remember: last sprint some areas were neglected and the team "
+    "noticed. Others are watching what you choose. Speak up about "
+    "who should take what, offer help, or raise concerns."
 )
 
 CALL_TO_TASK_DECISION = (
