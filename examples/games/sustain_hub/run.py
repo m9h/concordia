@@ -45,6 +45,9 @@ flags.DEFINE_bool('fast', False, 'Skip conversation scenes, go straight to task 
 flags.DEFINE_string('vllm_url', None, 'vLLM API base URL (e.g. http://localhost:8000/v1).')
 flags.DEFINE_bool('vllm_chat', True, 'Use chat completions API (vs. text completions).')
 flags.DEFINE_string('vllm_system_prompt', None, 'System prompt for vLLM chat mode.')
+flags.DEFINE_string('vllm_api_key', None,
+    'API key for authenticated endpoints (NIM cloud). '
+    'Falls back to NGC_API_KEY env var.')
 
 
 def main(argv):
@@ -57,11 +60,13 @@ def main(argv):
     model = mock_model.MockModel()
   elif FLAGS.vllm_url:
     from concordia.contrib.language_models import vllm_remote
+    vllm_key = FLAGS.vllm_api_key or os.environ.get('NGC_API_KEY', '')
     model = vllm_remote.VLLMModel(
         model_name=FLAGS.model_name,
         api_base=FLAGS.vllm_url,
         use_chat=FLAGS.vllm_chat,
         system_prompt=FLAGS.vllm_system_prompt,
+        api_key=vllm_key or None,
     )
     model = retry_wrapper.RetryLanguageModel(
         model,

@@ -45,6 +45,7 @@ class VLLMModel(language_model.LanguageModel):
       api_base: str = 'http://localhost:8000/v1',
       use_chat: bool = True,
       system_prompt: str | None = None,
+      api_key: str | None = None,
   ):
     self._model_name = model_name
     self._api_base = api_base.rstrip('/')
@@ -52,6 +53,9 @@ class VLLMModel(language_model.LanguageModel):
     self._system_prompt = (
         system_prompt if system_prompt is not None else _DEFAULT_SYSTEM_PROMPT
     )
+    self._headers: dict[str, str] = {}
+    if api_key:
+      self._headers['Authorization'] = f'Bearer {api_key}'
     # Request stats
     self._total_requests = 0
     self._total_tokens = 0
@@ -111,7 +115,8 @@ class VLLMModel(language_model.LanguageModel):
 
     url = f'{self._api_base}/chat/completions'
     try:
-      response = requests.post(url, json=payload, timeout=timeout)
+      response = requests.post(
+          url, json=payload, headers=self._headers, timeout=timeout)
       response.raise_for_status()
     except Exception:
       self._total_errors += 1
@@ -141,7 +146,8 @@ class VLLMModel(language_model.LanguageModel):
 
     url = f'{self._api_base}/completions'
     try:
-      response = requests.post(url, json=payload, timeout=timeout)
+      response = requests.post(
+          url, json=payload, headers=self._headers, timeout=timeout)
       response.raise_for_status()
     except Exception:
       self._total_errors += 1
