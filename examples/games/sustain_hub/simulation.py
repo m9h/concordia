@@ -306,6 +306,7 @@ class SustainHubPayoff:
       player_tools: Mapping[str, Sequence[sustain_tools.tool_lib.Tool]] = (
           types.MappingProxyType({})
       ),
+      stress_schedule: Mapping[int, str] | None = None,
   ):
     self._player_names = list(player_names)
     self._player_roles = player_roles
@@ -315,12 +316,14 @@ class SustainHubPayoff:
     self._num_sprints = num_sprints
     self._alpha = alpha
     self._player_tools = player_tools
+    self._stress_schedule = dict(stress_schedule or {})
     self._latest_joint_action: dict[str, str] = {}
     self._cumulative_scores: dict[str, float] = {n: 0.0 for n in player_names}
     self._task_counts: dict[str, int] = {n: 0 for n in player_names}
     self._sprint_history: list[dict[str, Any]] = []
     self._prev_usage_counts = {p: 0 for p in player_names}
     self.current_policy = "None"
+    self.current_stress: str | None = None
     self.policy_config = {
         "Tool Subsidy": {"success_prob_bonus": 0.2},
         "Maintenance Premium": {
@@ -401,6 +404,10 @@ class SustainHubPayoff:
     """Map joint task selections to individual scores."""
     self._latest_joint_action = dict(joint_action)
 
+    # Update stress state based on current sprint number
+    current_sprint = len(self._sprint_history) + 1
+    self.current_stress = self._stress_schedule.get(current_sprint)
+
     # Check if this is a policy vote
     policy_options = [
         "Continue as-is",
@@ -475,7 +482,9 @@ class SustainHubPayoff:
 
       # Overload penalty: too many people on one task is wasteful
       num_on_task = len(task_choosers[chosen_task])
-      overload_penalty = max(0.0, (num_on_task - 2) * 0.1)
+      stress_mods = social_data.STRESS_MECHANICS.get(self.current_stress, {})
+      overload_thresh = stress_mods.get('overload_threshold', 2)
+      overload_penalty = max(0.0, (num_on_task - overload_thresh) * 0.2)
 
       success_prob = base_prob + collab_bonus + tool_bonus - overload_penalty
 
@@ -906,6 +915,10 @@ def configure_scenes(
           player_premise_parts.append(
               social_data.STRESS_SCENARIOS["newcomer_influx"]
           )
+        elif stress_type in social_data.STRESS_SCENARIOS:
+          player_premise_parts.append(
+              social_data.STRESS_SCENARIOS[stress_type]
+          )
 
         premise[name] = player_premise_parts
 
@@ -1174,6 +1187,7 @@ def run_simulation(
       relational_matrix=relational_matrix,
       num_sprints=num_sprints,
       player_tools=player_tools,
+      stress_schedule=stress_schedule,
   )
   global _CURRENT_PAYOFF
   _CURRENT_PAYOFF = payoff
