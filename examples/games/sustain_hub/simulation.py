@@ -520,6 +520,7 @@ class SustainHubPayoff:
         "joint_action": dict(joint_action),
         "scores": dict(scores),
         "harmony_index": self.harmony_index(),
+        "stress_type": self.current_stress,
         "policy": self.current_policy,
     })
 
@@ -1140,17 +1141,22 @@ def run_simulation(
       people, relational_matrix, rng
   )
 
-  # Stress schedule
+  # Stress schedule — progressive environmental pressure
   stress_schedule: dict[int, str] = {}
   dropout_name = None
-  if enable_stress and num_sprints >= 3:
-    # Sprint 2: contributor dropout
-    contributors = [n for n, r in player_roles.items() if r == social_data.Role.CONTRIBUTOR]
-    if len(contributors) >= 2:
-      dropout_name = rng.choice(contributors)
-      stress_schedule[2] = "contributor_dropout"
-    # Sprint 3: task overload
-    stress_schedule[3] = "task_overload"
+  if enable_stress:
+    if num_sprints >= 3:
+      contributors = [n for n, r in player_roles.items() if r == social_data.Role.CONTRIBUTOR]
+      if len(contributors) >= 2:
+        dropout_name = rng.choice(contributors)
+        stress_schedule[2] = "contributor_dropout"
+      stress_schedule[3] = "task_overload"
+    if num_sprints >= 4:
+      stress_schedule[4] = "funding_cut"
+    if num_sprints >= 5:
+      stress_schedule[5] = "dependency_crisis"
+    if num_sprints >= 6:
+      stress_schedule[6] = "fork_threat"
 
   # Configure scenes
   scenes, sprint_task_data = configure_scenes(
