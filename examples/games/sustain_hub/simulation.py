@@ -45,6 +45,7 @@ from typing import Any, Callable, Mapping, Sequence
 from absl import logging
 from examples.games.sustain_hub import active_inference as aif
 from examples.games.sustain_hub import social_data
+from examples.games.sustain_hub import code_tasks as code_tasks_mod
 from examples.games.sustain_hub import tools as sustain_tools
 from concordia.agents import entity_agent_with_logging
 from concordia.associative_memory import basic_associative_memory
@@ -307,11 +308,16 @@ class SustainHubPayoff:
           types.MappingProxyType({})
       ),
       stress_schedule: Mapping[int, str] | None = None,
+      code_tasks: bool = False,
+      model: language_model.LanguageModel | None = None,
   ):
     self._player_names = list(player_names)
     self._player_roles = player_roles
     self._task_options = task_options
     self._task_type_map = task_type_map  # maps task label -> task type
+    self._code_tasks = code_tasks
+    self._model = model
+    self._task_issue_map: dict[str, int] = {}  # maps task label -> issue_id
     self._relational_matrix = relational_matrix
     self._num_sprints = num_sprints
     self._alpha = alpha
@@ -397,6 +403,15 @@ class SustainHubPayoff:
       fairness = 1.0 - gini
 
     return self._alpha * avg_success + (1.0 - self._alpha) * fairness
+
+  @staticmethod
+  def _stochastic_reward(rng, success_prob, is_preferred):
+    """Roll for success/failure using the given probability."""
+    if rng.random() < success_prob:
+      return (social_data.REWARD_PREFERRED_SUCCESS if is_preferred
+              else social_data.REWARD_NONPREFERRED_SUCCESS)
+    return (social_data.REWARD_PREFERRED_FAILURE if is_preferred
+            else social_data.REWARD_NONPREFERRED_FAILURE)
 
   def action_to_scores(
       self, joint_action: Mapping[str, str]
@@ -496,17 +511,30 @@ class SustainHubPayoff:
 
       success_prob = max(0.05, min(0.95, success_prob))
 
-      # Stochastic success (grounded in empirical OSS difficulty distributions)
-      if _rng.random() < success_prob:
-        reward = (
-            social_data.REWARD_PREFERRED_SUCCESS if is_preferred
-            else social_data.REWARD_NONPREFERRED_SUCCESS
-        )
+      # --- Code tasks mode: LLM generates patch, pytest scores it ---
+      if self._code_tasks and self._model is not None:
+        task_issue_id = self._task_issue_map.get(chosen_task)
+        if task_issue_id is not None:
+          try:
+            issues = code_tasks_mod.load_issues()
+            issue = issues.get(task_issue_id)
+            if issue is not None:
+              expertise_str = expertise.value if hasattr(expertise, 'value') else str(expertise)
+              patch = code_tasks_mod.generate_patch(
+                  issue, self._model, agent_expertise=expertise_str,
+              )
+              reward = code_tasks_mod.score_code_task(
+                  task_issue_id, patch, is_preferred=is_preferred,
+              )
+            else:
+              reward = self._stochastic_reward(_rng, success_prob, is_preferred)
+          except Exception as e:
+            logging.warning('Code task scoring failed for %s: %s', player, e)
+            reward = self._stochastic_reward(_rng, success_prob, is_preferred)
+        else:
+          reward = self._stochastic_reward(_rng, success_prob, is_preferred)
       else:
-        reward = (
-            social_data.REWARD_PREFERRED_FAILURE if is_preferred
-            else social_data.REWARD_NONPREFERRED_FAILURE
-        )
+        reward = self._stochastic_reward(_rng, success_prob, is_preferred)
 
       # Apply Maintenance Premium Policy
       if self.current_policy == "Maintenance Premium" and task_type in self.policy_config["Maintenance Premium"]["task_types"]:
@@ -766,18 +794,31 @@ def generate_task_queue(
     rng: random.Random,
     num_tasks: int = 8,
     stress_type: str | None = None,
-) -> tuple[list[str], dict[str, str]]:
+    code_tasks: bool = False,
+) -> tuple[list[str], dict[str, str], dict[str, int] | None]:
   """Generate a sprint's task queue.
 
   Args:
     rng: Random number generator.
     num_tasks: Number of tasks to generate.
     stress_type: Optional stress scenario ("task_overload" triples bug fixes).
+    code_tasks: Use real code issues from the toy project.
 
   Returns:
-    Tuple of (task_labels, task_type_map) where task_labels are the display
-    names and task_type_map maps each label to its task type.
+    Tuple of (task_labels, task_type_map, task_issue_map) where task_labels
+    are display names, task_type_map maps label→type, and task_issue_map
+    maps label→issue_id (None when code_tasks=False).
   """
+  # Code tasks mode: use real issues from toy project
+  if code_tasks:
+    pool = code_tasks_mod.get_task_pool(num_tasks=num_tasks, rng=rng)
+    if pool:
+      task_labels = [t['label'] for t in pool]
+      task_type_map = {t['label']: t['task_type'] for t in pool}
+      task_issue_map = {t['label']: t['issue_id'] for t in pool}
+      return task_labels, task_type_map, task_issue_map
+    logging.warning('code_tasks.get_task_pool() returned empty; falling back.')
+
   task_labels = []
   task_type_map = {}
 
@@ -805,7 +846,7 @@ def generate_task_queue(
           task_labels.append(t)
           task_type_map[t] = task_type
 
-  return task_labels[:num_tasks + 4], task_type_map  # allow a few extra
+  return task_labels[:num_tasks + 4], task_type_map, None  # allow a few extra
 
 
 def configure_scenes(
@@ -818,9 +859,10 @@ def configure_scenes(
     dropout_name: str | None = None,
     skip_conversation: bool = False,
     governance: str = 'free_choice',
+    code_tasks: bool = False,
 ) -> tuple[
     Sequence[scene_lib.SceneSpec],
-    list[tuple[list[str], dict[str, str]]],
+    list[tuple[list[str], dict[str, str], dict[str, int] | None]],
 ]:
   """Configure the simulation's scene sequence.
 
@@ -863,12 +905,13 @@ def configure_scenes(
       active_people = [p for p in active_people if p != dropout_name]
 
     # Generate task queue
-    task_labels, task_type_map = generate_task_queue(
+    task_labels, task_type_map, task_issue_map = generate_task_queue(
         rng=rng,
         num_tasks=len(active_people) + 2,  # more tasks than people
         stress_type=stress_type,
+        code_tasks=code_tasks,
     )
-    sprint_task_data.append((task_labels, task_type_map))
+    sprint_task_data.append((task_labels, task_type_map, task_issue_map))
 
     # Task summary for premises
     type_counts = collections.Counter(task_type_map.values())
@@ -1188,6 +1231,7 @@ def run_simulation(
     inject_aif_context: bool | None = None,
     governance: str = 'free_choice',
     stress_types: Sequence[str] | None = None,
+    code_tasks: bool = False,
 ) -> dict[str, Any]:
   """Run the SustainHub simulation.
 
@@ -1278,13 +1322,17 @@ def run_simulation(
       dropout_name=dropout_name,
       skip_conversation=skip_conversation,
       governance=governance,
+      code_tasks=code_tasks,
   )
 
   # Build the combined task_type_map across all sprints (for payoff engine)
   combined_task_type_map: dict[str, str] = {}
+  combined_task_issue_map: dict[str, int] = {}
   all_task_options: list[str] = []
-  for task_labels, task_type_map in sprint_task_data:
+  for task_labels, task_type_map, task_issue_map in sprint_task_data:
     combined_task_type_map.update(task_type_map)
+    if task_issue_map:
+      combined_task_issue_map.update(task_issue_map)
     all_task_options.extend(task_labels)
 
   # Initialize player tools
@@ -1304,7 +1352,10 @@ def run_simulation(
       num_sprints=num_sprints,
       player_tools=player_tools,
       stress_schedule=stress_schedule,
+      code_tasks=code_tasks,
+      model=model,
   )
+  payoff._task_issue_map = combined_task_issue_map
   global _CURRENT_PAYOFF
   _CURRENT_PAYOFF = payoff
 

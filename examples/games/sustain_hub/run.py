@@ -51,6 +51,8 @@ flags.DEFINE_string('vllm_system_prompt', None, 'System prompt for vLLM chat mod
 flags.DEFINE_string('vllm_api_key', None,
     'API key for authenticated endpoints (NIM cloud). '
     'Falls back to NGC_API_KEY env var.')
+flags.DEFINE_bool('code_tasks', False,
+    'Use real code tasks with pytest scoring (LLAMOSC comparison mode).')
 flags.DEFINE_enum('governance', 'free_choice',
     ['free_choice', 'dictator', 'meritocratic'],
     'Governance model: free_choice (agents self-select), '
@@ -145,6 +147,7 @@ def main(argv):
       skip_conversation=FLAGS.fast,
       inject_aif_context=FLAGS.inject_aif_context,
       governance=FLAGS.governance,
+      code_tasks=FLAGS.code_tasks,
   )
 
   # Print summary
