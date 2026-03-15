@@ -1,0 +1,184 @@
+{
+  "system": "llamosc",
+  "config": {
+    "contributors": 8,
+    "maintainers": 3,
+    "issues": 10,
+    "algorithm": "d",
+    "seeds": 5,
+    "mode": "testing"
+  },
+  "per_seed": [
+    {
+      "seed": 0,
+      "experience_final": {
+        "Contributor_0": 4.31,
+        "Contributor_1": 1,
+        "Contributor_2": 5.0,
+        "Contributor_3": 3,
+        "Contributor_4": 3,
+        "Contributor_5": 2,
+        "Contributor_6": 2,
+        "Contributor_7": 3
+      },
+      "motivation_final": {
+        "Contributor_0": 0,
+        "Contributor_1": 0,
+        "Contributor_2": 10,
+        "Contributor_3": 3.56,
+        "Contributor_4": 0,
+        "Contributor_5": 0,
+        "Contributor_6": 0,
+        "Contributor_7": 1.58
+      },
+      "code_quality_avg": 3.906,
+      "issues_solved": 10,
+      "issues_total": 10,
+      "mean_experience": 2.914,
+      "mean_motivation": 1.893,
+      "norm_experience": 0.583,
+      "norm_motivation": 0.189,
+      "norm_code_quality": 0.781,
+      "hi_equivalent": 0.524
+    },
+    {
+      "seed": 1,
+      "experience_final": {
+        "Contributor_0": 2,
+        "Contributor_1": 3,
+        "Contributor_2": 4,
+        "Contributor_3": 4,
+        "Contributor_4": 2,
+        "Contributor_5": 4,
+        "Contributor_6": 5,
+        "Contributor_7": 1
+      },
+      "motivation_final": {
+        "Contributor_0": 0,
+        "Contributor_1": 0,
+        "Contributor_2": 1.41,
+        "Contributor_3": 1.23,
+        "Contributor_4": 1.01,
+        "Contributor_5": 0,
+        "Contributor_6": 10,
+        "Contributor_7": 0
+      },
+      "code_quality_avg": 4.348,
+      "issues_solved": 8,
+      "issues_total": 10,
+      "mean_experience": 3.125,
+      "mean_motivation": 1.706,
+      "norm_experience": 0.625,
+      "norm_motivation": 0.171,
+      "norm_code_quality": 0.87,
+      "hi_equivalent": 0.562
+    },
+    {
+      "seed": 2,
+      "experience_final": {
+        "Contributor_0": 1,
+        "Contributor_1": 1,
+        "Contributor_2": 2,
+        "Contributor_3": 3,
+        "Contributor_4": 1,
+        "Contributor_5": 5.0,
+        "Contributor_6": 3,
+        "Contributor_7": 3
+      },
+      "motivation_final": {
+        "Contributor_0": 0,
+        "Contributor_1": 0.56,
+        "Contributor_2": 0,
+        "Contributor_3": 0,
+        "Contributor_4": 2.23,
+        "Contributor_5": 8.65,
+        "Contributor_6": 0.33,
+        "Contributor_7": 0
+      },
+      "code_quality_avg": 3.757,
+      "issues_solved": 9,
+      "issues_total": 10,
+      "mean_experience": 2.375,
+      "mean_motivation": 1.471,
+      "norm_experience": 0.475,
+      "norm_motivation": 0.147,
+      "norm_code_quality": 0.751,
+      "hi_equivalent": 0.46
+    },
+    {
+      "seed": 3,
+      "experience_final": {
+        "Contributor_0": 2,
+        "Contributor_1": 3,
+        "Contributor_2": 1,
+        "Contributor_3": 4.32,
+        "Contributor_4": 2,
+        "Contributor_5": 5.0,
+        "Contributor_6": 4,
+        "Contributor_7": 2
+      },
+      "motivation_final": {
+        "Contributor_0": 0,
+        "Contributor_1": 5.01,
+        "Contributor_2": 0,
+        "Contributor_3": 2.95,
+        "Contributor_4": 0,
+        "Contributor_5": 10,
+        "Contributor_6": 0,
+        "Contributor_7": 0
+      },
+      "code_quality_avg": 4.325,
+      "issues_solved": 9,
+      "issues_total": 10,
+      "mean_experience": 2.915,
+      "mean_motivation": 2.245,
+      "norm_experience": 0.583,
+      "norm_motivation": 0.225,
+      "norm_code_quality": 0.865,
+      "hi_equivalent": 0.56
+    },
+    {
+      "seed": 4,
+      "experience_final": {
+        "Contributor_0": 2,
+        "Contributor_1": 1,
+        "Contributor_2": 5.0,
+        "Contributor_3": 1,
+        "Contributor_4": 1,
+        "Contributor_5": 3,
+        "Contributor_6": 2,
+        "Contributor_7": 3
+      },
+      "motivation_final": {
+        "Contributor_0": 0,
+        "Contributor_1": 0,
+        "Contributor_2": 10,
+        "Contributor_3": 0,
+        "Contributor_4": 3.62,
+        "Contributor_5": 0,
+        "Contributor_6": 0,
+        "Contributor_7": 4.12
+      },
+      "code_quality_avg": 4.016,
+      "issues_solved": 10,
+      "issues_total": 10,
+      "mean_experience": 2.25,
+      "mean_motivation": 2.218,
+      "norm_experience": 0.45,
+      "norm_motivation": 0.222,
+      "norm_code_quality": 0.803,
+      "hi_equivalent": 0.487
+    }
+  ],
+  "summary": {
+    "hi_equivalent_mean": 0.5186,
+    "hi_equivalent_std": 0.0401,
+    "experience_mean": 2.7158,
+    "experience_std": 0.3404,
+    "motivation_mean": 1.9066,
+    "motivation_std": 0.2972,
+    "code_quality_mean": 4.0704,
+    "code_quality_std": 0.2324,
+    "issues_solved_mean": 9.2
+  }
+}
