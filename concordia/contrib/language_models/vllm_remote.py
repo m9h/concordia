@@ -118,6 +118,15 @@ class VLLMModel(language_model.LanguageModel):
       response = requests.post(
           url, json=payload, headers=self._headers, timeout=timeout)
       response.raise_for_status()
+    except requests.exceptions.HTTPError as e:
+      self._total_errors += 1
+      body = ''
+      if e.response is not None:
+        try:
+          body = e.response.json()
+        except Exception:
+          body = e.response.text[:500]
+      raise type(e)(f'{e} | body={body}') from e
     except Exception:
       self._total_errors += 1
       raise
