@@ -425,6 +425,10 @@ class SustainHubPayoff:
       return {player: 0.0 for player in self._player_names}
 
     scores: dict[str, float] = {}
+    task_difficulties: dict[str, str] = {}
+
+    # Seeded RNG for reproducible difficulty sampling and success rolls
+    _rng = random.Random(len(self._sprint_history))
 
     # Track how many people chose each task (overloading penalty)
     task_choosers: dict[str, list[str]] = collections.defaultdict(list)
@@ -447,19 +451,16 @@ class SustainHubPayoff:
       )
       is_preferred = (task_type == preferred_type)
 
-      # Success probability based on expertise level and task alignment
-      # Calibrated from empirical OSS data (Gemini research brief):
-      #   Apprentice: 25%, Regular/Intermediate: 75%, Expert/Senior: 95%
+      # Success probability based on expertise level, task type, AND sampled
+      # difficulty -- grounded in empirical OSS data (GHTorrent/GitHub Archive).
       _all = social_data.get_all_agent_profiles()
       expertise = _all.get(player, {}).get(
           'expertise', social_data.ExpertiseLevel.INTERMEDIATE)
-      expertise_probs = {
-          social_data.ExpertiseLevel.APPRENTICE: 0.25,
-          social_data.ExpertiseLevel.INTERMEDIATE: 0.55,
-          social_data.ExpertiseLevel.SENIOR: 0.75,
-          social_data.ExpertiseLevel.EXPERT: 0.85,
-      }
-      base_prob = expertise_probs.get(expertise, 0.55)
+      # Sample a difficulty level for this agent's task
+      difficulty = sustain_tools.sample_task_difficulty(task_type, rng=_rng)
+      task_difficulties[player] = difficulty
+      base_prob = sustain_tools.get_grounded_success_rate(
+          task_type, difficulty, expertise)
       # Preferred task bonus
       if is_preferred:
         base_prob += 0.10
@@ -495,9 +496,8 @@ class SustainHubPayoff:
 
       success_prob = max(0.05, min(0.95, success_prob))
 
-      # Stochastic success (calibrated from empirical OSS data)
-      import random as _random
-      if _random.random() < success_prob:
+      # Stochastic success (grounded in empirical OSS difficulty distributions)
+      if _rng.random() < success_prob:
         reward = (
             social_data.REWARD_PREFERRED_SUCCESS if is_preferred
             else social_data.REWARD_NONPREFERRED_SUCCESS
@@ -523,6 +523,7 @@ class SustainHubPayoff:
         "harmony_index": self.harmony_index(),
         "stress_type": self.current_stress,
         "policy": self.current_policy,
+        "task_difficulties": dict(task_difficulties),
     })
 
     return scores

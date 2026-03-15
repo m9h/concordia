@@ -1073,5 +1073,406 @@ def main(argv):
     print(f'\nResults saved to {FLAGS.output_dir}/')
 
 
+# =============================================================================
+# Cross-System Comparison Experiments (Step 5)
+# =============================================================================
+
+COMPARISON_EXPERIMENTS = {
+    # Series A: Match Rohira's setup
+    "A1": {
+        "name": "Concordia LLM-only vs Rohira",
+        "community_size": 10,
+        "num_sprints": 10,
+        "stress_types": ["contributor_dropout"],
+        "governance": "free_choice",
+        "use_active_inference": False,
+        "seeds": 5,
+        "purpose": "Match Rohira's setup — does LLM reasoning help or hurt?",
+    },
+    "A2": {
+        "name": "Concordia LLM+AIF vs Rohira",
+        "community_size": 10,
+        "num_sprints": 10,
+        "stress_types": ["contributor_dropout"],
+        "governance": "free_choice",
+        "use_active_inference": True,
+        "seeds": 5,
+        "purpose": "AIF contribution — does Bayesian guidance improve LLM decisions?",
+    },
+    "A3": {
+        "name": "Concordia AIF-only convergence",
+        "community_size": 10,
+        "num_sprints": 50,
+        "stress_types": ["contributor_dropout"],
+        "governance": "free_choice",
+        "use_active_inference": True,
+        "llm_level": 4,  # AIF Level 4 only, no LLM
+        "seeds": 10,
+        "purpose": "Convergence comparison — same math, different framework",
+    },
+    # Series B: Governance comparison (vs LLAMOSC)
+    "B1": {
+        "name": "Free choice governance",
+        "community_size": 8,
+        "num_sprints": 5,
+        "stress_types": None,  # all stress types
+        "governance": "free_choice",
+        "use_active_inference": True,
+        "seeds": 5,
+        "purpose": "Governance baseline",
+    },
+    "B2": {
+        "name": "Dictator governance",
+        "community_size": 8,
+        "num_sprints": 5,
+        "stress_types": None,
+        "governance": "dictator",
+        "use_active_inference": True,
+        "seeds": 5,
+        "purpose": "vs LLAMOSC dictator — same governance, richer cognition",
+    },
+    "B3": {
+        "name": "Meritocratic governance",
+        "community_size": 8,
+        "num_sprints": 5,
+        "stress_types": None,
+        "governance": "meritocratic",
+        "use_active_inference": True,
+        "seeds": 5,
+        "purpose": "vs LLAMOSC meritocratic — same governance, richer cognition",
+    },
+    # Series C: Ostrom contribution
+    "C1": {
+        "name": "LLM+AIF+Ostrom priors",
+        "community_size": 10,
+        "num_sprints": 10,
+        "stress_types": ["contributor_dropout"],
+        "governance": "free_choice",
+        "use_active_inference": True,
+        "use_ostrom": True,
+        "seeds": 5,
+        "purpose": "Ostrom priors as Bayesian formalization of governance principles",
+    },
+}
+
+
+def run_comparison_experiment(
+    experiment_key: str,
+    vllm_url: str,
+    model_name: str,
+    output_dir: str = '/tmp/sustain_hub_comparison',
+) -> dict[str, Any]:
+    """Run a single cross-system comparison experiment across seeds.
+
+    Args:
+        experiment_key: Key into COMPARISON_EXPERIMENTS (e.g. "A1").
+        vllm_url: vLLM API base URL.
+        model_name: LLM model name.
+        output_dir: Root output directory.
+
+    Returns:
+        Summary dict with mean/std for each metric across seeds.
+    """
+    import subprocess
+    import sys
+
+    config = COMPARISON_EXPERIMENTS[experiment_key]
+    num_seeds = config['seeds']
+    seed_results: list[dict[str, Any]] = []
+
+    print(f'\n{"=" * 60}')
+    print(f'Experiment {experiment_key}: {config["name"]}')
+    print(f'  Purpose: {config["purpose"]}')
+    print(f'  Seeds: {num_seeds}  |  Sprints: {config["num_sprints"]}  '
+          f'|  Community: {config["community_size"]}')
+    print(f'{"=" * 60}')
+
+    # Check if this is an AIF-only experiment (uses the experiment ladder
+    # runner instead of the full simulation via run.py)
+    is_aif_only = 'llm_level' in config
+
+    for seed_idx in range(num_seeds):
+        seed_val = 42 + seed_idx
+        run_dir = os.path.join(
+            output_dir, experiment_key, f'seed_{seed_idx}'
+        )
+        os.makedirs(run_dir, exist_ok=True)
+
+        if is_aif_only:
+            # Run via the experiment ladder (AIF-only, no LLM subprocess)
+            level_idx = config['llm_level']
+            level = EXPERIMENT_LEVELS[level_idx]
+            runner = ExperimentRunner(
+                level=level,
+                num_agents=min(config['community_size'], 6),
+                num_sprints=config['num_sprints'],
+                seed=seed_val,
+                enable_stress=bool(config.get('stress_types')),
+            )
+            if config.get('use_ostrom'):
+                apply_ostrom_to_runner(runner)
+            ladder_result = runner.run()
+            adapted = ladder_results_to_evaluate_schema(ladder_result)
+
+            # Compute metrics using evaluate.py functions
+            # Lazy-import to avoid absl flag conflicts at module load time
+            for _flag_name in list(FLAGS):
+                FLAGS[_flag_name].allow_override = True
+            from examples.games.sustain_hub import evaluate as _eval_mod
+
+            metrics = _eval_mod.compute_sustain_score(adapted)
+            metrics['status'] = 'ok'
+
+            # Save per-seed results
+            results_path = os.path.join(run_dir, 'results.json')
+            with open(results_path, 'w') as f:
+                json.dump(adapted, f, indent=2, default=str)
+
+        else:
+            # Run via subprocess to run.py (full Concordia simulation)
+            cmd = [
+                sys.executable, '-m', 'examples.games.sustain_hub.run',
+                f'--num_sprints={config["num_sprints"]}',
+                f'--community_size={config["community_size"]}',
+                f'--governance={config["governance"]}',
+                f'--seed={seed_val}',
+                '--skip_backstory',
+                '--fast',
+                f'--output_dir={run_dir}',
+                f'--vllm_url={vllm_url}',
+                f'--model_name={model_name}',
+            ]
+            if config['use_active_inference']:
+                cmd.append('--use_active_inference')
+            else:
+                cmd.append('--nouse_active_inference')
+            if config.get('stress_types'):
+                cmd.append(f'--stress_types={",".join(config["stress_types"])}')
+                cmd.append('--enable_stress')
+            else:
+                # None means all stress types
+                cmd.append('--enable_stress')
+
+            print(f'  Seed {seed_idx} (seed={seed_val})...', end=' ',
+                  flush=True)
+            t0 = time.time()
+            result = subprocess.run(
+                cmd, capture_output=True, text=True, timeout=1800,
+            )
+            duration = time.time() - t0
+
+            if result.returncode != 0:
+                print(f'CRASHED ({duration:.0f}s)')
+                stderr_tail = result.stderr[-300:] if result.stderr else ''
+                if stderr_tail:
+                    print(f'    stderr: {stderr_tail}')
+                seed_results.append({'status': 'crash'})
+                continue
+
+            # Load results
+            results_path = os.path.join(run_dir, 'results.json')
+            if not os.path.exists(results_path):
+                print(f'no results.json ({duration:.0f}s)')
+                seed_results.append({'status': 'crash'})
+                continue
+
+            with open(results_path) as f:
+                data = json.load(f)
+
+            for _flag_name in list(FLAGS):
+                FLAGS[_flag_name].allow_override = True
+            from examples.games.sustain_hub import evaluate as _eval_mod
+
+            metrics = _eval_mod.compute_sustain_score(data)
+            metrics['status'] = 'ok'
+            print(f'HI={metrics["harmony_index"]:.3f} '
+                  f'CHS={metrics["chs"]:.3f} ({duration:.0f}s)')
+
+        seed_results.append(metrics)
+
+    # Aggregate across seeds
+    ok_results = [r for r in seed_results if r.get('status') == 'ok']
+    if not ok_results:
+        print(f'  WARNING: All seeds crashed for {experiment_key}')
+        return {
+            'key': experiment_key,
+            'name': config['name'],
+            'purpose': config['purpose'],
+            'status': 'all_crashed',
+            'num_ok': 0,
+            'num_seeds': num_seeds,
+        }
+
+    metric_keys = [
+        'harmony_index', 'resilience_quotient', 'mean_brs', 'sue', 'chs',
+    ]
+    summary: dict[str, Any] = {
+        'key': experiment_key,
+        'name': config['name'],
+        'purpose': config['purpose'],
+        'config': config,
+        'status': 'ok',
+        'num_ok': len(ok_results),
+        'num_seeds': num_seeds,
+    }
+    for mk in metric_keys:
+        values = [r[mk] for r in ok_results if mk in r]
+        if values:
+            summary[f'{mk}_mean'] = float(np.mean(values))
+            summary[f'{mk}_std'] = float(np.std(values))
+        else:
+            summary[f'{mk}_mean'] = 0.0
+            summary[f'{mk}_std'] = 0.0
+
+    return summary
+
+
+def run_comparison_suite(
+    experiment_keys: list[str] | str = 'all',
+    vllm_url: str = '',
+    model_name: str = 'Qwen/Qwen2.5-7B-Instruct',
+    output_dir: str = '/tmp/sustain_hub_comparison',
+) -> dict[str, Any]:
+    """Run the full cross-system comparison suite.
+
+    Args:
+        experiment_keys: List of keys (e.g. ["A1","A2"]) or "all".
+        vllm_url: vLLM API base URL.
+        model_name: LLM model name.
+        output_dir: Root output directory.
+
+    Returns:
+        Dict with all experiment results keyed by experiment key.
+    """
+    if experiment_keys == 'all' or experiment_keys == ['all']:
+        keys = list(COMPARISON_EXPERIMENTS.keys())
+    elif isinstance(experiment_keys, str):
+        keys = [k.strip() for k in experiment_keys.split(',')]
+    else:
+        keys = list(experiment_keys)
+
+    # Validate keys
+    for k in keys:
+        if k not in COMPARISON_EXPERIMENTS:
+            raise ValueError(
+                f'Unknown experiment key: {k}. '
+                f'Valid keys: {list(COMPARISON_EXPERIMENTS.keys())}'
+            )
+
+    os.makedirs(output_dir, exist_ok=True)
+
+    all_results: dict[str, Any] = {}
+    for key in keys:
+        result = run_comparison_experiment(
+            key, vllm_url, model_name, output_dir,
+        )
+        all_results[key] = result
+
+    # Print formatted table
+    format_comparison_table(all_results)
+
+    # Save combined results
+    comparison_file = os.path.join(output_dir, 'comparison.json')
+    with open(comparison_file, 'w') as f:
+        json.dump(all_results, f, indent=2, default=str)
+    print(f'\nComparison results saved to {comparison_file}')
+
+    return all_results
+
+
+def format_comparison_table(results: dict[str, Any]) -> None:
+    """Print a formatted comparison table across experiments.
+
+    Args:
+        results: Dict mapping experiment key -> summary dict from
+            run_comparison_experiment.
+    """
+    print(f'\n{"=" * 120}')
+    print('CROSS-SYSTEM COMPARISON (Step 5)')
+    print(f'{"=" * 120}')
+
+    header = (
+        f'{"Exp":<5} '
+        f'{"HI (mean+/-std)":<18} '
+        f'{"RQ":<18} '
+        f'{"BRS":<18} '
+        f'{"SUE":<18} '
+        f'{"CHS":<18} '
+        f'{"Purpose"}'
+    )
+    print(header)
+    print('-' * 120)
+
+    for key in sorted(results.keys()):
+        r = results[key]
+        if r.get('status') != 'ok':
+            print(f'{key:<5} {"CRASHED":<18} {"":18} {"":18} {"":18} '
+                  f'{"":18} {r.get("purpose", "")}')
+            continue
+
+        def _fmt(metric_name: str) -> str:
+            mean = r.get(f'{metric_name}_mean', 0.0)
+            std = r.get(f'{metric_name}_std', 0.0)
+            return f'{mean:.3f} +/- {std:.3f}'
+
+        print(
+            f'{key:<5} '
+            f'{_fmt("harmony_index"):<18} '
+            f'{_fmt("resilience_quotient"):<18} '
+            f'{_fmt("mean_brs"):<18} '
+            f'{_fmt("sue"):<18} '
+            f'{_fmt("chs"):<18} '
+            f'{r.get("purpose", "")}'
+        )
+
+    print(f'{"=" * 120}')
+
+    # Summary statistics
+    ok_results = {k: v for k, v in results.items() if v.get('status') == 'ok'}
+    if ok_results:
+        seeds_ok = sum(v['num_ok'] for v in ok_results.values())
+        seeds_total = sum(v['num_seeds'] for v in ok_results.values())
+        print(f'\nExperiments completed: {len(ok_results)}/{len(results)}')
+        print(f'Seeds completed: {seeds_ok}/{seeds_total}')
+
+
+# =============================================================================
+# CLI flags for comparison mode
+# =============================================================================
+
+flags.DEFINE_bool(
+    'comparison', False,
+    'Run the cross-system comparison suite instead of the experiment ladder.')
+flags.DEFINE_list(
+    'experiments', None,
+    'Comma-separated experiment keys for comparison mode '
+    '(e.g. A1,A2,B1). Default: all.')
+
+
+def _run_comparison_main() -> None:
+    """Entry point for --comparison mode."""
+    experiment_keys = FLAGS.experiments if FLAGS.experiments else 'all'
+    vllm_url = FLAGS.vllm_url or ''
+    model_name = FLAGS.model_name
+
+    run_comparison_suite(
+        experiment_keys=experiment_keys,
+        vllm_url=vllm_url,
+        model_name=model_name,
+        output_dir=FLAGS.output_dir,
+    )
+
+
+# Patch main to handle --comparison flag
+_original_main = main
+
+
+def main(argv):
+    if FLAGS.comparison:
+        _run_comparison_main()
+    else:
+        _original_main(argv)
+
+
 if __name__ == '__main__':
     app.run(main)

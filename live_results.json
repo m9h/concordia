@@ -1,29 +1,35 @@
 {
   "scores": {
-    "Jordan": 3.0,
+    "Jordan": -1.0,
     "Priya": 3.0,
     "Xavier": 3.0,
     "Elena": 3.0
   },
-  "harmony_index": 1.0,
+  "harmony_index": 0.8,
   "resilience_quotient": 1.0,
   "sprint_history": [
     {
       "joint_action": {
-        "Jordan": "Feature: Add multi-language localization framework.",
+        "Jordan": "Feature: Implement full-text search across project documents.",
         "Priya": "Fix: Null pointer exception when user profile has no avatar.",
         "Xavier": "Fix: Incorrect timezone handling in the scheduler module.",
         "Elena": "Docs: Rewrite the quickstart guide for new contributors."
       },
       "scores": {
-        "Jordan": 3.0,
+        "Jordan": -1.0,
         "Priya": 3.0,
         "Xavier": 3.0,
         "Elena": 3.0
       },
-      "harmony_index": 1.0,
+      "harmony_index": 0.8,
       "stress_type": null,
-      "policy": "None"
+      "policy": "None",
+      "task_difficulties": {
+        "Jordan": "hard",
+        "Priya": "medium",
+        "Xavier": "medium",
+        "Elena": "medium"
+      }
     }
   ],
   "narrative_history": [
@@ -65,5 +71,5 @@
     }
   },
   "seed": 42,
-  "governance": "dictator"
+  "governance": "free_choice"
 }
