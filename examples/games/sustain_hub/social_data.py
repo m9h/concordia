@@ -485,3 +485,40 @@ CALL_TO_TASK_DECISION = (
 CALL_TO_REVIEW_DECISION = (
     "How does {name} approach the code review? Choose their strategy."
 )
+
+# =============================================================================
+# Governance mode configuration
+# =============================================================================
+
+GOVERNANCE_MODES = {
+    "free_choice": {
+        "description": "Agents freely choose which tasks to work on.",
+        "task_decision_premise": DECISION_PREMISE,
+    },
+    "dictator": {
+        "description": "A project lead assigns tasks to maximize coverage.",
+        "assignment_prompt": (
+            "You are the Project Lead for SustainHub. Based on each contributor's "
+            "role and expertise, assign tasks to maximize coverage across all task "
+            "types. Ensure no task category is left unattended. "
+            "Assign {name} a task from: {task_options}"
+        ),
+        "agent_response_premise": (
+            "The Project Lead has assigned {name} to work on: {assigned_task}. "
+            "{name} can accept the assignment, negotiate for a different task, "
+            "or refuse (which hurts team trust)."
+        ),
+    },
+    "meritocratic": {
+        "description": "Top performers get priority access to preferred tasks.",
+        "priority_premise": (
+            "{name} has earned priority access to {task_type} tasks based on "
+            "their track record (cumulative score: {score:.1f}). They get first "
+            "pick among {task_type} tasks this sprint."
+        ),
+        "remaining_premise": (
+            "{name} does not have priority access this sprint. They may choose "
+            "from remaining tasks after priority agents have selected."
+        ),
+    },
+}

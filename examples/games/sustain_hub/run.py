@@ -48,6 +48,10 @@ flags.DEFINE_string('vllm_system_prompt', None, 'System prompt for vLLM chat mod
 flags.DEFINE_string('vllm_api_key', None,
     'API key for authenticated endpoints (NIM cloud). '
     'Falls back to NGC_API_KEY env var.')
+flags.DEFINE_enum('governance', 'free_choice',
+    ['free_choice', 'dictator', 'meritocratic'],
+    'Governance model: free_choice (agents self-select), '
+    'dictator (project lead assigns), meritocratic (priority by track record).')
 
 
 def main(argv):
@@ -115,6 +119,7 @@ def main(argv):
   print(f'Active Inference: {FLAGS.use_active_inference}')
   inject_ctx = FLAGS.inject_aif_context if FLAGS.inject_aif_context is not None else FLAGS.use_active_inference
   print(f'Inject AIF Context: {inject_ctx}')
+  print(f'Governance: {FLAGS.governance}')
   if FLAGS.vllm_url:
     print(f'Backend: vLLM ({FLAGS.vllm_url})')
   elif FLAGS.project:
@@ -135,6 +140,7 @@ def main(argv):
       use_active_inference=FLAGS.use_active_inference,
       skip_conversation=FLAGS.fast,
       inject_aif_context=FLAGS.inject_aif_context,
+      governance=FLAGS.governance,
   )
 
   # Print summary

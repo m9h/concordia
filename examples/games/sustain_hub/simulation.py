@@ -815,6 +815,7 @@ def configure_scenes(
     stress_schedule: Mapping[int, str] | None = None,
     dropout_name: str | None = None,
     skip_conversation: bool = False,
+    governance: str = 'free_choice',
 ) -> tuple[
     Sequence[scene_lib.SceneSpec],
     list[tuple[list[str], dict[str, str]]],
@@ -833,6 +834,8 @@ def configure_scenes(
     rng: Random number generator.
     stress_schedule: Optional mapping of sprint_num -> stress_type.
     dropout_name: Optional name of agent who drops out mid-simulation.
+    skip_conversation: Skip conversation scenes (fast mode).
+    governance: Governance model ('free_choice', 'dictator', 'meritocratic').
 
   Returns:
     Tuple of (scenes, sprint_task_data) where sprint_task_data[i] is
@@ -840,6 +843,10 @@ def configure_scenes(
   """
   if stress_schedule is None:
     stress_schedule = {}
+
+  governance_config = social_data.GOVERNANCE_MODES.get(
+      governance, social_data.GOVERNANCE_MODES['free_choice']
+  )
 
   scenes = []
   sprint_task_data = []
@@ -950,15 +957,100 @@ def configure_scenes(
     for name in active_people:
       role = player_roles.get(name, social_data.Role.CONTRIBUTOR)
       preferred = social_data.ROLE_PREFERRED_TASKS[role]
-      decision_premise[name] = [
-          (
-              f"{name} must now choose a task for Sprint {sprint_num}. "
-              f"As a {role.value}, {name}'s strength is "
-              f"{preferred.replace('_', ' ')} tasks. Picking a preferred "
-              f"task yields higher reward, but the project may need help in "
-              f"other areas."
-          ),
-      ]
+
+      base_premise = (
+          f"{name} must now choose a task for Sprint {sprint_num}. "
+          f"As a {role.value}, {name}'s strength is "
+          f"{preferred.replace('_', ' ')} tasks. Picking a preferred "
+          f"task yields higher reward, but the project may need help in "
+          f"other areas."
+      )
+
+      premise_parts: list[str | Callable] = [base_premise]
+
+      if governance == 'dictator':
+        # GM-assigned task: pick a task aligned with the agent's role
+        # to simulate a project lead maximizing coverage
+        task_options_str = '; '.join(task_labels[:6])
+        assignment_prompt = governance_config['assignment_prompt'].format(
+            name=name, task_options=task_options_str
+        )
+        # Find a task matching the agent's preferred type if available,
+        # otherwise pick the first available task
+        assigned_task = None
+        for t_label in task_labels:
+          t_type = task_type_map.get(t_label, '')
+          if t_type == preferred:
+            assigned_task = t_label
+            break
+        if assigned_task is None:
+          assigned_task = rng.choice(task_labels)
+
+        agent_response = governance_config['agent_response_premise'].format(
+            name=name, assigned_task=assigned_task
+        )
+        premise_parts.append(assignment_prompt)
+        premise_parts.append(agent_response)
+
+      elif governance == 'meritocratic':
+        # Determine priority based on cumulative scores from previous sprints
+        # Use sprint_task_data accumulated so far to approximate scores
+        # For the first sprint, no one has priority; afterwards use index
+        if sprint_idx > 0:
+          # Build a simple score proxy: agents who picked preferred tasks
+          # in earlier sprints have higher implicit scores
+          # We use a deterministic heuristic based on sprint index
+          expertise = social_data.AGENT_PROFILES.get(name, {}).get(
+              'expertise', social_data.ExpertiseLevel.INTERMEDIATE
+          )
+          expertise_score = {
+              social_data.ExpertiseLevel.EXPERT: 3.0,
+              social_data.ExpertiseLevel.SENIOR: 2.0,
+              social_data.ExpertiseLevel.INTERMEDIATE: 1.0,
+              social_data.ExpertiseLevel.APPRENTICE: 0.5,
+          }.get(expertise, 1.0)
+          # Scale by sprint index to simulate accumulation
+          proxy_score = expertise_score * sprint_idx
+
+          # Top half of agents (by proxy score among active) get priority
+          all_scores = []
+          for p in active_people:
+            p_expertise = social_data.AGENT_PROFILES.get(p, {}).get(
+                'expertise', social_data.ExpertiseLevel.INTERMEDIATE
+            )
+            p_score = {
+                social_data.ExpertiseLevel.EXPERT: 3.0,
+                social_data.ExpertiseLevel.SENIOR: 2.0,
+                social_data.ExpertiseLevel.INTERMEDIATE: 1.0,
+                social_data.ExpertiseLevel.APPRENTICE: 0.5,
+            }.get(p_expertise, 1.0) * sprint_idx
+            all_scores.append((p, p_score))
+          all_scores.sort(key=lambda x: x[1], reverse=True)
+          top_half = {s[0] for s in all_scores[:len(all_scores) // 2]}
+
+          if name in top_half:
+            task_type_label = preferred.replace('_', ' ')
+            priority_text = governance_config['priority_premise'].format(
+                name=name,
+                task_type=task_type_label,
+                score=proxy_score,
+            )
+            premise_parts.append(priority_text)
+          else:
+            remaining_text = governance_config['remaining_premise'].format(
+                name=name
+            )
+            premise_parts.append(remaining_text)
+        else:
+          # First sprint: no track record yet, all agents equal
+          premise_parts.append(
+              f"This is the first sprint. No track record exists yet, "
+              f"so all contributors have equal access to tasks."
+          )
+
+      # free_choice: no extra premise needed (base_premise is sufficient)
+
+      decision_premise[name] = premise_parts
 
     scenes.append(
         scene_lib.SceneSpec(
@@ -1092,6 +1184,7 @@ def run_simulation(
     use_active_inference: bool = True,
     skip_conversation: bool = False,
     inject_aif_context: bool | None = None,
+    governance: str = 'free_choice',
 ) -> dict[str, Any]:
   """Run the SustainHub simulation.
 
@@ -1110,6 +1203,9 @@ def run_simulation(
     inject_aif_context: Inject structured Active Inference beliefs
         (Bayesian health estimate, urgency, habits) into LLM prompts.
         Defaults to True when use_active_inference is True.
+    governance: Governance model for task allocation. One of 'free_choice'
+        (agents self-select), 'dictator' (project lead assigns), or
+        'meritocratic' (priority by track record).
 
   Returns:
     Dictionary containing simulation results, scores, harmony index history,
@@ -1169,6 +1265,7 @@ def run_simulation(
       stress_schedule=stress_schedule,
       dropout_name=dropout_name,
       skip_conversation=skip_conversation,
+      governance=governance,
   )
 
   # Build the combined task_type_map across all sprints (for payoff engine)
@@ -1420,5 +1517,6 @@ def run_simulation(
       "relational_matrix": dict(relational_matrix),
       "structured_log": structured_log,
       "seed": seed,
+      "governance": governance,
   }
 
