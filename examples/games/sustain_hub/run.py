@@ -31,6 +31,9 @@ flags.DEFINE_string(
 flags.DEFINE_bool('use_mock', False, 'Use a mock model for testing.')
 flags.DEFINE_integer('num_sprints', 3, 'Number of sprints to run.')
 flags.DEFINE_bool('enable_stress', True, 'Whether to enable stress scenarios.')
+flags.DEFINE_list('stress_types', None,
+    'Comma-separated stress types to use (default: all). '
+    'Options: contributor_dropout,task_overload,funding_cut,dependency_crisis,fork_threat')
 flags.DEFINE_integer('community_size', 16, 'Number of agents in the community.')
 flags.DEFINE_bool('skip_backstory', False, 'Whether to skip initial backstory generation (faster).')
 flags.DEFINE_bool('verbose', False, 'Whether to print detailed simulation logs.')
@@ -134,6 +137,7 @@ def main(argv):
       num_sprints=FLAGS.num_sprints,
       seed=FLAGS.seed,
       enable_stress=FLAGS.enable_stress,
+      stress_types=FLAGS.stress_types,
       community_size=FLAGS.community_size,
       skip_backstory=FLAGS.skip_backstory,
       verbose=FLAGS.verbose,

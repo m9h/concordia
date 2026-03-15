@@ -450,7 +450,8 @@ class SustainHubPayoff:
       # Success probability based on expertise level and task alignment
       # Calibrated from empirical OSS data (Gemini research brief):
       #   Apprentice: 25%, Regular/Intermediate: 75%, Expert/Senior: 95%
-      expertise = social_data.AGENT_PROFILES.get(player, {}).get(
+      _all = social_data.get_all_agent_profiles()
+      expertise = _all.get(player, {}).get(
           'expertise', social_data.ExpertiseLevel.INTERMEDIATE)
       expertise_probs = {
           social_data.ExpertiseLevel.APPRENTICE: 0.25,
@@ -1185,6 +1186,7 @@ def run_simulation(
     skip_conversation: bool = False,
     inject_aif_context: bool | None = None,
     governance: str = 'free_choice',
+    stress_types: Sequence[str] | None = None,
 ) -> dict[str, Any]:
   """Run the SustainHub simulation.
 
@@ -1219,16 +1221,17 @@ def run_simulation(
   random.seed(seed)
   rng = random.Random(seed)
 
-  # Select agents
+  # Select agents (use extended profiles for large communities)
+  all_profiles = social_data.get_all_agent_profiles(community_size)
   if agents_to_use is None:
-    all_names = list(social_data.AGENT_PROFILES.keys())
+    all_names = list(all_profiles.keys())
     if community_size > len(all_names):
       community_size = len(all_names)
     agents_to_use = rng.sample(all_names, community_size)
 
   people = list(agents_to_use)
   player_roles = {
-      name: social_data.AGENT_PROFILES[name]["role"]
+      name: all_profiles[name]["role"]
       for name in people
   }
 
@@ -1239,20 +1242,28 @@ def run_simulation(
   )
 
   # Stress schedule — progressive environmental pressure
+  # If stress_types is specified, only include those types.
+  # This enables matched comparisons (e.g. --stress_types=contributor_dropout
+  # to match Rohira's dropout-only experiments).
+  allowed_stress = set(stress_types) if stress_types else None
   stress_schedule: dict[int, str] = {}
   dropout_name = None
   if enable_stress:
+    def _include(stype: str) -> bool:
+      return allowed_stress is None or stype in allowed_stress
     if num_sprints >= 3:
-      contributors = [n for n, r in player_roles.items() if r == social_data.Role.CONTRIBUTOR]
-      if len(contributors) >= 2:
-        dropout_name = rng.choice(contributors)
-        stress_schedule[2] = "contributor_dropout"
-      stress_schedule[3] = "task_overload"
-    if num_sprints >= 4:
+      if _include("contributor_dropout"):
+        contributors = [n for n, r in player_roles.items() if r == social_data.Role.CONTRIBUTOR]
+        if len(contributors) >= 2:
+          dropout_name = rng.choice(contributors)
+          stress_schedule[2] = "contributor_dropout"
+      if _include("task_overload"):
+        stress_schedule[3] = "task_overload"
+    if num_sprints >= 4 and _include("funding_cut"):
       stress_schedule[4] = "funding_cut"
-    if num_sprints >= 5:
+    if num_sprints >= 5 and _include("dependency_crisis"):
       stress_schedule[5] = "dependency_crisis"
-    if num_sprints >= 6:
+    if num_sprints >= 6 and _include("fork_threat"):
       stress_schedule[6] = "fork_threat"
 
   # Configure scenes
@@ -1299,7 +1310,7 @@ def run_simulation(
   # Add common tools to each player's toolset
   common_tools = [
       sustain_tools.ProjectStatsTool(payoff),
-      sustain_tools.MentorshipTool(player_roles, social_data.AGENT_PROFILES),
+      sustain_tools.MentorshipTool(player_roles, all_profiles),
   ]
   for name in people:
     player_tools[name].extend(common_tools)
@@ -1334,7 +1345,7 @@ def run_simulation(
   player_specific_memories: dict[str, list[str]] = {}
 
   for name in people:
-    profile = social_data.AGENT_PROFILES[name]
+    profile = all_profiles[name]
     role = profile["role"]
     expertise = profile["expertise"]
     preferred_task = social_data.ROLE_PREFERRED_TASKS[role]

@@ -522,3 +522,185 @@ GOVERNANCE_MODES = {
         ),
     },
 }
+
+# =============================================================================
+# Cross-system comparison: Rohira SustainHub alignment
+# =============================================================================
+
+# Mapping between Rohira's expertise levels and ours:
+#   Rohira Novice       -> our Apprentice
+#   Rohira Intermediate -> our Intermediate
+#   Rohira Expert       -> our Senior/Expert (we split into two tiers)
+#
+# Rohira's reward function:
+#   reward = preferred_task_bonus * expertise_multiplier
+#   preferred_task_bonus = +3 (match), +1 (non-match), 0 (skip)
+#   expertise_multiplier = {Novice: 0.5, Intermediate: 0.75, Expert: 1.0}
+# Our reward function (simulation.py action_to_scores):
+#   Stochastic: success_prob based on expertise, then:
+#     preferred success: +3, preferred failure: -1
+#     non-preferred success: +1, non-preferred failure: -1
+#     skip: 0
+# Key difference: Rohira is deterministic, ours is stochastic with
+# expertise-dependent success probability. For comparison, report both
+# the expected reward E[R] and the realized reward.
+
+ROHIRA_EXPERTISE_MAP = {
+    ExpertiseLevel.APPRENTICE: "novice",
+    ExpertiseLevel.INTERMEDIATE: "intermediate",
+    ExpertiseLevel.SENIOR: "expert",
+    ExpertiseLevel.EXPERT: "expert",
+}
+
+# Extra agent profiles for scaling to 20-30 agents (Rohira tested these sizes)
+EXTRA_AGENT_PROFILES = {
+    "Mei": {
+        "role": Role.CONTRIBUTOR,
+        "expertise": ExpertiseLevel.INTERMEDIATE,
+        "backstory": (
+            "Mei is a backend developer who joined the project after using "
+            "SustainHub at her company. She focuses on database-related bugs "
+            "and performance issues. She is reliable but prefers to stay in "
+            "her comfort zone."
+        ),
+        "personality": "Steady, detail-oriented, avoids conflict.",
+    },
+    "Amir": {
+        "role": Role.INNOVATOR,
+        "expertise": ExpertiseLevel.INTERMEDIATE,
+        "backstory": (
+            "Amir is a mobile developer who wants to bring SustainHub to "
+            "new platforms. He is passionate about UX but sometimes proposes "
+            "changes without considering the maintenance burden."
+        ),
+        "personality": "Enthusiastic, UX-focused, sometimes naive about costs.",
+    },
+    "Sofia": {
+        "role": Role.KNOWLEDGE_CURATOR,
+        "expertise": ExpertiseLevel.INTERMEDIATE,
+        "backstory": (
+            "Sofia is a DevRel professional who writes tutorials and blog "
+            "posts about SustainHub. She bridges the gap between the core "
+            "team and the broader community."
+        ),
+        "personality": "Communicative, community-minded, pragmatic.",
+    },
+    "Diego": {
+        "role": Role.MAINTAINER,
+        "expertise": ExpertiseLevel.INTERMEDIATE,
+        "backstory": (
+            "Diego is an infrastructure engineer who helps maintain the CI/CD "
+            "pipeline. He is methodical and careful, preferring to review code "
+            "thoroughly before merging."
+        ),
+        "personality": "Cautious, systematic, values stability.",
+    },
+    "Nadia": {
+        "role": Role.CONTRIBUTOR,
+        "expertise": ExpertiseLevel.SENIOR,
+        "backstory": (
+            "Nadia is a systems programmer who contributes complex bug fixes "
+            "involving concurrency and memory management. She is quiet but "
+            "highly effective."
+        ),
+        "personality": "Reserved, precise, high technical standards.",
+    },
+    "Kwame": {
+        "role": Role.INNOVATOR,
+        "expertise": ExpertiseLevel.SENIOR,
+        "backstory": (
+            "Kwame is a data engineer who is building analytics features for "
+            "SustainHub. He enjoys large-scale system design and often "
+            "advocates for architectural improvements."
+        ),
+        "personality": "Strategic, big-picture thinker, patient.",
+    },
+    "Isla": {
+        "role": Role.KNOWLEDGE_CURATOR,
+        "expertise": ExpertiseLevel.APPRENTICE,
+        "backstory": (
+            "Isla is a technical writing student doing an internship with the "
+            "SustainHub project. She is eager to learn but needs guidance on "
+            "the codebase to write accurate documentation."
+        ),
+        "personality": "Curious, willing to learn, needs mentorship.",
+    },
+    "Tomas": {
+        "role": Role.CONTRIBUTOR,
+        "expertise": ExpertiseLevel.APPRENTICE,
+        "backstory": (
+            "Tomas is a bootcamp graduate making his first open-source "
+            "contributions. He picks up small bugs to build experience and "
+            "is grateful for any code review feedback."
+        ),
+        "personality": "Humble, persistent, learning quickly.",
+    },
+    "Ravi": {
+        "role": Role.MAINTAINER,
+        "expertise": ExpertiseLevel.SENIOR,
+        "backstory": (
+            "Ravi is a senior engineer at a cloud provider who reviews PRs "
+            "as part of his employer's open-source program. He is thorough "
+            "but strictly time-boxed in his contributions."
+        ),
+        "personality": "Efficient, professional, time-constrained.",
+    },
+    "Lena": {
+        "role": Role.INNOVATOR,
+        "expertise": ExpertiseLevel.EXPERT,
+        "backstory": (
+            "Lena is a compiler engineer who contributes performance-critical "
+            "features. She has deep expertise but limited patience for process. "
+            "She pushes the boundaries of what the project can do."
+        ),
+        "personality": "Brilliant, impatient, technically demanding.",
+    },
+    "Oscar": {
+        "role": Role.CONTRIBUTOR,
+        "expertise": ExpertiseLevel.INTERMEDIATE,
+        "backstory": (
+            "Oscar is a web developer who contributes frontend bug fixes and "
+            "accessibility improvements. He cares deeply about making the "
+            "project usable for everyone."
+        ),
+        "personality": "Empathetic, accessibility-focused, steady.",
+    },
+    "Hana": {
+        "role": Role.KNOWLEDGE_CURATOR,
+        "expertise": ExpertiseLevel.SENIOR,
+        "backstory": (
+            "Hana is a former teacher who brings pedagogical skill to "
+            "documentation. She creates step-by-step tutorials that have "
+            "significantly improved the project's onboarding experience."
+        ),
+        "personality": "Patient, structured, excellent communicator.",
+    },
+    "Viktor": {
+        "role": Role.MAINTAINER,
+        "expertise": ExpertiseLevel.EXPERT,
+        "backstory": (
+            "Viktor is a veteran open-source contributor who has maintained "
+            "several large projects. He brings governance experience and often "
+            "mediates disagreements between contributors."
+        ),
+        "personality": "Diplomatic, experienced, values consensus.",
+    },
+    "Preet": {
+        "role": Role.CONTRIBUTOR,
+        "expertise": ExpertiseLevel.SENIOR,
+        "backstory": (
+            "Preet is a full-stack developer who contributes bug fixes across "
+            "the entire stack. She is versatile and willing to take on any "
+            "task that needs doing, even if it's not glamorous."
+        ),
+        "personality": "Versatile, selfless, quietly effective.",
+    },
+}
+
+
+def get_all_agent_profiles(community_size: int | None = None) -> dict:
+  """Return agent profiles, including extras if community_size > 16."""
+  profiles = dict(AGENT_PROFILES)
+  if community_size is not None and community_size > len(profiles):
+    profiles.update(EXTRA_AGENT_PROFILES)
+  return profiles
