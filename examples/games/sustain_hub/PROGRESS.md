@@ -1,7 +1,8 @@
 # SustainHub Three-Way Comparison — Progress Report
 
-**Date**: 2026-03-15
+**Date**: 2026-03-15 (updated)
 **Target**: OREL meeting week of March 16-20
+**Branch**: `sustainhub-autoresearch` @ `3be7fcc`
 
 ---
 
@@ -28,11 +29,20 @@
 - Meritocratic: priority by expertise/track record
 - Free choice: agents self-select (default)
 
-### Step 4a: Toy Project for Code Tasks (Partial)
-- `toy_project/calculator/calculator.py` — calculator with 5 intentional bugs, 5 missing features
-- `toy_project/tests/test_calculator.py` — 10 test classes (TestIssue1-TestIssue10), pytest-scorable
-- `toy_project/issues/issue_1.md` through `issue_10.md` — markdown issue files matching LLAMOSC format
-- `toy_project/conftest.py` — path configuration
+### Step 4: Code Tasks (LLAMOSC Comparison)
+- `toy_project/` — 10 issues, buggy calculator, 36 pytest tests (30 fail on unpatched)
+- `code_tasks.py` — LLM→patch→pytest scoring engine (load_issues, generate_patch, score_patch)
+- `--code_tasks` flag wired into simulation.py and run.py
+- Falls back to stochastic on failure; abstract mode unchanged
+
+### Step 5: External Baseline Setup
+- **Rohira SustainHub** cloned at `~/dev/rohira-sustainhub` with uv venv
+  - `run_comparison.py` for headless batch runs
+  - Results: HI=0.829±0.077 (baseline), 0.737 (15 agents), 0.733 (20), 0.683 (30)
+- **LLAMOSC** cloned at `~/dev/llamosc` with uv venv
+  - `nim_adapter.py` replaces hardcoded Ollama with NIM cloud support
+  - `run_comparison.py` for headless batch runs
+- **`run_three_way_comparison.py`** orchestrates all three systems
 
 ### NIM Cloud Integration
 - `vllm_remote.py` supports Bearer auth for NVIDIA NIM cloud
@@ -71,43 +81,43 @@
 
 Rohira's reported HI ≈ 0.81. Our 3-seed mean matches exactly, but need 5 seeds for publishable error bars.
 
+### External Baselines (Rohira RL, LLAMOSC LLM)
+
+| System | Config | HI / HI_eq | Seeds |
+|--------|--------|-------------|-------|
+| Rohira | 10 agents, 10 steps | **0.829±0.077** | 5 |
+| Rohira | 15 agents, 7 steps (canonical) | 0.737±0.023 | 5 |
+| Rohira | 20 agents | 0.733±0.035 | 5 |
+| Rohira | 30 agents | 0.683±0.047 | 5 |
+| LLAMOSC | Auth, 5 contrib | 0.578±0.064 | 5 |
+| LLAMOSC | Decentral, 5 contrib | 0.595±0.077 | 5 |
+| LLAMOSC | Auth, 8 contrib, 10 issues | 0.518±0.044 | 5 |
+| LLAMOSC | Decentral, 8 contrib, 10 issues | 0.519±0.040 | 5 |
+| LLAMOSC | Auth, 10 contrib, 10 issues | 0.488±0.034 | 5 |
+| LLAMOSC | Decentral, 10 contrib, 10 issues | 0.488±0.038 | 5 |
+
 ---
 
 ## Remaining Work (Priority Order)
 
 ### HIGH — Needed for OREL meeting
 
-1. **`code_tasks.py` — Code execution scoring engine** (NOT YET CREATED)
-   - `load_issues()` — parse issue markdown files
-   - `generate_patch(issue, model, agent_expertise)` — LLM generates unified diff
-   - `score_patch(issue_id, patch)` — apply patch to temp copy, run pytest, return pass/fail
-   - `get_task_pool(num_tasks, rng)` — balanced issue selection
-   - This is the critical "apples-to-apples" piece matching LLAMOSC
+1. **Run code_tasks experiments on NIM** (B-series with `--code_tasks`)
+   - Free choice, dictator, meritocratic with real pytest scoring
+   - Direct comparison to LLAMOSC's governance + code findings
 
-2. **Wire `code_tasks` into `simulation.py`**
-   - Add `--code_tasks` flag to enable real code generation
-   - Replace abstract reward with pytest pass/fail scoring
-   - Agents generate patches via LLM, scored by running tests
-
-3. **Complete A-series experiments** (seeds 3-4 for A1, all of A2)
-   - A1: LLM-only, 10 agents, 10 sprints, dropout stress, 5 seeds
+2. **Complete A-series on NIM** (NIM context issues — may need smaller config)
+   - A1: seeds 3-4 (or re-run all 5 with 8 agents, 5 sprints)
    - A2: LLM+AIF, same config — quantifies AIF contribution
 
-4. **Run governance experiments WITH code tasks**
-   - B-series repeat with real code generation + pytest scoring
-   - Direct comparison to LLAMOSC's governance findings
+3. **Format final comparison table for OREL**
 
 ### MEDIUM — Strengthens the paper
 
-5. **A3: AIF-only (Level 4), 50 sprints, 10 seeds** — convergence comparison with Rohira
+4. **Rohira dropout stress results** (running)
+5. **A3: AIF-only (Level 4), 50 sprints, 10 seeds** — convergence comparison
 6. **C1: Ostrom priors experiment** — 10 agents, 10 sprints, 5 seeds
 7. **Comparison report/paper draft**
-
-### LOW — Nice to have
-
-8. **Real SWE-agent/Aider integration** (Docker-based, like LLAMOSC)
-9. **Community sizes 20/30** to match Rohira's scalability study
-10. **Multi-fidelity argument writeup** (Rohira for sweeps, Concordia for process, LLAMOSC for ground truth)
 
 ---
 
