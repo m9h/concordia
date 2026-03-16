@@ -1,0 +1,201 @@
+{
+  "config": {
+    "n_contributors": 5,
+    "n_maintainers": 3,
+    "n_issues": 5,
+    "algorithm": "a",
+    "test_mode": true,
+    "seed": 42
+  },
+  "results": [
+    {
+      "timestep": 1,
+      "issue_id": 1,
+      "issue_difficulty": 2,
+      "selected_contributor": "Contributor_4",
+      "pr_accepted": true,
+      "code_quality": 2,
+      "avg_code_quality": 2,
+      "issues_solved": 1
+    },
+    {
+      "timestep": 2,
+      "issue_id": 2,
+      "issue_difficulty": 3,
+      "selected_contributor": "Contributor_4",
+      "pr_accepted": true,
+      "code_quality": 3,
+      "avg_code_quality": 2.5,
+      "issues_solved": 2
+    },
+    {
+      "timestep": 3,
+      "issue_id": 3,
+      "issue_difficulty": 4,
+      "selected_contributor": "Contributor_4",
+      "pr_accepted": true,
+      "code_quality": 3,
+      "avg_code_quality": 2.667,
+      "issues_solved": 3
+    },
+    {
+      "timestep": 4,
+      "issue_id": 4,
+      "issue_difficulty": 1,
+      "selected_contributor": "Contributor_2",
+      "pr_accepted": true,
+      "code_quality": 3,
+      "avg_code_quality": 2.75,
+      "issues_solved": 4
+    },
+    {
+      "timestep": 5,
+      "issue_id": 5,
+      "issue_difficulty": 2,
+      "selected_contributor": "Contributor_1",
+      "pr_accepted": true,
+      "code_quality": 2,
+      "avg_code_quality": 2.6,
+      "issues_solved": 5
+    }
+  ],
+  "final_metrics": {
+    "total_issues": 5,
+    "issues_solved": 5,
+    "solve_rate": 1.0,
+    "avg_code_quality": 2.6,
+    "total_pull_requests": 5
+  },
+  "agent_final_state": {
+    "Contributor_0": {
+      "experience": 1,
+      "motivation": 2.5
+    },
+    "Contributor_1": {
+      "experience": 3.59,
+      "motivation": 5.0
+    },
+    "Contributor_2": {
+      "experience": 2.29,
+      "motivation": 4.5
+    },
+    "Contributor_3": {
+      "experience": 1,
+      "motivation": 3.5
+    },
+    "Contributor_4": {
+      "experience": 5.0,
+      "motivation": 3.5
+    }
+  },
+  "history": {
+    "time": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "experience": {
+      "Contributor_0": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "Contributor_1": [
+        3,
+        3,
+        3,
+        3,
+        3,
+        3.59
+      ],
+      "Contributor_2": [
+        2,
+        2,
+        2,
+        2,
+        2.29,
+        2.29
+      ],
+      "Contributor_3": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "Contributor_4": [
+        4,
+        4.6,
+        5.0,
+        5.0,
+        5.0,
+        5.0
+      ]
+    },
+    "motivation": {
+      "Contributor_0": [
+        3,
+        3,
+        3,
+        3,
+        2.5,
+        2.5
+      ],
+      "Contributor_1": [
+        6,
+        5.5,
+        5.0,
+        5.0,
+        4.5,
+        5.0
+      ],
+      "Contributor_2": [
+        5,
+        4.5,
+        4.5,
+        4.5,
+        5.0,
+        4.5
+      ],
+      "Contributor_3": [
+        4,
+        4,
+        4,
+        4,
+        3.5,
+        3.5
+      ],
+      "Contributor_4": [
+        3,
+        3.5,
+        4.0,
+        4.5,
+        4.0,
+        3.5
+      ]
+    },
+    "code_quality_avg": [
+      2.5,
+      2,
+      2.5,
+      2.6666666666666665,
+      2.75,
+      2.6
+    ],
+    "code_quality_current": [
+      2.5,
+      2,
+      3,
+      3,
+      3,
+      2
+    ]
+  }
+}

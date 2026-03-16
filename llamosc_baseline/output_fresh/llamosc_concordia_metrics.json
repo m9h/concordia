@@ -1,0 +1,106 @@
+{
+  "level": "llamosc",
+  "level_name": "LLAMOSC Baseline",
+  "description": "LLAMOSC agent-based simulation mapped to Concordia metric space. Algorithm: a, test_mode: True, seed: 42.",
+  "new_concept": "LLM-agent task allocation",
+  "rl_analog": "LLAMOSC simulation",
+  "aif_mechanism": "N/A",
+  "num_sprints": 5,
+  "duration_s": 0.0,
+  "mean_hi": 0.207867,
+  "final_hi": 0.296,
+  "resilience_quotient": 0.4444,
+  "mean_coverage": 1.0,
+  "mean_diversity": 1.0,
+  "strategy_diversity": 0.3333,
+  "hi_trajectory": [
+    0.08,
+    0.18,
+    0.213333,
+    0.27,
+    0.296
+  ],
+  "sprint_history": [
+    {
+      "sprint": 0,
+      "actions": {
+        "Contributor_4": "bug_fix"
+      },
+      "rewards": {
+        "Contributor_4": 0.0
+      },
+      "harmony_index": 0.07999999999999999,
+      "diversity": 0.25,
+      "coverage": 0.25
+    },
+    {
+      "sprint": 1,
+      "actions": {
+        "Contributor_4": "feature"
+      },
+      "rewards": {
+        "Contributor_4": 1.0
+      },
+      "harmony_index": 0.18,
+      "diversity": 0.25,
+      "coverage": 0.25
+    },
+    {
+      "sprint": 2,
+      "actions": {
+        "Contributor_4": "code_review"
+      },
+      "rewards": {
+        "Contributor_4": 1.0
+      },
+      "harmony_index": 0.21333333333333332,
+      "diversity": 0.25,
+      "coverage": 0.25
+    },
+    {
+      "sprint": 3,
+      "actions": {
+        "Contributor_2": "documentation"
+      },
+      "rewards": {
+        "Contributor_2": 1.0
+      },
+      "harmony_index": 0.27,
+      "diversity": 0.25,
+      "coverage": 0.25
+    },
+    {
+      "sprint": 4,
+      "actions": {
+        "Contributor_1": "bug_fix"
+      },
+      "rewards": {
+        "Contributor_1": 0.0
+      },
+      "harmony_index": 0.296,
+      "diversity": 0.25,
+      "coverage": 0.25
+    }
+  ],
+  "sustain_score": 0.166801,
+  "fairness": 1.666667,
+  "stress_validity": 1.0,
+  "gsoc_metrics": {
+    "brs_per_agent": {
+      "Contributor_0": 0.0,
+      "Contributor_1": 1.0,
+      "Contributor_2": 1.0,
+      "Contributor_3": 0.0,
+      "Contributor_4": 0.6667
+    },
+    "mean_brs": 0.5333,
+    "sue": 0.2,
+    "chs": 0.3297
+  },
+  "llamosc_native": {
+    "solve_rate": 1.0,
+    "avg_code_quality": 2.6,
+    "total_issues": 5,
+    "n_contributors": 5
+  }
+}
