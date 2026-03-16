@@ -1,75 +1,247 @@
 {
   "scores": {
-    "Jordan": -1.0,
-    "Priya": 3.0,
-    "Xavier": 3.0,
-    "Elena": 3.0
+    "Sam": 2.0,
+    "Elena": 5.0,
+    "Marcus": 3.0,
+    "Xavier": 6.0,
+    "Lin": 1.0,
+    "Hiroshi": 6.0,
+    "Anya": 9.0,
+    "Chen": 0.0
   },
-  "harmony_index": 0.8,
-  "resilience_quotient": 1.0,
+  "harmony_index": 0.5555555555555556,
+  "resilience_quotient": 1.2256,
   "sprint_history": [
     {
       "joint_action": {
-        "Jordan": "Feature: Implement full-text search across project documents.",
-        "Priya": "Fix: Null pointer exception when user profile has no avatar.",
-        "Xavier": "Fix: Incorrect timezone handling in the scheduler module.",
-        "Elena": "Docs: Rewrite the quickstart guide for new contributors."
+        "Sam": "Review: Review the refactored test suite for coverage gaps.",
+        "Elena": "Fix: CSS layout breaks on mobile when sidebar is collapsed.",
+        "Marcus": "Review: Review the refactored test suite for coverage gaps.",
+        "Xavier": "Skip this sprint",
+        "Lin": "Fix: Null pointer exception when user profile has no avatar.",
+        "Hiroshi": "Fix: CSS layout breaks on mobile when sidebar is collapsed.",
+        "Anya": "Fix: Authentication token refresh fails silently after 24 hours.",
+        "Chen": "Skip this sprint"
       },
       "scores": {
-        "Jordan": -1.0,
-        "Priya": 3.0,
-        "Xavier": 3.0,
-        "Elena": 3.0
+        "Sam": 1.0,
+        "Elena": 1.0,
+        "Marcus": -1.0,
+        "Xavier": 0.0,
+        "Lin": -1.0,
+        "Hiroshi": 3.0,
+        "Anya": 1.0,
+        "Chen": 0.0
       },
-      "harmony_index": 0.8,
-      "stress_type": null,
+      "harmony_index": 0.43333333333333335,
       "policy": "None",
-      "task_difficulties": {
-        "Jordan": "hard",
-        "Priya": "medium",
-        "Xavier": "medium",
-        "Elena": "medium"
-      }
+      "stress": null
+    },
+    {
+      "joint_action": {
+        "Sam": "Skip this sprint",
+        "Elena": "Review: Review the refactored test suite for coverage gaps.",
+        "Marcus": "Review: Review the refactored test suite for coverage gaps.",
+        "Xavier": "Feature: Add multi-language localization framework.",
+        "Lin": "Fix: Authentication token refresh fails silently after 24 hours.",
+        "Hiroshi": "Feature: Add multi-language localization framework.",
+        "Anya": "Feature: Implement full-text search across project documents.",
+        "Chen": "Fix: CSS layout breaks on mobile when sidebar is collapsed."
+      },
+      "scores": {
+        "Sam": 0.0,
+        "Elena": 1.0,
+        "Marcus": 1.0,
+        "Xavier": 1.0,
+        "Lin": -1.0,
+        "Hiroshi": 1.0,
+        "Anya": 3.0,
+        "Chen": -1.0
+      },
+      "harmony_index": 0.48076923076923084,
+      "policy": "None",
+      "stress": "contributor_dropout"
+    },
+    {
+      "joint_action": {
+        "Sam": "Docs: Add API reference for the new plugin architecture.",
+        "Elena": "Fix: Null pointer exception when user profile has no avatar.",
+        "Marcus": "Review: Review the refactored test suite for coverage gaps.",
+        "Xavier": "Fix: Null pointer exception when user profile has no avatar.",
+        "Lin": "Review: Review the refactored test suite for coverage gaps.",
+        "Hiroshi": "Docs: Write troubleshooting guide for common deployment issues.",
+        "Anya": "Docs: Write troubleshooting guide for common deployment issues.",
+        "Chen": "Review: Review the refactored test suite for coverage gaps."
+      },
+      "scores": {
+        "Sam": -1.0,
+        "Elena": 1.0,
+        "Marcus": -1.0,
+        "Xavier": 3.0,
+        "Lin": 3.0,
+        "Hiroshi": 1.0,
+        "Anya": 1.0,
+        "Chen": 3.0
+      },
+      "harmony_index": 0.5452380952380953,
+      "policy": "None",
+      "stress": "task_overload"
+    },
+    {
+      "joint_action": {
+        "Sam": "Review: Review the refactored test suite for coverage gaps.",
+        "Elena": "Docs: Add API reference for the new plugin architecture.",
+        "Marcus": "Docs: Add API reference for the new plugin architecture.",
+        "Xavier": "Docs: Write troubleshooting guide for common deployment issues.",
+        "Lin": "Fix: Authentication token refresh fails silently after 24 hours.",
+        "Hiroshi": "Skip this sprint",
+        "Anya": "Feature: Add multi-language localization framework.",
+        "Chen": "Docs: Add API reference for the new plugin architecture."
+      },
+      "scores": {
+        "Sam": -1.0,
+        "Elena": 3.0,
+        "Marcus": 1.0,
+        "Xavier": 1.0,
+        "Lin": -1.0,
+        "Hiroshi": 0.0,
+        "Anya": 3.0,
+        "Chen": -1.0
+      },
+      "harmony_index": 0.5428571428571428,
+      "policy": "None",
+      "stress": null
+    },
+    {
+      "joint_action": {
+        "Sam": "Fix: Null pointer exception when user profile has no avatar.",
+        "Elena": "Fix: Null pointer exception when user profile has no avatar.",
+        "Marcus": "Fix: CSS layout breaks on mobile when sidebar is collapsed.",
+        "Xavier": "Review: Review the refactored test suite for coverage gaps.",
+        "Lin": "Docs: Add API reference for the new plugin architecture.",
+        "Hiroshi": "Feature: Implement full-text search across project documents.",
+        "Anya": "Docs: Write troubleshooting guide for common deployment issues.",
+        "Chen": "Feature: Add multi-language localization framework."
+      },
+      "scores": {
+        "Sam": 3.0,
+        "Elena": -1.0,
+        "Marcus": 3.0,
+        "Xavier": 1.0,
+        "Lin": 1.0,
+        "Hiroshi": 1.0,
+        "Anya": 1.0,
+        "Chen": -1.0
+      },
+      "harmony_index": 0.5555555555555556,
+      "policy": "None",
+      "stress": null
     }
   ],
   "narrative_history": [
+    {},
+    {},
+    {},
+    {},
     {}
   ],
   "final_policy": "None",
   "player_roles": {
-    "Jordan": "Innovator",
-    "Priya": "Contributor",
+    "Sam": "Contributor",
+    "Elena": "Knowledge Curator",
+    "Marcus": "Contributor",
     "Xavier": "Contributor",
-    "Elena": "Knowledge Curator"
+    "Lin": "Maintainer",
+    "Hiroshi": "Contributor",
+    "Anya": "Innovator",
+    "Chen": "Maintainer"
   },
-  "stress_schedule": {},
-  "dropout_name": null,
+  "stress_schedule": {
+    "2": "contributor_dropout",
+    "3": "task_overload"
+  },
+  "dropout_name": "Sam",
   "relational_matrix": {
-    "Jordan": {
-      "Jordan": 1.0,
-      "Priya": 0.3,
-      "Xavier": 0.3,
-      "Elena": 0.3
-    },
-    "Priya": {
-      "Jordan": 0.3,
-      "Priya": 1.0,
-      "Xavier": 1.0,
-      "Elena": 0.3
-    },
-    "Xavier": {
-      "Jordan": 0.3,
-      "Priya": 1.0,
-      "Xavier": 1.0,
-      "Elena": 0.7
+    "Sam": {
+      "Sam": 1.0,
+      "Elena": 0.3,
+      "Marcus": 0.7,
+      "Xavier": 0.8,
+      "Lin": 0.7,
+      "Hiroshi": 0.8,
+      "Anya": 0.3,
+      "Chen": 0.3
     },
     "Elena": {
-      "Jordan": 0.3,
-      "Priya": 0.3,
+      "Sam": 0.3,
+      "Elena": 1.0,
+      "Marcus": 0.7,
       "Xavier": 0.7,
-      "Elena": 1.0
+      "Lin": 0.5,
+      "Hiroshi": 0.5,
+      "Anya": 0.3,
+      "Chen": 0.3
+    },
+    "Marcus": {
+      "Sam": 0.7,
+      "Elena": 0.7,
+      "Marcus": 1.0,
+      "Xavier": 0.8,
+      "Lin": 0.3,
+      "Hiroshi": 0.7,
+      "Anya": 0.7,
+      "Chen": 0.5
+    },
+    "Xavier": {
+      "Sam": 0.8,
+      "Elena": 0.7,
+      "Marcus": 0.8,
+      "Xavier": 1.0,
+      "Lin": 0.5,
+      "Hiroshi": 0.7,
+      "Anya": 0.3,
+      "Chen": 0.5
+    },
+    "Lin": {
+      "Sam": 0.7,
+      "Elena": 0.5,
+      "Marcus": 0.3,
+      "Xavier": 0.5,
+      "Lin": 1.0,
+      "Hiroshi": 0.5,
+      "Anya": 0.3,
+      "Chen": 1.0
+    },
+    "Hiroshi": {
+      "Sam": 0.8,
+      "Elena": 0.5,
+      "Marcus": 0.7,
+      "Xavier": 0.7,
+      "Lin": 0.5,
+      "Hiroshi": 1.0,
+      "Anya": 0.5,
+      "Chen": 0.3
+    },
+    "Anya": {
+      "Sam": 0.3,
+      "Elena": 0.3,
+      "Marcus": 0.7,
+      "Xavier": 0.3,
+      "Lin": 0.3,
+      "Hiroshi": 0.5,
+      "Anya": 1.0,
+      "Chen": 0.3
+    },
+    "Chen": {
+      "Sam": 0.3,
+      "Elena": 0.3,
+      "Marcus": 0.5,
+      "Xavier": 0.5,
+      "Lin": 1.0,
+      "Hiroshi": 0.3,
+      "Anya": 0.3,
+      "Chen": 1.0
     }
   },
-  "seed": 42,
-  "governance": "free_choice"
+  "seed": 4
 }

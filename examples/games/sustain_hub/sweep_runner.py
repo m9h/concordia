@@ -83,11 +83,11 @@ def run_simulation(
     return {"run_id": run_id, "status": "not_found"}
 
 def main():
-    API_KEY = os.environ.get("GEMINI_API_KEY", "")
-    MODEL = "gemini-2.5-flash"
+    API_KEY = "AIzaSyD0J3M-9eVtRv4oCIxotKSQbOhRD9VoxDc"
+    MODEL = "gemini-2.0-flash"
     NUM_SPRINTS = 2
     NUM_RUNS = 1
-    COMMUNITY_SIZE = 6
+    COMMUNITY_SIZE = 8
 
 
     print("="*60)
