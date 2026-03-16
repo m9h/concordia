@@ -127,7 +127,7 @@ def main(argv):
         chat_mode=True,
     )
     model = retry_wrapper.RetryLanguageModel(
-        model, retry_tries=8, retry_delay=3.0, backoff_factor=2.0,
+        model, retry_tries=15, retry_delay=5.0, backoff_factor=2.0,
     )
   elif FLAGS.together:
     from concordia.contrib.language_models.together import together_ai_model

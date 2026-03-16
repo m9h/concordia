@@ -642,6 +642,8 @@ class InnovationPayoff:
     """Parse a free-text action into two element names.
 
     Expected format: ``"element1, element2"`` (comma-separated).
+    Also handles narrative LLM responses by scanning for known element
+    names from the recipe book.
 
     Args:
       action_str: The raw action string from the agent.
@@ -655,26 +657,43 @@ class InnovationPayoff:
     # Remove common prefixes an LLM might add.
     cleaned = action_str.strip()
     for prefix in ["I choose ", "I combine ", "I want to combine ",
-                    "Let me try ", "My choice: ", "Combining "]:
+                    "Let me try ", "My choice: ", "Combining ",
+                    "I'd like to combine ", "I will combine ",
+                    "Let's combine ", "Let's try "]:
       if cleaned.lower().startswith(prefix.lower()):
         cleaned = cleaned[len(prefix):]
         break
 
-    # Split on comma, " and ", or " + ".
-    parts = None
-    for sep in [",", " and ", " + "]:
+    # Strategy 1: Split on comma, " and ", " + ", " with ".
+    for sep in [",", " and ", " + ", " with "]:
       if sep in cleaned:
-        parts = [p.strip().strip("'\"") for p in cleaned.split(sep, 1)]
-        break
+        parts = [p.strip().strip("'\"").lower() for p in cleaned.split(sep, 1)]
+        if len(parts) == 2 and parts[0] and parts[1]:
+          # Check if both parts are known elements (or short enough to be)
+          if len(parts[0]) < 40 and len(parts[1]) < 40:
+            return parts[0], parts[1]
 
-    if parts is None or len(parts) != 2:
-      return None, None
+    # Strategy 2: Scan for known element names in the text.
+    # This handles narrative responses like "I want to try combining
+    # water and fire to see what happens."
+    text_lower = action_str.lower()
+    all_elements = set(self.recipe_book._entities)
+    # Sort by length descending to match longer names first
+    sorted_elements = sorted(all_elements, key=len, reverse=True)
+    found = []
+    remaining = text_lower
+    for elem in sorted_elements:
+      if elem in remaining:
+        found.append(elem)
+        # Remove first occurrence to avoid double-matching
+        remaining = remaining.replace(elem, "", 1)
+        if len(found) >= 2:
+          break
 
-    elem1, elem2 = parts[0].strip(), parts[1].strip()
-    if not elem1 or not elem2:
-      return None, None
+    if len(found) >= 2:
+      return found[0], found[1]
 
-    return elem1, elem2
+    return None, None
 
   # -- metrics -------------------------------------------------------------
 
@@ -966,26 +985,27 @@ def configure_scenes(
         )
 
     # ------------------------------------------------------------------
-    # 2. Combination scene (decision) -- all agents act simultaneously
+    # 2. Combination scene (decision) -- each agent picks from their
+    #    valid element pairs (CHOICE output for reliable parsing).
     # ------------------------------------------------------------------
-    combination_scene_type = scene_lib.SceneTypeSpec(
-        name=f"step_{step_num}_combine",
-        game_master_name="decision rules",
-        action_spec=entity_lib.free_action_spec(
-            call_to_action=(
-                "Which two elements does {name} combine? "
-                "Respond with exactly two element names from your "
-                "inventory, separated by a comma (e.g., 'water, fire')."
-            ),
-            tag="combination",
-        ),
-    )
+    from itertools import combinations as _iter_combos
 
     combination_premise: dict[str, list[str | Callable]] = {}
+    per_agent_options: dict[str, list[str]] = {}
+
     for name in people:
       inv = payoff.inventories[name]
       elem_list = ", ".join(sorted(inv.elements))
       num_elems = len(inv.elements)
+
+      # Generate all unique pairs from inventory as options.
+      sorted_inv = sorted(inv.elements)
+      pairs = [
+          f"{a}, {b}" for a, b in _iter_combos(sorted_inv, 2)
+      ]
+      # Also allow same-element combos (e.g. water + water = sea).
+      pairs += [f"{a}, {a}" for a in sorted_inv]
+      per_agent_options[name] = pairs
 
       premise_parts: list[str | Callable] = [
           (
@@ -1012,6 +1032,32 @@ def configure_scenes(
         )
 
       combination_premise[name] = premise_parts
+
+    # Build the union of all elements across agents so every valid pair
+    # appears as an option.  Agents who pick a pair they don't own get a
+    # penalty from the payoff engine ("not in inventory").
+    all_elements = set()
+    for name in people:
+      all_elements |= payoff.inventories[name].elements
+    sorted_all = sorted(all_elements)
+    all_pairs = [f"{a}, {b}" for a, b in _iter_combos(sorted_all, 2)]
+    all_pairs += [f"{a}, {a}" for a in sorted_all]
+    # Deduplicate (shouldn't happen, but just in case)
+    all_pairs = list(dict.fromkeys(all_pairs))
+
+    combination_scene_type = scene_lib.SceneTypeSpec(
+        name=f"step_{step_num}_combine",
+        game_master_name="decision rules",
+        action_spec=entity_lib.ActionSpec(
+            call_to_action=(
+                "Which two elements does {name} combine? "
+                "Pick one pair from the options."
+            ),
+            output_type=entity_lib.OutputType.CHOICE,
+            options=tuple(all_pairs),
+            tag="combination",
+        ),
+    )
 
     scenes.append(
         scene_lib.SceneSpec(
