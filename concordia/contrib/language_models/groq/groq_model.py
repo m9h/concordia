@@ -80,9 +80,22 @@ class GroqModel(language_model.LanguageModel):
         {"role": "user", "content": prompt},
     ]
 
+    # Strict ASCII enforcement for all strings passed to the SDK/httpx
+    # This prevents UnicodeEncodeError in httpx headers or logging
+    def force_ascii(s: str) -> str:
+        return "".join(c for c in s if ord(c) < 128)
+
+    safe_model = force_ascii(self._model_name)
+    safe_messages = []
+    for m in messages:
+        safe_messages.append({
+            "role": m["role"],
+            "content": force_ascii(m["content"])
+        })
+
     response = self._client.chat.completions.create(
-        model=self._model_name,
-        messages=messages,
+        model=safe_model,
+        messages=safe_messages,
         temperature=temperature,
         max_tokens=max_tokens,
         top_p=top_p,
@@ -91,6 +104,8 @@ class GroqModel(language_model.LanguageModel):
     )
 
     text = response.choices[0].message.content
+    # Strict ASCII enforcement for the response text
+    text = force_ascii(text)
 
     if self._measurements is not None:
       self._measurements.publish_datum(
