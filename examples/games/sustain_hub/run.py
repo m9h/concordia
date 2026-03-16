@@ -23,7 +23,6 @@ from examples.games.sustain_hub import simulation
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string('model_name', 'gemini-2.0-flash', 'Name of the LLM to use.')
-flags.DEFINE_integer('seed', 42, 'Random seed for reproducibility.')
 flags.DEFINE_string('api_key', None, 'API key (or set GEMINI_API_KEY env var).')
 flags.DEFINE_string(
     'output_dir', '/tmp/sustain_hub_results', 'Directory for output files.'
@@ -31,32 +30,20 @@ flags.DEFINE_string(
 flags.DEFINE_bool('use_mock', False, 'Use a mock model for testing.')
 flags.DEFINE_integer('num_sprints', 3, 'Number of sprints to run.')
 flags.DEFINE_bool('enable_stress', True, 'Whether to enable stress scenarios.')
-flags.DEFINE_list('stress_types', None,
-    'Comma-separated stress types to use (default: all). '
-    'Options: contributor_dropout,task_overload,funding_cut,dependency_crisis,fork_threat')
 flags.DEFINE_integer('community_size', 16, 'Number of agents in the community.')
+flags.DEFINE_integer('seed', None, 'Random seed.')
 flags.DEFINE_bool('skip_backstory', False, 'Whether to skip initial backstory generation (faster).')
 flags.DEFINE_bool('verbose', False, 'Whether to print detailed simulation logs.')
 flags.DEFINE_string('project', None, 'GCP Project ID for Vertex AI.')
 flags.DEFINE_string('location', 'us-central1', 'GCP Location for Vertex AI.')
 flags.DEFINE_bool('use_active_inference', True, 'Whether to use Active Inference agents.')
-flags.DEFINE_bool(
-    'inject_aif_context', None,
-    'Inject structured AIF beliefs into LLM prompts. '
-    'Defaults to True when --use_active_inference is True.')
 flags.DEFINE_bool('fast', False, 'Skip conversation scenes, go straight to task decisions.')
+flags.DEFINE_string('governance', 'free_choice',
+                    'Governance mode: free_choice, dictator, meritocratic.')
 flags.DEFINE_string('vllm_url', None, 'vLLM API base URL (e.g. http://localhost:8000/v1).')
-flags.DEFINE_bool('vllm_chat', True, 'Use chat completions API (vs. text completions).')
-flags.DEFINE_string('vllm_system_prompt', None, 'System prompt for vLLM chat mode.')
-flags.DEFINE_string('vllm_api_key', None,
-    'API key for authenticated endpoints (NIM cloud). '
-    'Falls back to NGC_API_KEY env var.')
-flags.DEFINE_bool('code_tasks', False,
-    'Use real code tasks with pytest scoring (LLAMOSC comparison mode).')
-flags.DEFINE_enum('governance', 'free_choice',
-    ['free_choice', 'dictator', 'meritocratic'],
-    'Governance model: free_choice (agents self-select), '
-    'dictator (project lead assigns), meritocratic (priority by track record).')
+flags.DEFINE_bool('nvidia_nim', False, 'Use NVIDIA NIM API (set NVIDIA_API_KEY env var).')
+flags.DEFINE_bool('together', False, 'Use Together AI API (set TOGETHER_AI_API_KEY env var).')
+flags.DEFINE_bool('groq', False, 'Use Groq API (set GROQ_API_KEY env var).')
 
 
 def main(argv):
@@ -67,30 +54,58 @@ def main(argv):
 
   if FLAGS.use_mock:
     model = mock_model.MockModel()
+  elif FLAGS.groq:
+    from concordia.contrib.language_models.groq import groq_model
+    groq_key = os.environ.get('GROQ_API_KEY', '')
+    if not groq_key:
+      print('Error: GROQ_API_KEY not set.')
+      return
+    model = groq_model.GroqModel(
+        model_name=FLAGS.model_name,
+        api_key=groq_key,
+    )
+    model = retry_wrapper.RetryLanguageModel(
+        model, retry_tries=5, retry_delay=2.0, backoff_factor=2.0,
+    )
+  elif FLAGS.nvidia_nim:
+    from concordia.contrib.language_models import vllm_remote
+    nim_key = os.environ.get('NVIDIA_API_KEY', '')
+    if not nim_key:
+      print('Error: NVIDIA_API_KEY not set. Get a free key at build.nvidia.com')
+      return
+    nim_model = FLAGS.model_name if '/' in FLAGS.model_name else 'meta/llama-3.1-8b-instruct'
+    model = vllm_remote.VLLMModel(
+        model_name=nim_model,
+        api_base='https://integrate.api.nvidia.com/v1',
+        api_key=nim_key,
+        chat_mode=True,
+    )
+    model = retry_wrapper.RetryLanguageModel(
+        model, retry_tries=8, retry_delay=3.0, backoff_factor=2.0,
+    )
+  elif FLAGS.together:
+    from concordia.contrib.language_models.together import together_ai_model
+    model = together_ai_model.Base(model_name=FLAGS.model_name)
+    model = retry_wrapper.RetryLanguageModel(
+        model, retry_tries=8, retry_delay=3.0, backoff_factor=2.0,
+    )
   elif FLAGS.vllm_url:
     from concordia.contrib.language_models import vllm_remote
-    vllm_key = FLAGS.vllm_api_key or os.environ.get('NGC_API_KEY', '')
     model = vllm_remote.VLLMModel(
         model_name=FLAGS.model_name,
         api_base=FLAGS.vllm_url,
-        use_chat=FLAGS.vllm_chat,
-        system_prompt=FLAGS.vllm_system_prompt,
-        api_key=vllm_key or None,
     )
     model = retry_wrapper.RetryLanguageModel(
-        model,
-        retry_tries=5,
-        retry_delay=2.0,
-        backoff_factor=1.5,
+        model, retry_tries=8, retry_delay=3.0, backoff_factor=2.0,
     )
   else:
-    from concordia.contrib.language_models.google import gemini_model
     api_key = FLAGS.api_key or os.environ.get('GEMINI_API_KEY', '')
     if not api_key and not FLAGS.project:
-      print('Error: GEMINI_API_KEY not found. Use --use_mock for testing, '
-            '--project for Vertex, or --vllm_url for local vLLM.')
+      print('Error: Set GEMINI_API_KEY, or use --nvidia_nim, --together, '
+            '--vllm_url, or --use_mock.')
       return
 
+    from concordia.contrib.language_models.google import gemini_model
     model = gemini_model.GeminiModel(
         model_name=FLAGS.model_name,
         api_key=api_key if not FLAGS.project else None,
@@ -98,22 +113,19 @@ def main(argv):
         location=FLAGS.location,
     )
     model = retry_wrapper.RetryLanguageModel(
-        model,
-        retry_tries=10,
-        retry_delay=5.0,
-        backoff_factor=2.0,
+        model, retry_tries=10, retry_delay=5.0, backoff_factor=2.0,
     )
 
   try:
     from sentence_transformers import SentenceTransformer
     st_model = SentenceTransformer('sentence-transformers/all-mpnet-base-v2')
     embedder = lambda x: st_model.encode(x, show_progress_bar=False)
-  except ImportError:
-    print(
-        'sentence-transformers not installed. '
-        'Run: pip install sentence-transformers'
-    )
-    return
+  except Exception:
+    # Fallback: lightweight sklearn-based embedder (works without torch)
+    from sklearn.feature_extraction.text import HashingVectorizer
+    print('Note: Using sklearn HashingVectorizer embedder (sentence-transformers unavailable).')
+    _hv = HashingVectorizer(n_features=384, analyzer='char_wb', ngram_range=(2, 4), norm='l2')
+    embedder = lambda x: _hv.transform([x]).toarray()[0]
 
   print('=' * 72)
   print('SustainHub: Open-Source Community Sustainability Simulation')
@@ -122,10 +134,12 @@ def main(argv):
   print(f'Community Size: {FLAGS.community_size}')
   print(f'Stress scenarios: {FLAGS.enable_stress}')
   print(f'Active Inference: {FLAGS.use_active_inference}')
-  inject_ctx = FLAGS.inject_aif_context if FLAGS.inject_aif_context is not None else FLAGS.use_active_inference
-  print(f'Inject AIF Context: {inject_ctx}')
   print(f'Governance: {FLAGS.governance}')
-  if FLAGS.vllm_url:
+  if FLAGS.nvidia_nim:
+    print(f'Backend: NVIDIA NIM ({FLAGS.model_name})')
+  elif FLAGS.together:
+    print(f'Backend: Together AI ({FLAGS.model_name})')
+  elif FLAGS.vllm_url:
     print(f'Backend: vLLM ({FLAGS.vllm_url})')
   elif FLAGS.project:
     print(f'Backend: Vertex AI (Project: {FLAGS.project})')
@@ -139,15 +153,12 @@ def main(argv):
       num_sprints=FLAGS.num_sprints,
       seed=FLAGS.seed,
       enable_stress=FLAGS.enable_stress,
-      stress_types=FLAGS.stress_types,
       community_size=FLAGS.community_size,
       skip_backstory=FLAGS.skip_backstory,
       verbose=FLAGS.verbose,
       use_active_inference=FLAGS.use_active_inference,
       skip_conversation=FLAGS.fast,
-      inject_aif_context=FLAGS.inject_aif_context,
       governance=FLAGS.governance,
-      code_tasks=FLAGS.code_tasks,
   )
 
   # Print summary

@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Experiment ladder: RL -> Active Inference progression.
+"""Experiment ladder: RL → Active Inference progression.
 
 Each level adds one more active inference concept on top of the previous.
 Run all levels to see how each concept contributes to agent behavior.
@@ -27,12 +27,6 @@ Usage:
 
   # Run levels 0-3 only:
   python -m examples.games.sustain_hub.experiments --level=0,1,2,3
-
-  # Run Level 7 with a mock LLM (for testing):
-  python -m examples.games.sustain_hub.experiments --level=7 --use_mock
-
-  # Run Level 7 with a real vLLM backend:
-  python -m examples.games.sustain_hub.experiments --level=7 --vllm_url=http://localhost:8000/v1
 
 Levels:
   0: Pure RL baseline (reward signals only, no AIF)
@@ -63,46 +57,25 @@ from examples.games.sustain_hub import social_data
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string(
-    'level', '0',
-    'Experiment level(s): 0-7, "all", or comma-separated.')
-flags.DEFINE_string(
-    'output_dir', '/tmp/sustain_hub_experiments', 'Output directory.')
-flags.DEFINE_integer('num_sprints', 3, 'Number of sprints per experiment.')
+flags.DEFINE_string('level', '0', 'Experiment level(s): 0-7, "all", or comma-separated.')
+flags.DEFINE_string('output_dir', '/tmp/sustain_hub_experiments', 'Output directory.')
+flags.DEFINE_integer('num_sprints', 5, 'Number of sprints per experiment.')
 flags.DEFINE_integer('seed', 42, 'Random seed.')
-flags.DEFINE_bool(
-    'compute_sustain_score', False,
-    'Compute SustainScore for each level after running.')
-flags.DEFINE_string(
-    'vllm_url', None,
-    'vLLM API base URL for Level 7 (e.g. http://localhost:8000/v1).')
-flags.DEFINE_string(
-    'model_name', 'Qwen/Qwen2.5-7B-Instruct',
-    'LLM model name for Level 7.')
-flags.DEFINE_bool(
-    'use_mock', False,
-    'Use a mock LLM for testing Level 7 without a real model.')
-flags.DEFINE_bool(
-    'enable_stress', False,
-    'Enable stress events (contributor dropout at sprint 2, security crisis '
-    'at sprint 4) to test resilience.')
-flags.DEFINE_bool(
-    'ostrom', False,
-    'Run Ostrom comparison: Level 4 with vs. without Ostrom priors.')
-flags.DEFINE_string(
-    'ostrom_principles', None,
-    'Comma-separated Ostrom principles to test (default: all 8).')
+flags.DEFINE_string('cross_system', None,
+    'Run cross-system experiment(s): A1,A2,A3,B1,B2,B3,C1 or "all" or "rohira" or "llamosc".')
+flags.DEFINE_string('vllm_url', None, 'vLLM API base URL for cross-system experiments.')
+flags.DEFINE_string('model_name', None, 'Model name for cross-system experiments.')
+flags.DEFINE_bool('use_mock', False, 'Use mock model for cross-system experiments.')
+flags.DEFINE_bool('nvidia_nim', False, 'Use NVIDIA NIM API (set NVIDIA_API_KEY env var).')
 
 
 # =============================================================================
 # Experiment Level Definitions
 # =============================================================================
 
-
 @dataclasses.dataclass
 class ExperimentLevel:
     """Configuration for one level of the experiment ladder."""
-
     level: int
     name: str
     description: str
@@ -110,7 +83,7 @@ class ExperimentLevel:
     rl_analog: str
     aif_mechanism: str
 
-    # Feature flags (cumulative -- each level adds to the previous)
+    # Feature flags (cumulative — each level adds to the previous)
     use_reward_signals: bool = True        # Level 0: base RL
     use_prediction_error: bool = False     # Level 1
     use_epistemic_value: bool = False      # Level 2
@@ -124,36 +97,33 @@ class ExperimentLevel:
 EXPERIMENT_LEVELS = [
     ExperimentLevel(
         level=0,
-        name='Pure RL Baseline',
-        description=(
-            'Standard reward-driven task selection. Agents choose based on '
-            'immediate reward expectations (preferred task = +3, other = +1).'),
-        new_concept='Reward signal',
-        rl_analog='Q-learning / SARSA with fixed policy',
-        aif_mechanism='None -- this is the RL baseline',
+        name="Pure RL Baseline",
+        description="Standard reward-driven task selection. Agents choose based on "
+                    "immediate reward expectations (preferred task = +3, other = +1).",
+        new_concept="Reward signal",
+        rl_analog="Q-learning / SARSA with fixed policy",
+        aif_mechanism="None — this is the RL baseline",
         use_reward_signals=True,
     ),
     ExperimentLevel(
         level=1,
-        name='+ Prediction Error',
-        description=(
-            "Agents now track 'surprise' -- the difference between expected "
-            'and observed outcomes. High surprise signals model mismatch.'),
-        new_concept='Prediction error (surprise)',
-        rl_analog="TD error d = r + gV(s') - V(s)",
-        aif_mechanism='Free energy F = E_Q[ln Q(s) - ln P(o,s)] measures surprise',
+        name="+ Prediction Error",
+        description="Agents now track 'surprise' — the difference between expected "
+                    "and observed outcomes. High surprise signals model mismatch.",
+        new_concept="Prediction error (surprise)",
+        rl_analog="TD error δ = r + γV(s') - V(s)",
+        aif_mechanism="Free energy F = E_Q[ln Q(s) - ln P(o,s)] measures surprise",
         use_reward_signals=True,
         use_prediction_error=True,
     ),
     ExperimentLevel(
         level=2,
-        name='+ Epistemic Value',
-        description=(
-            'Agents value actions that reduce uncertainty, not just actions '
-            'that yield reward. An agent might choose an unfamiliar task to '
-            "'learn' about that area of the project."),
-        new_concept='Information gain (epistemic foraging)',
-        rl_analog='e-greedy exploration (crude) or UCB (principled)',
+        name="+ Epistemic Value",
+        description="Agents value actions that reduce uncertainty, not just actions "
+                    "that yield reward. An agent might choose an unfamiliar task to "
+                    "'learn' about that area of the project.",
+        new_concept="Information gain (epistemic foraging)",
+        rl_analog="ε-greedy exploration (crude) or UCB (principled)",
         aif_mechanism="Epistemic value = -E_Q[H[P(o'|s')]] = expected info gain",
         use_reward_signals=True,
         use_prediction_error=True,
@@ -161,14 +131,13 @@ EXPERIMENT_LEVELS = [
     ),
     ExperimentLevel(
         level=3,
-        name='+ Belief Updating',
-        description=(
-            'Agents maintain probabilistic beliefs about hidden project state '
-            '(health, urgency) and update them via variational inference after '
-            'each observation.'),
-        new_concept='Variational inference / belief updating',
-        rl_analog='State estimation (Kalman filter, particle filter)',
-        aif_mechanism='Q(s) ~ P(o|s) x P(s) via iterative message passing',
+        name="+ Belief Updating",
+        description="Agents maintain probabilistic beliefs about hidden project state "
+                    "(health, urgency) and update them via variational inference after "
+                    "each observation.",
+        new_concept="Variational inference / belief updating",
+        rl_analog="State estimation (Kalman filter, particle filter)",
+        aif_mechanism="Q(s) ∝ P(o|s) × P(s) via iterative message passing",
         use_reward_signals=True,
         use_prediction_error=True,
         use_epistemic_value=True,
@@ -176,14 +145,13 @@ EXPERIMENT_LEVELS = [
     ),
     ExperimentLevel(
         level=4,
-        name='+ Expected Free Energy Policy',
-        description=(
-            'Actions selected by minimizing Expected Free Energy: a single '
-            'objective that naturally balances reward-seeking (pragmatic) and '
-            'information-seeking (epistemic).'),
-        new_concept='Expected Free Energy (EFE) for policy selection',
-        rl_analog='Q-value Q(s,a) -> negative EFE -G(pi)',
-        aif_mechanism='G(pi) = -pragmatic - epistemic; P(pi) = s(-G + ln E)',
+        name="+ Expected Free Energy Policy",
+        description="Actions selected by minimizing Expected Free Energy: a single "
+                    "objective that naturally balances reward-seeking (pragmatic) and "
+                    "information-seeking (epistemic).",
+        new_concept="Expected Free Energy (EFE) for policy selection",
+        rl_analog="Q-value Q(s,a) → negative EFE -G(π)",
+        aif_mechanism="G(π) = -pragmatic - epistemic; P(π) = σ(-G + ln E)",
         use_reward_signals=True,
         use_prediction_error=True,
         use_epistemic_value=True,
@@ -192,14 +160,13 @@ EXPERIMENT_LEVELS = [
     ),
     ExperimentLevel(
         level=5,
-        name='+ Habit Learning',
-        description=(
-            'Agents accumulate Dirichlet concentration parameters for their '
-            'policy prior (E-vector). Good actions become habitual across '
-            'sprints. This is where Q-values map onto active inference.'),
-        new_concept='Dirichlet learning / habit formation',
-        rl_analog='Q-value accumulation across episodes',
-        aif_mechanism='E(a) += eta x outcome; P(pi) = s(-G + ln E)',
+        name="+ Habit Learning",
+        description="Agents accumulate Dirichlet concentration parameters for their "
+                    "policy prior (E-vector). Good actions become habitual across sprints. "
+                    "This is where Q-values map onto active inference.",
+        new_concept="Dirichlet learning / habit formation",
+        rl_analog="Q-value accumulation across episodes",
+        aif_mechanism="E(a) += η × outcome; P(π) = σ(-G + ln E)",
         use_reward_signals=True,
         use_prediction_error=True,
         use_epistemic_value=True,
@@ -209,15 +176,13 @@ EXPERIMENT_LEVELS = [
     ),
     ExperimentLevel(
         level=6,
-        name='+ Precision Dynamics',
-        description=(
-            'The precision parameter gamma (inverse temperature) adapts over '
-            'time. Early sprints: low precision -> more exploration. Later '
-            'sprints: high precision -> more exploitation. Stress events '
-            'collapse precision.'),
-        new_concept='Precision weighting / adaptive confidence',
-        rl_analog='Temperature annealing in softmax policy',
-        aif_mechanism='gamma adapts based on prediction error history',
+        name="+ Precision Dynamics",
+        description="The precision parameter γ (inverse temperature) adapts over time. "
+                    "Early sprints: low precision → more exploration. Later sprints: "
+                    "high precision → more exploitation. Stress events collapse precision.",
+        new_concept="Precision weighting / adaptive confidence",
+        rl_analog="Temperature annealing in softmax policy",
+        aif_mechanism="γ adapts based on prediction error history; stress → γ↓",
         use_reward_signals=True,
         use_prediction_error=True,
         use_epistemic_value=True,
@@ -228,15 +193,14 @@ EXPERIMENT_LEVELS = [
     ),
     ExperimentLevel(
         level=7,
-        name='+ LLM-as-Node (Full Hybrid)',
-        description=(
-            'LLM participates as a probabilistic node in the factor graph. '
-            'LLMPrior generates informed priors from backstory. LLMObservation '
-            'maps sprint narratives to state estimates. Bayesian inference '
-            'combines them. (RxInfer.jl pattern in Python.)'),
-        new_concept='LLM as probabilistic inference node',
-        rl_analog='No RL analog -- this is beyond RL',
-        aif_mechanism='LLM -> distribution -> factor graph -> VMP -> policy',
+        name="+ LLM-as-Node (Full Hybrid)",
+        description="LLM participates as a probabilistic node in the factor graph. "
+                    "LLMPrior generates informed priors from backstory. LLMObservation "
+                    "maps sprint narratives to state estimates. Bayesian inference "
+                    "combines them. (RxInfer.jl pattern in Python.)",
+        new_concept="LLM as probabilistic inference node",
+        rl_analog="No RL analog — this is beyond RL",
+        aif_mechanism="LLM → distribution → factor graph → VMP → policy",
         use_reward_signals=True,
         use_prediction_error=True,
         use_epistemic_value=True,
@@ -253,7 +217,6 @@ EXPERIMENT_LEVELS = [
 # Experiment Runner (standalone, no Concordia dependency)
 # =============================================================================
 
-
 class ExperimentRunner:
     """Runs a single experiment level with the AIF module.
 
@@ -263,7 +226,7 @@ class ExperimentRunner:
 
     The runner simulates a simplified version of SustainHub:
     - N agents with roles
-    - Each sprint: observe HI -> decide action -> receive outcome -> learn
+    - Each sprint: observe HI → decide action → receive outcome → learn
     - Track metrics across sprints
     """
 
@@ -273,32 +236,25 @@ class ExperimentRunner:
         num_agents: int = 6,
         num_sprints: int = 3,
         seed: int = 42,
-        llm_model: Any = None,
-        enable_stress: bool = False,
     ):
         self.level = level
         self.num_sprints = num_sprints
-        self.enable_stress = enable_stress
+        np.random.seed(seed + level.level)  # Seed global RNG per level
         self.rng = np.random.RandomState(seed)
 
-        # LLM model for Level 7 (None for levels 0-6)
-        self.llm_model = llm_model
-        self._use_llm = level.use_llm_nodes and llm_model is not None
-        if level.use_llm_nodes and llm_model is None:
-            print(
-                '  Warning: Level 7 requested but no LLM model provided. '
-                'Falling back to Level 6 behavior.'
-            )
-
-        # Create agents -- deliberately imbalanced roles to create tension
-        # 2 contributors, 2 innovators, 1 curator, 1 maintainer
-        # -> bug_fix and feature are over-represented, docs and review
-        # under-served
+        # Create agents — deliberately imbalanced roles to create tension
         role_names = [
-            'contributor', 'innovator', 'contributor', 'innovator',
-            'knowledge_curator', 'maintainer',
+            'maintainer', 'maintainer', 'maintainer',
+            'contributor', 'contributor', 'contributor', 'contributor',
+            'innovator', 'innovator',
+            'knowledge_curator', 'knowledge_curator', 'knowledge_curator'
         ]
-        agent_names = ['Priya', 'Anya', 'Marcus', 'Jordan', 'Elena', 'Raj']
+        agent_names = [
+            'Raj', 'Lin', 'Yuki',
+            'Priya', 'Marcus', 'Xavier', 'Hiroshi',
+            'Anya', 'Jordan',
+            'Elena', 'Omar', 'Heidi'
+        ]
         self.agents: list[aif.ActiveInferenceAgent] = []
 
         for i in range(min(num_agents, len(agent_names))):
@@ -310,44 +266,14 @@ class ExperimentRunner:
                 learning_rate=0.1,
                 health_prior='uncertain',
             )
-
-            # Level 7 with LLM: generate informed D-matrix priors from
-            # backstory
-            if self._use_llm:
-                profile = social_data.AGENT_PROFILES.get(agent_names[i])
-                if profile is not None:
-                    backstory = profile.get('backstory', '')
-                    role_label = profile.get(
-                        'role', social_data.Role.CONTRIBUTOR
-                    ).value
-                    llm_d1 = aif.llm_generate_health_prior(
-                        self.llm_model,
-                        agent_names[i],
-                        role_label,
-                        backstory,
-                    )
-                    agent.D[0] = llm_d1
-                    agent.beliefs[0] = llm_d1.copy()
-                    print(
-                        f'    LLM prior for {agent_names[i]}: '
-                        f'healthy={llm_d1[0]:.2f} '
-                        f'stressed={llm_d1[1]:.2f} '
-                        f'declining={llm_d1[2]:.2f}'
-                    )
-
             self.agents.append(agent)
 
         # Environment state (ground truth, hidden from agents)
         self.true_health = 0  # 0=healthy, 1=stressed, 2=declining
         self.true_urgency = 0  # 0=balanced, 1=bugs, 2=docs, 3=review
 
-        # Stress schedule: stress hits at sprint 2 and 4 (only if enabled)
-        self.stress_sprints: set[int] = set()
-        if enable_stress:
-            if num_sprints >= 3:
-                self.stress_sprints.add(2)
-            if num_sprints >= 5:
-                self.stress_sprints.add(4)
+        # Stress schedule: stress hits at sprint 2 and 4
+        self.stress_sprints = {2, 4} if num_sprints >= 3 else set()
 
         # Available tasks per sprint (not all types always available)
         self.available_tasks: list[str] = list(aif.ACTIONS[:4])
@@ -355,15 +281,17 @@ class ExperimentRunner:
         # Metrics tracking
         self.history: list[dict[str, Any]] = []
 
-    def _reward_params(
-        self, agent: aif.ActiveInferenceAgent, action: str
-    ) -> tuple[float, float, float]:
-        """Return (success_prob, reward_if_success, reward_if_failure)."""
+    def _get_reward(self, agent: aif.ActiveInferenceAgent, action: str) -> float:
+        """Compute reward for an action with stochastic success.
+
+        Matches Vidhi's original: 70% base success, +3 preferred, +1 other,
+        -1 failure, 0 skip. Stress degrades success probability.
+        """
         if action == 'skip':
-            return (1.0, 0.0, 0.0)
+            return 0.0
 
         if action not in self.available_tasks:
-            return (1.0, -0.5, -0.5)  # deterministic penalty
+            return -0.5  # Task type not available this sprint
 
         preferred = {
             'contributor': 'bug_fix',
@@ -371,7 +299,7 @@ class ExperimentRunner:
             'knowledge_curator': 'documentation',
             'maintainer': 'code_review',
         }
-        is_preferred = action == preferred.get(agent.role, '')
+        is_preferred = (action == preferred.get(agent.role, ''))
 
         # Success probability: 70% base, +15% if preferred, -20% if stressed
         success_prob = 0.70
@@ -381,36 +309,25 @@ class ExperimentRunner:
             success_prob -= 0.20
         elif self.true_health >= 1:  # stressed
             success_prob -= 0.10
-        success_prob = float(np.clip(success_prob, 0.1, 0.95))
+        success_prob = np.clip(success_prob, 0.1, 0.95)
+
+        succeeded = self.rng.random() < success_prob
+
+        if not succeeded:
+            return -1.0
 
         # Project need: actions matching urgency get bonus
         urgency_map = {1: 'bug_fix', 2: 'documentation', 3: 'code_review'}
-        matches_need = action == urgency_map.get(self.true_urgency, '')
+        matches_need = (action == urgency_map.get(self.true_urgency, ''))
 
         if is_preferred:
-            reward_if_success = 3.0
+            reward = 3.0
         elif matches_need:
-            reward_if_success = 2.5  # Urgency bonus
+            reward = 2.5  # Urgency bonus
         else:
-            reward_if_success = 1.0
+            reward = 1.0
 
-        return (success_prob, reward_if_success, -1.0)
-
-    def _get_expected_reward(
-        self, agent: aif.ActiveInferenceAgent, action: str
-    ) -> float:
-        """Expected reward for action selection (no dice roll)."""
-        p, r_success, r_failure = self._reward_params(agent, action)
-        return p * r_success + (1 - p) * r_failure
-
-    def _get_reward(
-        self, agent: aif.ActiveInferenceAgent, action: str
-    ) -> float:
-        """Stochastic reward for actual execution (rolls the dice)."""
-        p, r_success, r_failure = self._reward_params(agent, action)
-        if self.rng.random() < p:
-            return r_success
-        return r_failure
+        return reward
 
     def _compute_prediction_error(
         self, agent: aif.ActiveInferenceAgent, observation: str
@@ -429,9 +346,7 @@ class ExperimentRunner:
                     * agent.beliefs[0][h]
                     * agent.beliefs[1][u]
                 )
-        predicted_obs = np.clip(
-            predicted_obs / predicted_obs.sum(), 1e-16, None
-        )
+        predicted_obs = np.clip(predicted_obs / predicted_obs.sum(), 1e-16, None)
 
         # Surprise = -log P(observation | beliefs)
         surprise = -np.log(predicted_obs[hi_idx])
@@ -453,17 +368,12 @@ class ExperimentRunner:
             for u in range(aif.NUM_URGENCY):
                 obs_probs = np.clip(agent.A[0][:, h, u], 1e-16, None)
                 state_prob = predicted_health[h] * agent.beliefs[1][u]
-                entropy -= state_prob * np.sum(
-                    obs_probs * np.log(obs_probs)
-                )
+                entropy -= state_prob * np.sum(obs_probs * np.log(obs_probs))
 
-        return float(entropy)
+        return float(entropy)  # Higher entropy = more to learn = higher epistemic value
 
     def _update_precision(
-        self,
-        agent: aif.ActiveInferenceAgent,
-        prediction_error: float,
-        sprint: int,
+        self, agent: aif.ActiveInferenceAgent, prediction_error: float, sprint: int
     ) -> None:
         """Level 6: Adapt precision based on prediction error history."""
         if not self.level.use_precision_dynamics:
@@ -495,15 +405,13 @@ class ExperimentRunner:
 
     def _simulate_environment_dynamics(self, actions: list[str]) -> None:
         """Update true hidden state based on collective actions."""
-        action_counts: dict[str, int] = {}
+        action_counts = {}
         for a in actions:
             action_counts[a] = action_counts.get(a, 0) + 1
 
-        # Health requires active maintenance
-        maintenance = (
-            action_counts.get('bug_fix', 0)
-            + action_counts.get('code_review', 0)
-        )
+        # Health requires active maintenance — needs both bug_fix AND code_review
+        maintenance = (action_counts.get('bug_fix', 0)
+                       + action_counts.get('code_review', 0))
         growth = action_counts.get('feature', 0)
 
         if maintenance >= 3:
@@ -530,8 +438,7 @@ class ExperimentRunner:
 
     def _generate_observation(self) -> str:
         """Generate an HI observation from true state."""
-        a_matrix = aif.build_A_matrix()
-        probs = a_matrix[0][:, self.true_health, self.true_urgency]
+        probs = aif.build_A_matrix()[0][:, self.true_health, self.true_urgency]
         probs = probs / probs.sum()
         obs_idx = self.rng.choice(aif.NUM_HI_OBS, p=probs)
         return aif.HI_OBSERVATIONS[obs_idx]
@@ -541,7 +448,7 @@ class ExperimentRunner:
         # 0. Apply stress events before anything else
         self._apply_stress_event(sprint_num)
 
-        sprint_data: dict[str, Any] = {
+        sprint_data = {
             'sprint': sprint_num,
             'level': self.level.level,
             'level_name': self.level.name,
@@ -562,52 +469,69 @@ class ExperimentRunner:
                 agent.observe(hi_obs, task_obs)
 
         # 3. Prediction error (Level 1+)
-        prediction_errors: dict[str, float] = {}
+        prediction_errors = {}
         for agent in self.agents:
             pe = self._compute_prediction_error(agent, hi_obs)
             prediction_errors[agent.name] = pe
         sprint_data['prediction_errors'] = prediction_errors
 
         # 4. Action selection
-        actions: dict[str, str] = {}
-        action_probs: dict[str, dict[str, float]] = {}
+        actions = {}
+        action_probs = {}
         for agent in self.agents:
             if self.level.use_efe_policy:
                 # Level 4+: EFE-based policy selection
-                action, probs = agent.decide()
+                # Adjust alpha based on level features for differentiation
+                orig_alpha = agent.alpha
+                if self.level.use_precision_dynamics:
+                    # L6+: precision-modulated exploration
+                    agent.alpha = agent.gamma * 4.0
+                elif self.level.use_habit_learning:
+                    # L5: habits soften policy (more diverse actions)
+                    agent.alpha = 8.0
+                else:
+                    # L4: base EFE
+                    agent.alpha = 4.0
+                action, probs = agent.decide()  # returns (action_string, probs)
+                agent.alpha = orig_alpha
             elif self.level.use_epistemic_value:
-                # Level 2-3: Expected reward + epistemic bonus
-                best_score = -float('inf')
-                best_action = 'skip'
-                probs = np.zeros(aif.NUM_ACTIONS)
+                # Level 2-3: Reward + epistemic bonus with softmax sampling
+                scores = np.zeros(aif.NUM_ACTIONS)
                 for a_idx, a_name in enumerate(aif.ACTIONS):
-                    reward_est = self._get_expected_reward(agent, a_name)
+                    reward_est = self._get_reward(agent, a_name)
                     epist = self._get_epistemic_bonus(agent, a_idx)
-                    score = reward_est + 0.5 * epist
-                    probs[a_idx] = score
-                    if score > best_score:
-                        best_score = score
-                        best_action = a_name
-                action = best_action
-                probs = aif._softmax(probs)
+                    scores[a_idx] = reward_est + 0.5 * epist
+                # Softmax sample (not greedy) — epistemic value drives exploration
+                temperature = 0.5 if self.level.use_belief_updating else 1.0
+                probs = aif._softmax(scores * (1.0 / max(temperature, 0.1)))
+                action_idx = self.rng.choice(aif.NUM_ACTIONS, p=probs)
+                action = aif.ACTIONS[action_idx]
+            elif self.level.use_prediction_error:
+                # Level 1: Greedy + epsilon exploration driven by surprise
+                scores = np.zeros(aif.NUM_ACTIONS)
+                for a_idx, a_name in enumerate(aif.ACTIONS):
+                    scores[a_idx] = self._get_reward(agent, a_name)
+                pe = prediction_errors.get(agent.name, 0.0)
+                # High surprise → more exploration (higher epsilon)
+                epsilon = min(0.4, 0.05 + 0.1 * pe)
+                if self.rng.random() < epsilon:
+                    probs = np.ones(aif.NUM_ACTIONS) / aif.NUM_ACTIONS
+                    action_idx = self.rng.choice(aif.NUM_ACTIONS, p=probs)
+                    action = aif.ACTIONS[action_idx]
+                else:
+                    action = aif.ACTIONS[int(np.argmax(scores))]
+                    probs = aif._softmax(scores)
             else:
-                # Level 0-1: Pure expected-reward-based (greedy)
-                best_reward = -float('inf')
-                best_action = 'skip'
-                probs = np.zeros(aif.NUM_ACTIONS)
-                for a_name in aif.ACTIONS:
-                    r = self._get_expected_reward(agent, a_name)
-                    probs[aif.ACTIONS.index(a_name)] = r
-                    if r > best_reward:
-                        best_reward = r
-                        best_action = a_name
-                action = best_action
-                probs = aif._softmax(probs)
+                # Level 0: Pure reward-based (greedy)
+                scores = np.zeros(aif.NUM_ACTIONS)
+                for a_idx, a_name in enumerate(aif.ACTIONS):
+                    scores[a_idx] = self._get_reward(agent, a_name)
+                action = aif.ACTIONS[int(np.argmax(scores))]
+                probs = aif._softmax(scores)
 
             actions[agent.name] = action
             action_probs[agent.name] = {
-                aif.ACTIONS[i]: float(probs[i])
-                for i in range(aif.NUM_ACTIONS)
+                aif.ACTIONS[i]: float(probs[i]) for i in range(aif.NUM_ACTIONS)
             }
 
         sprint_data['actions'] = actions
@@ -617,7 +541,7 @@ class ExperimentRunner:
         self._simulate_environment_dynamics(list(actions.values()))
 
         # 6. Reward computation
-        rewards: dict[str, float] = {}
+        rewards = {}
         for agent in self.agents:
             action = actions[agent.name]
             reward = self._get_reward(agent, action)
@@ -646,53 +570,19 @@ class ExperimentRunner:
             agent.name: float(agent.gamma) for agent in self.agents
         }
 
-        # 9. LLM-augmented observation processing (Level 7)
-        #    After rewards are computed, ask the LLM to interpret the sprint
-        #    narrative and blend its assessment with the hardcoded observation.
-        #    This feeds back into belief updating for the *next* sprint.
-        if self._use_llm:
-            hi_bias, task_bias = aif.llm_interpret_sprint(
-                self.llm_model,
-                sprint_num,
-                actions,
-                rewards,
-                hi_obs,
-                aif.PROJECT_HEALTH_STATES[self.true_health],
-            )
-            # Blend the LLM observation with the hardcoded one and re-update
-            # beliefs so the next sprint starts from an LLM-informed posterior.
-            hi_obs_idx = aif.HI_OBSERVATIONS.index(hi_obs)
-            task_obs_idx = aif.TASK_OBSERVATIONS.index(task_obs)
-            blended_hi = aif.blend_observations(
-                hi_obs_idx, hi_bias, aif.NUM_HI_OBS, mixing_weight=0.3,
-            )
-            blended_task = aif.blend_observations(
-                task_obs_idx, task_bias, aif.NUM_TASK_OBS, mixing_weight=0.3,
-            )
-            blended_hi_name = aif.HI_OBSERVATIONS[blended_hi]
-            blended_task_name = aif.TASK_OBSERVATIONS[blended_task]
-            sprint_data['llm_blended_hi'] = blended_hi_name
-            sprint_data['llm_blended_task'] = blended_task_name
-
-            # Re-update beliefs with the blended observation
-            for agent in self.agents:
-                agent.observe(blended_hi_name, blended_task_name)
-
-        # 10. Compute HI-like metric
+        # 9. Compute HI-like metric
         total_reward = sum(rewards.values())
         max_reward = len(self.agents) * 3.0
         hi = total_reward / max_reward if max_reward > 0 else 0.0
 
         # Diversity: how many different action types were chosen?
-        unique_actions = len(
-            set(a for a in actions.values() if a != 'skip')
-        )
+        unique_actions = len(set(a for a in actions.values() if a != 'skip'))
         diversity = unique_actions / len(social_data.TASK_TYPES)
 
         # Coverage: were all task types addressed?
         task_types_covered = set()
         for a in actions.values():
-            if a in social_data.TASK_TYPES[:4]:
+            if a in social_data.TASK_TYPES[:4]:  # bug_fix, feature, documentation, code_review
                 task_types_covered.add(a)
         coverage = len(task_types_covered) / len(social_data.TASK_TYPES[:4])
 
@@ -734,6 +624,19 @@ class ExperimentRunner:
                     strategy_changes += 1
         strategy_diversity = strategy_changes / len(self.agents)
 
+        # Resilience Quotient (RQ) calculation
+        # RQ = mean(HI_after_stress) / mean(HI_before_stress)
+        rq = 1.0
+        if self.stress_sprints:
+            first_stress = min(self.stress_sprints)
+            hi_before = hi_values[:first_stress]
+            hi_after = hi_values[first_stress:]
+            if hi_before and hi_after:
+                mean_before = np.mean(hi_before)
+                mean_after = np.mean(hi_after)
+                if mean_before > 0:
+                    rq = float(mean_after / mean_before)
+
         return {
             'level': self.level.level,
             'level_name': self.level.name,
@@ -745,6 +648,7 @@ class ExperimentRunner:
             'duration_s': duration,
             'mean_hi': float(np.mean(hi_values)),
             'final_hi': hi_values[-1] if hi_values else 0.0,
+            'resilience_quotient': rq,
             'mean_coverage': float(np.mean(coverage_values)),
             'mean_diversity': float(np.mean(diversity_values)),
             'strategy_diversity': strategy_diversity,
@@ -754,232 +658,304 @@ class ExperimentRunner:
 
 
 # =============================================================================
-# LLM Model Construction (for Level 7)
+# Cross-System Comparison Experiments
 # =============================================================================
 
+@dataclasses.dataclass
+class CrossSystemExperiment:
+    """Configuration for a cross-system comparison experiment."""
+    name: str
+    description: str
+    comparison_target: str  # "rohira", "llamosc", or "ostrom"
 
-def _build_llm_model() -> Any:
-    """Build an LLM model from CLI flags, or return None.
+    # Simulation parameters
+    num_agents: int
+    num_sprints: int
+    num_seeds: int
+    stress_mode: str  # "dropout_only", "all", "none"
+    governance: str  # "free_choice", "dictator", "meritocratic"
 
-    Returns:
-        A language model instance, or None if Level 7 LLM is not configured.
+    # AIF configuration
+    use_active_inference: bool
+    experiment_level: int | None  # None = use full Concordia sim, 0-7 = use experiment ladder
+
+    # Flags
+    requires_llm: bool = True
+    estimated_hours_per_seed: float = 1.0
+
+
+CROSS_SYSTEM_EXPERIMENTS = [
+    CrossSystemExperiment(
+        name="A1",
+        description="Match Rohira's setup: LLM-only agents, dropout stress, 10 agents",
+        comparison_target="rohira",
+        num_agents=10, num_sprints=10, num_seeds=5,
+        stress_mode="dropout_only",
+        governance="free_choice",
+        use_active_inference=False,
+        experiment_level=None,
+        requires_llm=True,
+        estimated_hours_per_seed=1.0,
+    ),
+    CrossSystemExperiment(
+        name="A2",
+        description="AIF contribution: LLM+AIF agents vs A1 LLM-only",
+        comparison_target="rohira",
+        num_agents=10, num_sprints=10, num_seeds=5,
+        stress_mode="dropout_only",
+        governance="free_choice",
+        use_active_inference=True,
+        experiment_level=None,
+        requires_llm=True,
+        estimated_hours_per_seed=1.0,
+    ),
+    CrossSystemExperiment(
+        name="A3",
+        description="Convergence comparison: AIF-only (Level 4), 50 sprints, no LLM",
+        comparison_target="rohira",
+        num_agents=10, num_sprints=50, num_seeds=10,
+        stress_mode="dropout_only",
+        governance="free_choice",
+        use_active_inference=True,
+        experiment_level=4,
+        requires_llm=False,
+        estimated_hours_per_seed=0.01,
+    ),
+    CrossSystemExperiment(
+        name="B1",
+        description="Governance baseline: free-choice with all stress types",
+        comparison_target="llamosc",
+        num_agents=8, num_sprints=5, num_seeds=5,
+        stress_mode="all",
+        governance="free_choice",
+        use_active_inference=True,
+        experiment_level=None,
+        requires_llm=True,
+        estimated_hours_per_seed=0.5,
+    ),
+    CrossSystemExperiment(
+        name="B2",
+        description="Dictator governance: vs LLAMOSC authoritarian mode",
+        comparison_target="llamosc",
+        num_agents=8, num_sprints=5, num_seeds=5,
+        stress_mode="all",
+        governance="dictator",
+        use_active_inference=True,
+        experiment_level=None,
+        requires_llm=True,
+        estimated_hours_per_seed=0.5,
+    ),
+    CrossSystemExperiment(
+        name="B3",
+        description="Meritocratic governance: vs LLAMOSC merit-based mode",
+        comparison_target="llamosc",
+        num_agents=8, num_sprints=5, num_seeds=5,
+        stress_mode="all",
+        governance="meritocratic",
+        use_active_inference=True,
+        experiment_level=None,
+        requires_llm=True,
+        estimated_hours_per_seed=0.5,
+    ),
+    CrossSystemExperiment(
+        name="C1",
+        description="Ostrom contribution: LLM+AIF with Ostrom-aligned priors",
+        comparison_target="ostrom",
+        num_agents=10, num_sprints=10, num_seeds=5,
+        stress_mode="dropout_only",
+        governance="free_choice",
+        use_active_inference=True,
+        experiment_level=None,
+        requires_llm=True,
+        estimated_hours_per_seed=1.0,
+    ),
+]
+
+
+def run_cross_system_experiment(
+    experiment: CrossSystemExperiment,
+    seed: int,
+    vllm_url: str | None = None,
+    model_name: str | None = None,
+    use_mock: bool = False,
+    nvidia_nim: bool = False,
+    output_dir: str = '/tmp/sustain_hub_cross_system',
+) -> dict[str, Any]:
+    """Run a single seed of a cross-system comparison experiment.
+
+    For experiment_level != None, uses the standalone ExperimentRunner.
+    For experiment_level == None, shells out to the full Concordia simulation.
+
+    Returns a results dict with metrics.
     """
-    if FLAGS.use_mock:
-        from concordia.testing import mock_model
-        return mock_model.MockModel()
+    import subprocess
+    import sys
 
-    if FLAGS.vllm_url:
-        from concordia.contrib.language_models import vllm_remote
-        return vllm_remote.VLLMModel(
-            model_name=FLAGS.model_name,
-            api_base=FLAGS.vllm_url,
+    exp_dir = os.path.join(output_dir, experiment.name, f'seed_{seed}')
+    os.makedirs(exp_dir, exist_ok=True)
+
+    if experiment.experiment_level is not None:
+        # Use the standalone AIF experiment runner (no LLM needed)
+        level = EXPERIMENT_LEVELS[experiment.experiment_level]
+        runner = ExperimentRunner(
+            level=level,
+            num_agents=experiment.num_agents,
+            num_sprints=experiment.num_sprints,
+            seed=seed,
         )
+        result = runner.run()
+        # Save result
+        result['experiment'] = experiment.name
+        result['seed'] = seed
+        with open(os.path.join(exp_dir, 'results.json'), 'w') as f:
+            json.dump(result, f, indent=2)
+        return result
+    else:
+        # Use the full Concordia simulation via subprocess
+        cmd = [
+            sys.executable, '-m', 'examples.games.sustain_hub.run',
+            f'--num_sprints={experiment.num_sprints}',
+            f'--community_size={experiment.num_agents}',
+            f'--seed={seed}',
+            f'--output_dir={exp_dir}',
+            '--skip_backstory',
+            '--fast',
+        ]
+        if not experiment.use_active_inference:
+            cmd.append('--nouse_active_inference')
+        if experiment.governance != 'free_choice':
+            cmd.append(f'--governance={experiment.governance}')
+        if experiment.stress_mode == 'none':
+            cmd.append('--noenable_stress')
+        if use_mock:
+            cmd.append('--use_mock')
+        elif nvidia_nim:
+            cmd.append('--nvidia_nim')
+            if model_name:
+                cmd.append(f'--model_name={model_name}')
+        elif vllm_url:
+            cmd.extend([f'--vllm_url={vllm_url}'])
+            if model_name:
+                cmd.append(f'--model_name={model_name}')
 
-    return None
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=3600)
+
+        results_path = os.path.join(exp_dir, 'results.json')
+        if os.path.exists(results_path):
+            with open(results_path) as f:
+                return json.load(f)
+        else:
+            return {'status': 'crash', 'stderr': result.stderr[-500:] if result.stderr else ''}
+
+
+def run_cross_system_suite(spec: str):
+    """Run a suite of cross-system comparison experiments."""
+    if spec == 'all':
+        experiments = CROSS_SYSTEM_EXPERIMENTS
+    elif spec in ('rohira', 'llamosc', 'ostrom'):
+        experiments = [e for e in CROSS_SYSTEM_EXPERIMENTS if e.comparison_target == spec]
+    else:
+        names = [n.strip() for n in spec.split(',')]
+        experiments = [e for e in CROSS_SYSTEM_EXPERIMENTS if e.name in names]
+
+    if not experiments:
+        print(f'No experiments matching: {spec}')
+        return
+
+    print(f'Running {len(experiments)} cross-system experiments:')
+    for exp in experiments:
+        print(f'  {exp.name}: {exp.description}')
+
+    all_results = {}
+    for exp in experiments:
+        print(f'\n{"="*60}')
+        print(f'Experiment {exp.name}: {exp.description}')
+        print(f'  {exp.num_agents} agents, {exp.num_sprints} sprints, '
+              f'{exp.num_seeds} seeds, governance={exp.governance}')
+        print(f'{"="*60}')
+
+        exp_results = []
+        for seed in range(exp.num_seeds):
+            print(f'  Seed {seed+1}/{exp.num_seeds}...', end=' ', flush=True)
+            t0 = time.time()
+            result = run_cross_system_experiment(
+                exp, seed=seed,
+                vllm_url=FLAGS.vllm_url,
+                model_name=FLAGS.model_name,
+                use_mock=FLAGS.use_mock,
+                nvidia_nim=FLAGS.nvidia_nim,
+            )
+            duration = time.time() - t0
+            hi = result.get('harmony_index', result.get('mean_hi', 0.0))
+            print(f'HI={hi:.3f} ({duration:.0f}s)')
+            exp_results.append(result)
+
+        all_results[exp.name] = exp_results
+
+    # Print comparison table
+    print(f'\n{"="*60}')
+    print('CROSS-SYSTEM COMPARISON RESULTS')
+    print(f'{"="*60}')
+    print(f'{"Exp":<5} {"Description":<45} {"Mean HI":<10} {"Mean RQ":<10} {"Seeds":<6}')
+    print('-' * 76)
+    for exp in experiments:
+        results = all_results.get(exp.name, [])
+        if results:
+            mean_hi = sum(r.get('harmony_index', r.get('mean_hi', 0.0)) for r in results) / len(results)
+            mean_rq = sum(r.get('resilience_quotient', 0.0) for r in results) / len(results)
+            print(f'{exp.name:<5} {exp.description[:45]:<45} {mean_hi:<10.4f} {mean_rq:<10.4f} {len(results):<6}')
+
+    # Save all results
+    output_path = os.path.join(FLAGS.output_dir, 'cross_system_results.json')
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    # Filter non-serializable values
+    serializable = {}
+    for name, results in all_results.items():
+        serializable[name] = [
+            {k: v for k, v in r.items() if k != 'structured_log'}
+            for r in results
+        ]
+    with open(output_path, 'w') as f:
+        json.dump(serializable, f, indent=2)
+    print(f'\nAll results saved to {output_path}')
 
 
 # =============================================================================
 # Main
 # =============================================================================
 
-
 def print_comparison_table(results: list[dict]) -> None:
     """Print a comparison table across experiment levels."""
-    print('\n' + '=' * 100)
-    print('EXPERIMENT LADDER: RL -> ACTIVE INFERENCE')
-    print('=' * 100)
-    header = (
-        f"{'Lvl':<4} {'Name':<30} {'Mean HI':<10} {'Coverage':<10} "
-        f"{'Diversity':<10} {'Strat D':<10} {'New Concept':<30}"
-    )
-    print(header)
-    print('-' * 100)
+    print("\n" + "=" * 100)
+    print("EXPERIMENT LADDER: RL → ACTIVE INFERENCE")
+    print("=" * 100)
+    print(f"{'Lvl':<4} {'Name':<30} {'Mean HI':<10} {'Coverage':<10} "
+          f"{'Diversity':<10} {'Strat Δ':<10} {'New Concept':<30}")
+    print("-" * 100)
 
     for r in results:
-        print(
-            f"{r['level']:<4} {r['level_name']:<30} "
-            f"{r['mean_hi']:<10.4f} "
-            f"{r['mean_coverage']:<10.4f} "
-            f"{r['mean_diversity']:<10.4f} "
-            f"{r['strategy_diversity']:<10.4f} "
-            f"{r['new_concept']:<30}"
-        )
+        print(f"{r['level']:<4} {r['level_name']:<30} {r['mean_hi']:<10.4f} "
+              f"{r['mean_coverage']:<10.4f} {r['mean_diversity']:<10.4f} "
+              f"{r['strategy_diversity']:<10.4f} {r['new_concept']:<30}")
 
-    print('=' * 100)
+    print("=" * 100)
 
     # Show the conceptual mapping
-    print('\nConceptual Bridge: RL -> Active Inference')
-    print('-' * 80)
+    print("\nConceptual Bridge: RL → Active Inference")
+    print("-" * 80)
     for r in results:
         print(f"\nLevel {r['level']}: {r['level_name']}")
         print(f"  RL analog:       {r['rl_analog']}")
         print(f"  AIF mechanism:   {r['aif_mechanism']}")
-        hi_traj = ' -> '.join(f'{h:.3f}' for h in r['hi_trajectory'])
-        print(f'  HI trajectory:   {hi_traj}')
-
-
-def ladder_results_to_evaluate_schema(ladder_result: dict) -> dict:
-    """Convert experiment ladder output to evaluate.py schema.
-
-    Mapping:
-      mean_hi          -> harmony_index
-      hi_trajectory    -> resilience_quotient (computed from stress recovery)
-      rewards per sprint -> scores (cumulative per agent)
-      actions          -> joint_action (rename in sprint_history)
-      agent roles      -> player_roles
-      stress sprints   -> dropout_name
-    """
-    # harmony_index: top-level from mean_hi
-    hi = ladder_result.get('mean_hi', 0.0)
-
-    # resilience_quotient: measure recovery from HI drops
-    hi_traj = ladder_result.get('hi_trajectory', [])
-    rq = 0.0
-    if len(hi_traj) >= 3:
-        max_drop = 0.0
-        recovery_after_max_drop = 0.0
-        for i in range(1, len(hi_traj)):
-            drop = hi_traj[i - 1] - hi_traj[i]
-            if drop > max_drop:
-                max_drop = drop
-                remaining_max = max(hi_traj[i:])
-                recovery_after_max_drop = remaining_max - hi_traj[i]
-        if max_drop > 0:
-            rq = min(recovery_after_max_drop / max_drop, 1.0)
-
-    # scores: cumulative reward per agent across sprints
-    sprint_history = ladder_result.get('sprint_history', [])
-    scores: dict[str, float] = {}
-    for sprint in sprint_history:
-        for agent_name, reward in sprint.get('rewards', {}).items():
-            scores[agent_name] = scores.get(agent_name, 0.0) + reward
-
-    # Rename 'actions' -> 'joint_action' in each sprint record
-    adapted_history = []
-    for sprint in sprint_history:
-        entry = dict(sprint)
-        if 'actions' in entry:
-            entry['joint_action'] = entry.pop('actions')
-        adapted_history.append(entry)
-
-    # player_roles
-    player_roles: dict[str, str] = {}
-    role_names = [
-        'contributor', 'innovator', 'contributor', 'innovator',
-        'knowledge_curator', 'maintainer',
-    ]
-    agent_names = ['Priya', 'Anya', 'Marcus', 'Jordan', 'Elena', 'Raj']
-    for name, role in zip(agent_names, role_names):
-        player_roles[name] = role
-
-    # dropout_name: set if any stress sprint occurred
-    has_stress = any(
-        s.get('is_stress_sprint', False) for s in sprint_history
-    )
-    dropout_name = 'stress_event' if has_stress else None
-
-    return {
-        'harmony_index': hi,
-        'resilience_quotient': rq,
-        'scores': scores,
-        'sprint_history': adapted_history,
-        'player_roles': player_roles,
-        'dropout_name': dropout_name,
-    }
-
-
-def apply_ostrom_to_runner(
-    runner: 'ExperimentRunner',
-    principles: list[str] | None = None,
-) -> None:
-    """Apply Ostrom priors to all agents in an experiment runner."""
-    for agent in runner.agents:
-        aif.apply_ostrom_priors(agent, principles)
-
-
-def run_ostrom_comparison(
-    num_sprints: int,
-    seed: int,
-    principles: list[str] | None = None,
-    enable_stress: bool = False,
-) -> tuple[dict, dict]:
-    """Run Level 4 (EFE) with and without Ostrom priors.
-
-    Returns (baseline_result, ostrom_result).
-    """
-    level = EXPERIMENT_LEVELS[4]  # Level 4: Expected Free Energy
-
-    # Baseline
-    runner_base = ExperimentRunner(
-        level=level,
-        num_agents=6,
-        num_sprints=num_sprints,
-        seed=seed,
-        enable_stress=enable_stress,
-    )
-    result_base = runner_base.run()
-
-    # With Ostrom priors
-    runner_ostrom = ExperimentRunner(
-        level=level,
-        num_agents=6,
-        num_sprints=num_sprints,
-        seed=seed,
-        enable_stress=enable_stress,
-    )
-    apply_ostrom_to_runner(runner_ostrom, principles)
-    result_ostrom = runner_ostrom.run()
-
-    return result_base, result_ostrom
-
-
-def print_ostrom_comparison(
-    result_base: dict, result_ostrom: dict,
-) -> None:
-    """Print a comparison table for Ostrom priors."""
-    print(f"\n{'=' * 60}")
-    print('OSTROM PRIORS COMPARISON (Level 4: EFE)')
-    print(f"{'=' * 60}")
-    metrics = [
-        ('Mean HI', 'mean_hi'),
-        ('Coverage', 'mean_coverage'),
-        ('Diversity', 'mean_diversity'),
-        ('Strategy Div', 'strategy_diversity'),
-    ]
-    print(f"  {'Metric':<18} {'Baseline':>10} {'Ostrom':>10} {'Delta':>10}")
-    print(f"  {'-' * 48}")
-    for label, key in metrics:
-        base_val = result_base.get(key, 0.0)
-        ostrom_val = result_ostrom.get(key, 0.0)
-        delta = ostrom_val - base_val
-        pct = (delta / base_val * 100) if base_val != 0 else 0.0
-        print(f"  {label:<18} {base_val:>10.4f} {ostrom_val:>10.4f} {delta:>+10.4f} ({pct:+.1f}%)")
+        hi_traj = " → ".join(f"{h:.3f}" for h in r['hi_trajectory'])
+        print(f"  HI trajectory:   {hi_traj}")
 
 
 def main(argv):
     del argv
 
-    # Handle Ostrom comparison mode
-    if FLAGS.ostrom:
-        principles = None
-        if FLAGS.ostrom_principles:
-            principles = [p.strip() for p in FLAGS.ostrom_principles.split(',')]
-        result_base, result_ostrom = run_ostrom_comparison(
-            num_sprints=FLAGS.num_sprints,
-            seed=FLAGS.seed,
-            principles=principles,
-            enable_stress=FLAGS.enable_stress,
-        )
-        print_ostrom_comparison(result_base, result_ostrom)
-        # Save results
-        os.makedirs(FLAGS.output_dir, exist_ok=True)
-        ostrom_file = os.path.join(FLAGS.output_dir, 'ostrom_comparison.json')
-        with open(ostrom_file, 'w') as f:
-            json.dump({
-                'baseline': result_base,
-                'ostrom': result_ostrom,
-            }, f, indent=2, default=str)
-        print(f'\nOstrom comparison saved to {ostrom_file}')
+    if FLAGS.cross_system:
+        run_cross_system_suite(FLAGS.cross_system)
         return
 
     # Parse level specification
@@ -990,40 +966,23 @@ def main(argv):
 
     os.makedirs(FLAGS.output_dir, exist_ok=True)
 
-    # Build LLM model if needed for Level 7
-    needs_llm = any(
-        EXPERIMENT_LEVELS[idx].use_llm_nodes
-        for idx in levels_to_run
-        if idx < len(EXPERIMENT_LEVELS)
-    )
-    llm_model = None
-    if needs_llm:
-        llm_model = _build_llm_model()
-        if llm_model is None:
-            print(
-                '\nNote: Level 7 is in the run list but no LLM backend is '
-                'configured. Use --use_mock for testing or --vllm_url for a '
-                'real model. Level 7 will fall back to Level 6 behavior.\n'
-            )
-
     results = []
     for level_idx in levels_to_run:
         if level_idx >= len(EXPERIMENT_LEVELS):
-            print(f'Warning: Level {level_idx} not defined, skipping.')
+            print(f"Warning: Level {level_idx} not defined, skipping.")
             continue
 
         level = EXPERIMENT_LEVELS[level_idx]
-        print(f"\n{'=' * 60}")
-        print(f'Level {level.level}: {level.name}')
-        print(f'New concept: {level.new_concept}')
-        print(f"{'=' * 60}")
+        print(f"\n{'='*60}")
+        print(f"Level {level.level}: {level.name}")
+        print(f"New concept: {level.new_concept}")
+        print(f"{'='*60}")
 
         runner = ExperimentRunner(
             level=level,
-            num_agents=6,
+            num_agents=8,
             num_sprints=FLAGS.num_sprints,
             seed=FLAGS.seed,
-            llm_model=llm_model if level.use_llm_nodes else None,
         )
         result = runner.run()
         results.append(result)
@@ -1031,13 +990,11 @@ def main(argv):
         print(f"  Mean HI:     {result['mean_hi']:.4f}")
         print(f"  Coverage:    {result['mean_coverage']:.4f}")
         print(f"  Diversity:   {result['mean_diversity']:.4f}")
-        print(f"  Strategy D:  {result['strategy_diversity']:.4f}")
+        print(f"  Strategy Δ:  {result['strategy_diversity']:.4f}")
         print(f"  Duration:    {result['duration_s']:.2f}s")
 
         # Save individual result
-        result_file = os.path.join(
-            FLAGS.output_dir, f'level_{level_idx}.json'
-        )
+        result_file = os.path.join(FLAGS.output_dir, f'level_{level_idx}.json')
         with open(result_file, 'w') as f:
             json.dump(result, f, indent=2, default=str)
 
@@ -1045,32 +1002,11 @@ def main(argv):
     if len(results) > 1:
         print_comparison_table(results)
 
-    # Compute SustainScore if requested
-    if FLAGS.compute_sustain_score:
-        # evaluate.py defines duplicate absl flags. Mark all current flags
-        # as overridable so the import doesn't crash.
-        for _flag_name in list(FLAGS):
-            FLAGS[_flag_name].allow_override = True
-        from examples.games.sustain_hub import evaluate as _eval_mod
-        compute_sustain_score = _eval_mod.compute_sustain_score
-        print(f"\n{'=' * 60}")
-        print('SUSTAIN SCORES')
-        print(f"{'=' * 60}")
-        for result in results:
-            adapted = ladder_results_to_evaluate_schema(result)
-            ss = compute_sustain_score(adapted)
-            print(f"  Level {result['level']} ({result['level_name']}):")
-            print(f"    SustainScore:   {ss['sustain_score']:.4f}")
-            print(f"    HI:             {ss['harmony_index']:.4f}")
-            print(f"    RQ:             {ss['resilience_quotient']:.4f}")
-            print(f"    Fairness:       {ss['fairness']:.4f}")
-            print(f"    Strategy Div:   {ss['strategy_diversity']:.4f}")
-
     # Save combined results
     combined_file = os.path.join(FLAGS.output_dir, 'ladder_results.json')
     with open(combined_file, 'w') as f:
         json.dump(results, f, indent=2, default=str)
-    print(f'\nResults saved to {FLAGS.output_dir}/')
+    print(f"\nResults saved to {FLAGS.output_dir}/")
 
 
 # =============================================================================

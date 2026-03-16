@@ -56,7 +56,7 @@ flags.DEFINE_string('results_file', 'results.tsv',
 flags.DEFINE_bool('dry_run', False,
                   'Show what each variation would change without executing.')
 flags.DEFINE_integer('start_layer', 1,
-                     'Which variation layer to start from (1-5).')
+                     'Which variation layer to start from (1-4).')
 flags.DEFINE_bool('skip_baseline', False,
                   'Skip initial baseline measurement.')
 flags.DEFINE_bool('validate', False,
@@ -90,10 +90,6 @@ TIER_CONFIGS = {
     2: {'num_sprints': 3, 'community_size': 8, 'runs': 3},
     3: {'num_sprints': 5, 'community_size': 16, 'runs': 1},
 }
-
-# Module-level governance mode, set by Layer 5 variations.
-# Used by _run_single_seed to pass --governance=<mode> to the run command.
-_governance_mode = 'free_choice'
 
 
 # ===================================================================
@@ -233,7 +229,6 @@ def _run_single_seed(tier, seed_idx, seed_label):
             sys.executable, '-m', 'examples.games.sustain_hub.run',
             '--num_sprints=%d' % cfg['num_sprints'],
             '--community_size=%d' % cfg['community_size'],
-            '--governance=%s' % _governance_mode,
             '--skip_backstory',
             '--fast',
             '--output_dir=%s' % out_dir,
@@ -730,53 +725,44 @@ def _build_variations():
     ))
 
     # -----------------------------------------------------------------
-    # Layer 5: Governance Mode
+    # Layer 5: Governance Mode (LLAMOSC comparison)
     # -----------------------------------------------------------------
-    # These variations change the governance flag passed to the run command
-    # rather than modifying source files. A marker is written to
-    # scenario_config.py so there is a committable change for git tracking.
+
+    # These variations change the --governance flag passed to the simulation.
+    # They modify the run command rather than source files, so they use a
+    # different mechanism: we patch _run_single_seed to inject the flag.
 
     variations.append((
-        'L5: Governance dictator - centralized task assignment improves coverage',
-        lambda: _apply_governance('dictator'),
+        'L5: Governance = dictator (Project Lead assigns tasks)',
+        lambda: _apply_governance_mode('dictator'),
     ))
 
     variations.append((
-        'L5: Governance meritocratic - merit-based priority improves skill utilization',
-        lambda: _apply_governance('meritocratic'),
+        'L5: Governance = meritocratic (expertise-ranked priority)',
+        lambda: _apply_governance_mode('meritocratic'),
     ))
 
     return variations
 
 
-def _apply_governance(mode):
-    """Set the governance mode for experiment runs.
+_ACTIVE_GOVERNANCE = 'free_choice'
 
-    Updates the module-level _governance_mode variable so that
-    _run_single_seed passes --governance=<mode> to the subprocess.
-    Also writes a marker comment to scenario_config.py so git has
-    something to commit.
+
+def _apply_governance_mode(mode):
+    """Set the governance mode for subsequent experiment runs.
+
+    Modifies run.py's default governance flag value so that subprocess
+    calls pick it up without needing to change the autoresearch runner.
     """
-    global _governance_mode
-    _governance_mode = mode
-    # Write a trackable marker so git commit succeeds
-    content = read_file(SCENARIO_CONFIG_PATH)
-    marker = '# autoresearch governance mode: '
-    # Remove any previous marker
-    lines = [l for l in content.splitlines(True) if not l.startswith(marker)]
-    lines.append(marker + mode + '\n')
-    write_file(SCENARIO_CONFIG_PATH, ''.join(lines))
-    return True
-
-
-def _reset_governance():
-    """Reset governance mode to default (free_choice).
-
-    Called at the start of each iteration so non-L5 variations
-    run with the default governance mode.
-    """
-    global _governance_mode
-    _governance_mode = 'free_choice'
+    global _ACTIVE_GOVERNANCE
+    _ACTIVE_GOVERNANCE = mode
+    # Patch the default value in run.py so subprocess invocations use it
+    run_path = os.path.join(SUSTAIN_DIR, 'run.py')
+    return replace_block(
+        run_path,
+        r"flags\.DEFINE_string\('governance',\s*'[^']*'",
+        "flags.DEFINE_string('governance', '%s'" % mode,
+    )
 
 
 def _make_reward_variation(pref, nonpref):
@@ -988,9 +974,6 @@ def main(argv):
         print_banner('Iteration %d/%d' % (iteration, FLAGS.max_iterations))
         print('  Hypothesis: %s' % hyp_desc)
         print('  Best so far: %.4f' % best_score)
-
-        # Reset governance mode so non-L5 variations use the default
-        _reset_governance()
 
         # Step 1: Verify clean state
         if not git_is_clean():

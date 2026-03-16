@@ -27,8 +27,6 @@ import time
 from absl import app
 from absl import flags
 
-from examples.games.sustain_hub import social_data
-
 FLAGS = flags.FLAGS
 
 flags.DEFINE_integer('runs', 1, 'Number of runs to average.')
@@ -92,113 +90,107 @@ def compute_strategy_diversity(sprint_history: list, player_roles: dict) -> floa
     return changers / len(agents) if agents else 0.0
 
 
-def _task_to_type(task: str) -> str:
-    """Map a task string to its task type based on prefix."""
-    if task.startswith('Fix:'):
-        return 'bug_fix'
-    elif task.startswith('Feature:'):
-        return 'feature'
-    elif task.startswith('Docs:'):
-        return 'documentation'
-    elif task.startswith('Review:'):
-        return 'code_review'
-    elif task.startswith('Skip'):
-        return 'skip'
-    return 'unknown'
+def compute_brs(sprint_history: list, player_roles: dict) -> dict:
+    """Burnout Risk Score per agent.
 
-
-def _role_value_to_enum(role_value: str) -> social_data.Role | None:
-    """Convert a role value string (e.g. 'Contributor') to a Role enum."""
-    for role in social_data.Role:
-        if role.value == role_value:
-            return role
-    return None
-
-
-# Adjacency matrix for skill utilization: pairs of task types that are
-# considered adjacent (related) for partial credit.
-_ADJACENT_TASKS = {
-    frozenset({'bug_fix', 'code_review'}),   # both maintenance
-    frozenset({'feature', 'documentation'}),  # both creation
-}
-
-
-def compute_burnout_risk(
-    sprint_history: list, player_roles: dict
-) -> dict[str, float]:
-    """Compute Burnout Risk Score for each agent.
-
-    BRS_i = max_consecutive_nonpreferred / total_sprints.
-    Non-preferred means the agent worked on a task type that is not their
-    role's preferred task type according to ROLE_PREFERRED_TASKS.
-
-    Args:
-        sprint_history: List of sprint dicts, each with 'joint_action'.
-        player_roles: Dict mapping agent name -> role value string.
-
-    Returns:
-        Dict mapping agent name -> BRS value in [0, 1].
+    BRS = max(consecutive non-preferred task sprints) / total sprints.
+    Lower is better. High BRS indicates burnout risk.
     """
-    if not sprint_history:
-        return {}
-    total_sprints = len(sprint_history)
-    agents = set()
+    role_to_preferred = {
+        'Contributor': 'bug_fix',
+        'Innovator': 'feature',
+        'Knowledge Curator': 'documentation',
+        'Maintainer': 'code_review',
+    }
+
+    # Build per-agent task type sequence across sprints
+    agent_tasks = {}  # name -> list of task_type_or_skip
     for sprint in sprint_history:
-        agents.update(sprint.get('joint_action', {}).keys())
+        joint_action = sprint.get('joint_action', {})
+        for name, task in joint_action.items():
+            if name not in agent_tasks:
+                agent_tasks[name] = []
+            # Determine task type from the task label
+            # Task labels start with "Fix:", "Feature:", "Docs:", "Review:"
+            if not task or task.lower().startswith('skip'):
+                agent_tasks[name].append('skip')
+            elif task.startswith('Fix:'):
+                agent_tasks[name].append('bug_fix')
+            elif task.startswith('Feature:'):
+                agent_tasks[name].append('feature')
+            elif task.startswith('Docs:') or task.startswith('Doc:'):
+                agent_tasks[name].append('documentation')
+            elif task.startswith('Review:'):
+                agent_tasks[name].append('code_review')
+            else:
+                agent_tasks[name].append('unknown')
 
     brs = {}
-    for agent in agents:
-        role_enum = _role_value_to_enum(player_roles.get(agent, ''))
-        preferred = social_data.ROLE_PREFERRED_TASKS.get(role_enum, '')
-        max_consec = 0
-        current_consec = 0
-        for sprint in sprint_history:
-            task = sprint.get('joint_action', {}).get(agent)
-            if task is None:
-                # Agent absent this sprint; treat as non-preferred
-                current_consec += 1
+    for name, tasks in agent_tasks.items():
+        if not tasks:
+            brs[name] = 0.0
+            continue
+
+        role_str = player_roles.get(name, 'Contributor')
+        preferred = role_to_preferred.get(role_str, 'bug_fix')
+
+        max_consecutive = 0
+        current = 0
+        for t in tasks:
+            if t != preferred and t != 'skip':
+                current += 1
+                max_consecutive = max(max_consecutive, current)
             else:
-                task_type = _task_to_type(task)
-                if task_type != preferred:
-                    current_consec += 1
-                else:
-                    current_consec = 0
-            max_consec = max(max_consec, current_consec)
-        brs[agent] = max_consec / total_sprints if total_sprints > 0 else 0.0
+                current = 0
+
+        brs[name] = max_consecutive / len(tasks) if tasks else 0.0
+
     return brs
 
 
-def compute_skill_utilization(
-    sprint_history: list, player_roles: dict
-) -> float:
-    """Compute Skill Utilization Efficiency (SUE).
+def compute_sue(sprint_history: list, player_roles: dict) -> float:
+    """Skill Utilization Efficiency.
 
-    For each agent-sprint pair, score:
-      1.0 if the task type matches the agent's preferred type,
-      0.5 if the task type is adjacent to preferred,
-      0.0 otherwise (including skip and unknown).
-
-    SUE is the mean of all agent-sprint scores.
-
-    Args:
-        sprint_history: List of sprint dicts, each with 'joint_action'.
-        player_roles: Dict mapping agent name -> role value string.
-
-    Returns:
-        SUE value in [0, 1].
+    SUE = mean skill-match score. 1.0 = preferred, 0.5 = adjacent, 0.0 = unrelated.
     """
-    if not sprint_history:
-        return 0.0
+    ADJACENCY = {
+        'bug_fix': {'feature'},
+        'feature': {'bug_fix', 'code_review'},
+        'documentation': {'code_review'},
+        'code_review': {'documentation', 'feature'},
+    }
+
+    role_to_preferred = {
+        'Contributor': 'bug_fix',
+        'Innovator': 'feature',
+        'Knowledge Curator': 'documentation',
+        'Maintainer': 'code_review',
+    }
 
     scores = []
     for sprint in sprint_history:
-        for agent, task in sprint.get('joint_action', {}).items():
-            role_enum = _role_value_to_enum(player_roles.get(agent, ''))
-            preferred = social_data.ROLE_PREFERRED_TASKS.get(role_enum, '')
-            task_type = _task_to_type(task)
+        joint_action = sprint.get('joint_action', {})
+        for name, task in joint_action.items():
+            if not task or task.lower().startswith('skip'):
+                continue
+            # Parse task type
+            if task.startswith('Fix:'):
+                task_type = 'bug_fix'
+            elif task.startswith('Feature:'):
+                task_type = 'feature'
+            elif task.startswith('Docs:') or task.startswith('Doc:'):
+                task_type = 'documentation'
+            elif task.startswith('Review:'):
+                task_type = 'code_review'
+            else:
+                continue
+
+            role_str = player_roles.get(name, 'Contributor')
+            preferred = role_to_preferred.get(role_str, 'bug_fix')
+
             if task_type == preferred:
                 scores.append(1.0)
-            elif frozenset({task_type, preferred}) in _ADJACENT_TASKS:
+            elif task_type in ADJACENCY.get(preferred, set()):
                 scores.append(0.5)
             else:
                 scores.append(0.0)
@@ -206,36 +198,11 @@ def compute_skill_utilization(
     return sum(scores) / len(scores) if scores else 0.0
 
 
-def compute_community_health(
-    hi: float,
-    mean_brs: float,
-    sue: float,
-    rq: float,
-    w1: float = 0.3,
-    w2: float = 0.25,
-    w3: float = 0.25,
-    w4: float = 0.2,
-) -> float:
-    """Compute Community Health Score (CHS).
-
-    CHS = w1*hi + w2*(1 - mean_brs) + w3*sue + w4*rq
-
-    This matches Rohira's proposed GSoC 2025 formula.
-
-    Args:
-        hi: Harmony Index.
-        mean_brs: Mean Burnout Risk Score across agents.
-        sue: Skill Utilization Efficiency.
-        rq: Resilience Quotient.
-        w1: Weight for harmony index (default 0.3).
-        w2: Weight for burnout inversion (default 0.25).
-        w3: Weight for skill utilization (default 0.25).
-        w4: Weight for resilience quotient (default 0.2).
-
-    Returns:
-        CHS value (weighted sum).
-    """
-    return w1 * hi + w2 * (1 - mean_brs) + w3 * sue + w4 * rq
+def compute_chs(hi: float, mean_brs: float, sue: float, rq: float,
+                weights: tuple = (0.25, 0.25, 0.25, 0.25)) -> float:
+    """Community Health Score. CHS = w1*HI + w2*(1-mean_BRS) + w3*SUE + w4*RQ."""
+    w1, w2, w3, w4 = weights
+    return w1 * hi + w2 * (1.0 - mean_brs) + w3 * sue + w4 * rq
 
 
 def compute_sustain_score(data: dict) -> dict:
@@ -253,13 +220,12 @@ def compute_sustain_score(data: dict) -> dict:
     # For single runs, assume 1.0 if stress was enabled, 0.5 if not
     stress_validity = 1.0 if data.get('dropout_name') else 0.5
 
-    # New metrics: BRS, SUE, CHS
-    brs = compute_burnout_risk(sprint_history, player_roles)
-    mean_brs = sum(brs.values()) / len(brs) if brs else 0.0
-    sue = compute_skill_utilization(sprint_history, player_roles)
-    chs = compute_community_health(hi, mean_brs, sue, rq)
-
     sustain_score = hi * (1 + rq) * fairness * strategy_div * stress_validity
+
+    brs = compute_brs(sprint_history, player_roles)
+    mean_brs = sum(brs.values()) / len(brs) if brs else 0.0
+    sue = compute_sue(sprint_history, player_roles)
+    chs = compute_chs(hi, mean_brs, sue, rq)
 
     return {
         'sustain_score': sustain_score,
@@ -268,7 +234,7 @@ def compute_sustain_score(data: dict) -> dict:
         'fairness': fairness,
         'strategy_diversity': strategy_div,
         'stress_validity': stress_validity,
-        'burnout_risk': brs,
+        'brs_per_agent': brs,
         'mean_brs': mean_brs,
         'sue': sue,
         'chs': chs,
@@ -307,8 +273,9 @@ def run_once(run_id: int) -> dict:
         return {
             'sustain_score': 0.0, 'harmony_index': 0.0,
             'resilience_quotient': 0.0, 'fairness': 0.0,
-            'strategy_diversity': 0.0, 'mean_brs': 0.0, 'sue': 0.0,
-            'chs': 0.0, 'duration': duration, 'status': 'crash',
+            'strategy_diversity': 0.0, 'mean_brs': 0.0,
+            'sue': 0.0, 'chs': 0.0,
+            'duration': duration, 'status': 'crash',
         }
 
     results_path = os.path.join(out_dir, 'results.json')
@@ -317,8 +284,9 @@ def run_once(run_id: int) -> dict:
         return {
             'sustain_score': 0.0, 'harmony_index': 0.0,
             'resilience_quotient': 0.0, 'fairness': 0.0,
-            'strategy_diversity': 0.0, 'mean_brs': 0.0, 'sue': 0.0,
-            'chs': 0.0, 'duration': duration, 'status': 'crash',
+            'strategy_diversity': 0.0, 'mean_brs': 0.0,
+            'sue': 0.0, 'chs': 0.0,
+            'duration': duration, 'status': 'crash',
         }
 
     with open(results_path) as f:
@@ -357,7 +325,6 @@ def main(argv):
         print(f'  SustainScore={r["sustain_score"]:.4f}  '
               f'HI={r["harmony_index"]:.4f}  RQ={r["resilience_quotient"]:.4f}  '
               f'Fair={r["fairness"]:.2f}  Div={r["strategy_diversity"]:.2f}  '
-              f'BRS={r["mean_brs"]:.4f}  SUE={r["sue"]:.4f}  CHS={r["chs"]:.4f}  '
               f'({r["duration"]:.0f}s)  [{r["status"]}]')
 
     ok_results = [r for r in results if r['status'] == 'ok']
@@ -386,9 +353,9 @@ def main(argv):
     print(f'  Resilience Quotient: {avg_rq:.4f}')
     print(f'  Fairness:            {avg_fair:.4f}')
     print(f'  Strategy Diversity:  {avg_div:.4f}')
-    print(f'  Burnout Risk (mean): {avg_brs:.4f}')
-    print(f'  Skill Utilization:   {avg_sue:.4f}')
-    print(f'  Community Health:    {avg_chs:.4f}')
+    print(f'  Mean BRS:            {avg_brs:.4f}')
+    print(f'  SUE:                 {avg_sue:.4f}')
+    print(f'  CHS:                 {avg_chs:.4f}')
     print(f'  Total time:          {total_duration:.0f}s')
 
     if FLAGS.log:

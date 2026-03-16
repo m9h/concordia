@@ -43,9 +43,7 @@ import types
 from typing import Any, Callable, Mapping, Sequence
 
 from absl import logging
-from examples.games.sustain_hub import active_inference as aif
 from examples.games.sustain_hub import social_data
-from examples.games.sustain_hub import code_tasks as code_tasks_mod
 from examples.games.sustain_hub import tools as sustain_tools
 from concordia.agents import entity_agent_with_logging
 from concordia.associative_memory import basic_associative_memory
@@ -149,15 +147,11 @@ class ActiveInferenceSituationPerception(
           memory_component.DEFAULT_MEMORY_COMPONENT_KEY
       ),
       num_memories_to_retrieve: int = 25,
-      aif_agent: aif.ActiveInferenceAgent | None = None,
-      inject_aif_context: bool = True,
   ):
     super().__init__('\nQuestion: How does the agent perceive their situation through the lens of Active Inference?\nAnswer')
     self._model = model
     self._memory_component_key = memory_component_key
     self._num_memories_to_retrieve = num_memories_to_retrieve
-    self._aif_agent = aif_agent
-    self._inject_aif_context = inject_aif_context
 
   def _make_pre_act_value(self) -> str:
     agent_name = self.get_entity().name
@@ -205,19 +199,12 @@ class ActiveInferenceSituationPerception(
 
     result = f"{agent_name} is currently {final_perception} (Uncertainty Score: {uncertainty_score}/10)"
 
-    # Inject structured AIF beliefs into the prompt if available
-    aif_context = ''
-    if self._inject_aif_context and self._aif_agent is not None:
-      aif_context = aif.format_aif_context_for_llm(self._aif_agent)
-      result = f"{result}\n\n{aif_context}"
-
     self._logging_channel({
         'Key': self.get_pre_act_label(),
         'Pragmatic Assessment': pragmatic,
         'Epistemic Assessment': epistemic,
         'Uncertainty Score': uncertainty_score,
         'Strategy': result,
-        'AIF Context': aif_context,
     })
 
     return result
@@ -242,8 +229,6 @@ class SustainHubEntity(basic.Entity):
           model=model,
           num_memories_to_retrieve=self.params.get(
               'situation_perception_history_length', 25),
-          aif_agent=self.params.get('aif_agent', None),
-          inject_aif_context=self.params.get('inject_aif_context', True),
       )
       agent._context_components['SituationPerception'] = situation_perception
       situation_perception.set_entity(agent)
@@ -308,28 +293,24 @@ class SustainHubPayoff:
           types.MappingProxyType({})
       ),
       stress_schedule: Mapping[int, str] | None = None,
-      code_tasks: bool = False,
-      model: language_model.LanguageModel | None = None,
+      dropout_name: str | None = None,
   ):
     self._player_names = list(player_names)
     self._player_roles = player_roles
     self._task_options = task_options
     self._task_type_map = task_type_map  # maps task label -> task type
-    self._code_tasks = code_tasks
-    self._model = model
-    self._task_issue_map: dict[str, int] = {}  # maps task label -> issue_id
     self._relational_matrix = relational_matrix
     self._num_sprints = num_sprints
     self._alpha = alpha
     self._player_tools = player_tools
-    self._stress_schedule = dict(stress_schedule or {})
+    self._stress_schedule = dict(stress_schedule) if stress_schedule else {}
+    self._dropout_name = dropout_name
     self._latest_joint_action: dict[str, str] = {}
     self._cumulative_scores: dict[str, float] = {n: 0.0 for n in player_names}
     self._task_counts: dict[str, int] = {n: 0 for n in player_names}
     self._sprint_history: list[dict[str, Any]] = []
     self._prev_usage_counts = {p: 0 for p in player_names}
     self.current_policy = "None"
-    self.current_stress: str | None = None
     self.policy_config = {
         "Tool Subsidy": {"success_prob_bonus": 0.2},
         "Maintenance Premium": {
@@ -356,26 +337,46 @@ class SustainHubPayoff:
   @property
   def resilience_quotient(self) -> float:
     """Calculate the Resilience Quotient (RQ).
-    
-    RQ = HI_after_stress / HI_before_stress
+
+    RQ measures how well the community maintains its Harmony Index
+    through stress events. Computed as:
+
+      RQ = mean(HI during/after stress sprints) / mean(HI before stress)
+
+    Returns 1.0 if no stress was scheduled or no pre-stress baseline exists.
+    Values > 1.0 indicate improvement under stress.
+    Values < 1.0 indicate degradation under stress.
     """
-    if len(self._sprint_history) < 2:
+    if len(self._sprint_history) < 2 or not self._stress_schedule:
       return 1.0
-    
-    # Find if a dropout happened
-    dropout_sprint = -1
-    for i, s in enumerate(self._sprint_history):
-      if any(not s["joint_action"].get(p) for p in self._player_names):
-        dropout_sprint = i
-        break
-    
-    if dropout_sprint == -1:
-      return 1.0 
-      
-    hi_before = sum(s["harmony_index"] for s in self._sprint_history[:dropout_sprint]) / dropout_sprint if dropout_sprint > 0 else 1.0
-    hi_after = sum(s["harmony_index"] for s in self._sprint_history[dropout_sprint:]) / (len(self._sprint_history) - dropout_sprint)
-    
-    return min(1.0, hi_after / hi_before)
+
+    # Find the first stressed sprint (1-indexed in schedule, 0-indexed in history)
+    first_stress_sprint = min(self._stress_schedule.keys())
+    stress_idx = first_stress_sprint - 1  # convert to 0-indexed
+
+    if stress_idx <= 0:
+      # Stress starts at sprint 1 — no pre-stress baseline
+      return 1.0
+    if stress_idx >= len(self._sprint_history):
+      # Stress scheduled beyond what was simulated
+      return 1.0
+
+    # Pre-stress: all sprints before first stress event
+    pre_stress_his = [
+        s["harmony_index"] for s in self._sprint_history[:stress_idx]
+    ]
+    # Stress and post-stress: first stress event onward
+    stress_his = [
+        s["harmony_index"] for s in self._sprint_history[stress_idx:]
+    ]
+
+    hi_before = sum(pre_stress_his) / len(pre_stress_his)
+    hi_during = sum(stress_his) / len(stress_his)
+
+    if hi_before <= 0:
+      return 0.0
+
+    return round(hi_during / hi_before, 4)
 
   def harmony_index(self) -> float:
     """Compute the Harmony Index: HI = alpha * avg_success + (1-alpha) * fairness."""
@@ -404,24 +405,18 @@ class SustainHubPayoff:
 
     return self._alpha * avg_success + (1.0 - self._alpha) * fairness
 
-  @staticmethod
-  def _stochastic_reward(rng, success_prob, is_preferred):
-    """Roll for success/failure using the given probability."""
-    if rng.random() < success_prob:
-      return (social_data.REWARD_PREFERRED_SUCCESS if is_preferred
-              else social_data.REWARD_NONPREFERRED_SUCCESS)
-    return (social_data.REWARD_PREFERRED_FAILURE if is_preferred
-            else social_data.REWARD_NONPREFERRED_FAILURE)
-
   def action_to_scores(
       self, joint_action: Mapping[str, str]
   ) -> Mapping[str, float]:
     """Map joint task selections to individual scores."""
-    self._latest_joint_action = dict(joint_action)
+    # Enforce dropout: override the dropout agent's action during stress
+    joint_action = dict(joint_action)
+    sprint_num = len(self._sprint_history) + 1
+    stress_type = self._stress_schedule.get(sprint_num)
+    if stress_type == "contributor_dropout" and self._dropout_name:
+      joint_action[self._dropout_name] = "Skip this sprint"
 
-    # Update stress state based on current sprint number
-    current_sprint = len(self._sprint_history) + 1
-    self.current_stress = self._stress_schedule.get(current_sprint)
+    self._latest_joint_action = dict(joint_action)
 
     # Check if this is a policy vote
     policy_options = [
@@ -440,10 +435,6 @@ class SustainHubPayoff:
       return {player: 0.0 for player in self._player_names}
 
     scores: dict[str, float] = {}
-    task_difficulties: dict[str, str] = {}
-
-    # Seeded RNG for reproducible difficulty sampling and success rolls
-    _rng = random.Random(len(self._sprint_history))
 
     # Track how many people chose each task (overloading penalty)
     task_choosers: dict[str, list[str]] = collections.defaultdict(list)
@@ -466,16 +457,18 @@ class SustainHubPayoff:
       )
       is_preferred = (task_type == preferred_type)
 
-      # Success probability based on expertise level, task type, AND sampled
-      # difficulty -- grounded in empirical OSS data (GHTorrent/GitHub Archive).
-      _all = social_data.get_all_agent_profiles()
-      expertise = _all.get(player, {}).get(
+      # Success probability based on expertise level and task alignment
+      # Calibrated from empirical OSS data (Gemini research brief):
+      #   Apprentice: 25%, Regular/Intermediate: 75%, Expert/Senior: 95%
+      expertise = social_data.AGENT_PROFILES.get(player, {}).get(
           'expertise', social_data.ExpertiseLevel.INTERMEDIATE)
-      # Sample a difficulty level for this agent's task
-      difficulty = sustain_tools.sample_task_difficulty(task_type, rng=_rng)
-      task_difficulties[player] = difficulty
-      base_prob = sustain_tools.get_grounded_success_rate(
-          task_type, difficulty, expertise)
+      expertise_probs = {
+          social_data.ExpertiseLevel.APPRENTICE: 0.25,
+          social_data.ExpertiseLevel.INTERMEDIATE: 0.55,
+          social_data.ExpertiseLevel.SENIOR: 0.75,
+          social_data.ExpertiseLevel.EXPERT: 0.85,
+      }
+      base_prob = expertise_probs.get(expertise, 0.55)
       # Preferred task bonus
       if is_preferred:
         base_prob += 0.10
@@ -499,9 +492,7 @@ class SustainHubPayoff:
 
       # Overload penalty: too many people on one task is wasteful
       num_on_task = len(task_choosers[chosen_task])
-      stress_mods = social_data.STRESS_MECHANICS.get(self.current_stress, {})
-      overload_thresh = stress_mods.get('overload_threshold', 2)
-      overload_penalty = max(0.0, (num_on_task - overload_thresh) * 0.2)
+      overload_penalty = max(0.0, (num_on_task - 2) * 0.1)
 
       success_prob = base_prob + collab_bonus + tool_bonus - overload_penalty
 
@@ -511,30 +502,18 @@ class SustainHubPayoff:
 
       success_prob = max(0.05, min(0.95, success_prob))
 
-      # --- Code tasks mode: LLM generates patch, pytest scores it ---
-      if self._code_tasks and self._model is not None:
-        task_issue_id = self._task_issue_map.get(chosen_task)
-        if task_issue_id is not None:
-          try:
-            issues = code_tasks_mod.load_issues()
-            issue = issues.get(task_issue_id)
-            if issue is not None:
-              expertise_str = expertise.value if hasattr(expertise, 'value') else str(expertise)
-              patch = code_tasks_mod.generate_patch(
-                  issue, self._model, agent_expertise=expertise_str,
-              )
-              reward = code_tasks_mod.score_code_task(
-                  task_issue_id, patch, is_preferred=is_preferred,
-              )
-            else:
-              reward = self._stochastic_reward(_rng, success_prob, is_preferred)
-          except Exception as e:
-            logging.warning('Code task scoring failed for %s: %s', player, e)
-            reward = self._stochastic_reward(_rng, success_prob, is_preferred)
-        else:
-          reward = self._stochastic_reward(_rng, success_prob, is_preferred)
+      # Stochastic success (calibrated from empirical OSS data)
+      import random as _random
+      if _random.random() < success_prob:
+        reward = (
+            social_data.REWARD_PREFERRED_SUCCESS if is_preferred
+            else social_data.REWARD_NONPREFERRED_SUCCESS
+        )
       else:
-        reward = self._stochastic_reward(_rng, success_prob, is_preferred)
+        reward = (
+            social_data.REWARD_PREFERRED_FAILURE if is_preferred
+            else social_data.REWARD_NONPREFERRED_FAILURE
+        )
 
       # Apply Maintenance Premium Policy
       if self.current_policy == "Maintenance Premium" and task_type in self.policy_config["Maintenance Premium"]["task_types"]:
@@ -545,13 +524,13 @@ class SustainHubPayoff:
       self._task_counts[player] += 1
 
     # Record sprint results
+    sprint_num = len(self._sprint_history) + 1
     self._sprint_history.append({
         "joint_action": dict(joint_action),
         "scores": dict(scores),
         "harmony_index": self.harmony_index(),
-        "stress_type": self.current_stress,
         "policy": self.current_policy,
-        "task_difficulties": dict(task_difficulties),
+        "stress": self._stress_schedule.get(sprint_num),
     })
 
     return scores
@@ -616,6 +595,11 @@ class SustainHubPayoff:
         sentiment = (
             f"{player} completed the task adequately. It was {alignment}, "
             f"so the work was slower but the team appreciated the flexibility."
+        )
+      elif score == 0.0 and player not in joint_action:
+        sentiment = (
+            f"{player} dropped out of this sprint due to burnout or other "
+            f"commitments. The team must absorb their share of the work."
         )
       elif score == 0.0:
         sentiment = (
@@ -794,31 +778,18 @@ def generate_task_queue(
     rng: random.Random,
     num_tasks: int = 8,
     stress_type: str | None = None,
-    code_tasks: bool = False,
-) -> tuple[list[str], dict[str, str], dict[str, int] | None]:
+) -> tuple[list[str], dict[str, str]]:
   """Generate a sprint's task queue.
 
   Args:
     rng: Random number generator.
     num_tasks: Number of tasks to generate.
     stress_type: Optional stress scenario ("task_overload" triples bug fixes).
-    code_tasks: Use real code issues from the toy project.
 
   Returns:
-    Tuple of (task_labels, task_type_map, task_issue_map) where task_labels
-    are display names, task_type_map maps label→type, and task_issue_map
-    maps label→issue_id (None when code_tasks=False).
+    Tuple of (task_labels, task_type_map) where task_labels are the display
+    names and task_type_map maps each label to its task type.
   """
-  # Code tasks mode: use real issues from toy project
-  if code_tasks:
-    pool = code_tasks_mod.get_task_pool(num_tasks=num_tasks, rng=rng)
-    if pool:
-      task_labels = [t['label'] for t in pool]
-      task_type_map = {t['label']: t['task_type'] for t in pool}
-      task_issue_map = {t['label']: t['issue_id'] for t in pool}
-      return task_labels, task_type_map, task_issue_map
-    logging.warning('code_tasks.get_task_pool() returned empty; falling back.')
-
   task_labels = []
   task_type_map = {}
 
@@ -846,7 +817,47 @@ def generate_task_queue(
           task_labels.append(t)
           task_type_map[t] = task_type
 
-  return task_labels[:num_tasks + 4], task_type_map, None  # allow a few extra
+  return task_labels[:num_tasks + 4], task_type_map  # allow a few extra
+
+
+def _assign_tasks_dictator(
+    agents: Sequence[str],
+    player_roles: Mapping[str, social_data.Role],
+    task_labels: Sequence[str],
+    rng: random.Random,
+) -> Mapping[str, str]:
+  """Assign tasks as a dictator: match roles to preferred task types first."""
+  task_type_map_local = {}
+  for label in task_labels:
+    if label.startswith('Fix:'): task_type_map_local[label] = 'bug_fix'
+    elif label.startswith('Feature:'): task_type_map_local[label] = 'feature'
+    elif label.startswith('Docs:') or label.startswith('Doc:'): task_type_map_local[label] = 'documentation'
+    elif label.startswith('Review:'): task_type_map_local[label] = 'code_review'
+
+  assignments = {}
+  remaining_tasks = list(task_labels)
+  remaining_agents = list(agents)
+
+  # First pass: assign preferred tasks
+  for agent in list(remaining_agents):
+    role = player_roles.get(agent, social_data.Role.CONTRIBUTOR)
+    preferred_type = social_data.ROLE_PREFERRED_TASKS[role]
+    for task in list(remaining_tasks):
+      if task_type_map_local.get(task) == preferred_type:
+        assignments[agent] = task
+        remaining_tasks.remove(task)
+        remaining_agents.remove(agent)
+        break
+
+  # Second pass: assign remaining tasks round-robin
+  for agent in remaining_agents:
+    if remaining_tasks:
+      task = remaining_tasks.pop(0)
+      assignments[agent] = task
+    else:
+      assignments[agent] = rng.choice(task_labels)
+
+  return assignments
 
 
 def configure_scenes(
@@ -858,11 +869,10 @@ def configure_scenes(
     stress_schedule: Mapping[int, str] | None = None,
     dropout_name: str | None = None,
     skip_conversation: bool = False,
-    governance: str = 'free_choice',
-    code_tasks: bool = False,
+    governance: str = "free_choice",
 ) -> tuple[
     Sequence[scene_lib.SceneSpec],
-    list[tuple[list[str], dict[str, str], dict[str, int] | None]],
+    list[tuple[list[str], dict[str, str]]],
 ]:
   """Configure the simulation's scene sequence.
 
@@ -878,8 +888,6 @@ def configure_scenes(
     rng: Random number generator.
     stress_schedule: Optional mapping of sprint_num -> stress_type.
     dropout_name: Optional name of agent who drops out mid-simulation.
-    skip_conversation: Skip conversation scenes (fast mode).
-    governance: Governance model ('free_choice', 'dictator', 'meritocratic').
 
   Returns:
     Tuple of (scenes, sprint_task_data) where sprint_task_data[i] is
@@ -887,10 +895,6 @@ def configure_scenes(
   """
   if stress_schedule is None:
     stress_schedule = {}
-
-  governance_config = social_data.GOVERNANCE_MODES.get(
-      governance, social_data.GOVERNANCE_MODES['free_choice']
-  )
 
   scenes = []
   sprint_task_data = []
@@ -901,17 +905,16 @@ def configure_scenes(
 
     # Determine active participants (handle dropout)
     active_people = list(people)
-    if dropout_name and sprint_num >= 3:
+    if dropout_name and stress_type == "contributor_dropout":
       active_people = [p for p in active_people if p != dropout_name]
 
     # Generate task queue
-    task_labels, task_type_map, task_issue_map = generate_task_queue(
+    task_labels, task_type_map = generate_task_queue(
         rng=rng,
         num_tasks=len(active_people) + 2,  # more tasks than people
         stress_type=stress_type,
-        code_tasks=code_tasks,
     )
-    sprint_task_data.append((task_labels, task_type_map, task_issue_map))
+    sprint_task_data.append((task_labels, task_type_map))
 
     # Task summary for premises
     type_counts = collections.Counter(task_type_map.values())
@@ -968,10 +971,6 @@ def configure_scenes(
           player_premise_parts.append(
               social_data.STRESS_SCENARIOS["newcomer_influx"]
           )
-        elif stress_type in social_data.STRESS_SCENARIOS:
-          player_premise_parts.append(
-              social_data.STRESS_SCENARIOS[stress_type]
-          )
 
         premise[name] = player_premise_parts
 
@@ -984,118 +983,86 @@ def configure_scenes(
           )
       )
 
-    # Build task decision scene
+    # Build task decision scene (governance-dependent)
     # Include a "Skip this sprint" option
     task_options = task_labels + ["Skip this sprint"]
 
-    decision_scene_type = scene_lib.SceneTypeSpec(
-        name=f"sprint_{sprint_num}_task_selection",
-        game_master_name="decision rules",
-        action_spec=entity_lib.choice_action_spec(
-            call_to_action=social_data.CALL_TO_TASK_DECISION,
-            options=task_options,
-            tag="task_decision",
-        ),
-    )
+    if governance == "dictator":
+      assignments = _assign_tasks_dictator(
+          active_people, player_roles, task_labels, rng)
 
-    decision_premise: dict[str, list[str | Callable]] = {}
-    for name in active_people:
-      role = player_roles.get(name, social_data.Role.CONTRIBUTOR)
-      preferred = social_data.ROLE_PREFERRED_TASKS[role]
-
-      base_premise = (
-          f"{name} must now choose a task for Sprint {sprint_num}. "
-          f"As a {role.value}, {name}'s strength is "
-          f"{preferred.replace('_', ' ')} tasks. Picking a preferred "
-          f"task yields higher reward, but the project may need help in "
-          f"other areas."
+      decision_scene_type = scene_lib.SceneTypeSpec(
+          name=f"sprint_{sprint_num}_dictator_response",
+          game_master_name="decision rules",
+          action_spec=entity_lib.choice_action_spec(
+              call_to_action=social_data.CALL_TO_TASK_DECISION,
+              options=task_options,
+              tag="task_decision",
+          ),
       )
 
-      premise_parts: list[str | Callable] = [base_premise]
+      decision_premise: dict[str, list[str | Callable]] = {}
+      for name in active_people:
+        assigned = assignments.get(name, task_labels[0])
+        decision_premise[name] = [
+            social_data.DICTATOR_ASSIGNMENT_PREMISE,
+            (
+                f"The Project Lead has assigned {name} to: {assigned}. "
+                f"{name} may accept this or choose a different task."
+            ),
+        ]
 
-      if governance == 'dictator':
-        # GM-assigned task: pick a task aligned with the agent's role
-        # to simulate a project lead maximizing coverage
-        task_options_str = '; '.join(task_labels[:6])
-        assignment_prompt = governance_config['assignment_prompt'].format(
-            name=name, task_options=task_options_str
+    elif governance == "meritocratic":
+      decision_scene_type = scene_lib.SceneTypeSpec(
+          name=f"sprint_{sprint_num}_merit_selection",
+          game_master_name="decision rules",
+          action_spec=entity_lib.choice_action_spec(
+              call_to_action=social_data.CALL_TO_TASK_DECISION,
+              options=task_options,
+              tag="task_decision",
+          ),
+      )
+
+      decision_premise: dict[str, list[str | Callable]] = {}
+      for name in active_people:
+        role = player_roles.get(name, social_data.Role.CONTRIBUTOR)
+        preferred = social_data.ROLE_PREFERRED_TASKS[role]
+        rank_info = (
+            f"Ranked by expertise as {role.value} "
+            f"({social_data.AGENT_PROFILES.get(name, {}).get('expertise', social_data.ExpertiseLevel.INTERMEDIATE).value})"
         )
-        # Find a task matching the agent's preferred type if available,
-        # otherwise pick the first available task
-        assigned_task = None
-        for t_label in task_labels:
-          t_type = task_type_map.get(t_label, '')
-          if t_type == preferred:
-            assigned_task = t_label
-            break
-        if assigned_task is None:
-          assigned_task = rng.choice(task_labels)
+        decision_premise[name] = [
+            social_data.MERITOCRATIC_PREMISE.format(
+                name=name, rank_info=rank_info,
+                available_tasks="; ".join(task_labels[:6])
+            ),
+        ]
 
-        agent_response = governance_config['agent_response_premise'].format(
-            name=name, assigned_task=assigned_task
-        )
-        premise_parts.append(assignment_prompt)
-        premise_parts.append(agent_response)
+    else:
+      # free_choice (default / existing behavior)
+      decision_scene_type = scene_lib.SceneTypeSpec(
+          name=f"sprint_{sprint_num}_task_selection",
+          game_master_name="decision rules",
+          action_spec=entity_lib.choice_action_spec(
+              call_to_action=social_data.CALL_TO_TASK_DECISION,
+              options=task_options,
+              tag="task_decision",
+          ),
+      )
 
-      elif governance == 'meritocratic':
-        # Determine priority based on cumulative scores from previous sprints
-        # Use sprint_task_data accumulated so far to approximate scores
-        # For the first sprint, no one has priority; afterwards use index
-        if sprint_idx > 0:
-          # Build a simple score proxy: agents who picked preferred tasks
-          # in earlier sprints have higher implicit scores
-          # We use a deterministic heuristic based on sprint index
-          expertise = social_data.AGENT_PROFILES.get(name, {}).get(
-              'expertise', social_data.ExpertiseLevel.INTERMEDIATE
-          )
-          expertise_score = {
-              social_data.ExpertiseLevel.EXPERT: 3.0,
-              social_data.ExpertiseLevel.SENIOR: 2.0,
-              social_data.ExpertiseLevel.INTERMEDIATE: 1.0,
-              social_data.ExpertiseLevel.APPRENTICE: 0.5,
-          }.get(expertise, 1.0)
-          # Scale by sprint index to simulate accumulation
-          proxy_score = expertise_score * sprint_idx
-
-          # Top half of agents (by proxy score among active) get priority
-          all_scores = []
-          for p in active_people:
-            p_expertise = social_data.AGENT_PROFILES.get(p, {}).get(
-                'expertise', social_data.ExpertiseLevel.INTERMEDIATE
-            )
-            p_score = {
-                social_data.ExpertiseLevel.EXPERT: 3.0,
-                social_data.ExpertiseLevel.SENIOR: 2.0,
-                social_data.ExpertiseLevel.INTERMEDIATE: 1.0,
-                social_data.ExpertiseLevel.APPRENTICE: 0.5,
-            }.get(p_expertise, 1.0) * sprint_idx
-            all_scores.append((p, p_score))
-          all_scores.sort(key=lambda x: x[1], reverse=True)
-          top_half = {s[0] for s in all_scores[:len(all_scores) // 2]}
-
-          if name in top_half:
-            task_type_label = preferred.replace('_', ' ')
-            priority_text = governance_config['priority_premise'].format(
-                name=name,
-                task_type=task_type_label,
-                score=proxy_score,
-            )
-            premise_parts.append(priority_text)
-          else:
-            remaining_text = governance_config['remaining_premise'].format(
-                name=name
-            )
-            premise_parts.append(remaining_text)
-        else:
-          # First sprint: no track record yet, all agents equal
-          premise_parts.append(
-              f"This is the first sprint. No track record exists yet, "
-              f"so all contributors have equal access to tasks."
-          )
-
-      # free_choice: no extra premise needed (base_premise is sufficient)
-
-      decision_premise[name] = premise_parts
+      decision_premise: dict[str, list[str | Callable]] = {}
+      for name in active_people:
+        role = player_roles.get(name, social_data.Role.CONTRIBUTOR)
+        preferred = social_data.ROLE_PREFERRED_TASKS[role]
+        decision_premise[name] = [
+            (
+                f"{name} must now choose a task for Sprint {sprint_num}. "
+                f"As a {role.value}, {name}'s strength is "
+                f"{preferred.replace('_', ' ')} tasks. Picking a preferred "
+                f"task yields higher reward, but the project may need help in "
+                f"other areas."
+            ),
+        ]
 
     scenes.append(
         scene_lib.SceneSpec(
@@ -1228,10 +1195,7 @@ def run_simulation(
     verbose: bool = False,
     use_active_inference: bool = True,
     skip_conversation: bool = False,
-    inject_aif_context: bool | None = None,
-    governance: str = 'free_choice',
-    stress_types: Sequence[str] | None = None,
-    code_tasks: bool = False,
+    governance: str = "free_choice",
 ) -> dict[str, Any]:
   """Run the SustainHub simulation.
 
@@ -1243,40 +1207,24 @@ def run_simulation(
     enable_stress: Whether to include stress scenarios (dropout, overload).
     agents_to_use: Optional subset of agent names from AGENT_PROFILES.
     community_size: If agents_to_use is None, how many to sample from profiles.
-    skip_backstory: Skip formative memory initialization (faster).
-    verbose: Enable verbose logging.
-    use_active_inference: Use Active Inference perception components.
-    skip_conversation: Skip conversation scenes.
-    inject_aif_context: Inject structured Active Inference beliefs
-        (Bayesian health estimate, urgency, habits) into LLM prompts.
-        Defaults to True when use_active_inference is True.
-    governance: Governance model for task allocation. One of 'free_choice'
-        (agents self-select), 'dictator' (project lead assigns), or
-        'meritocratic' (priority by track record).
 
   Returns:
     Dictionary containing simulation results, scores, harmony index history,
     and the structured log.
   """
-  # Default inject_aif_context to True when use_active_inference is True
-  if inject_aif_context is None:
-    inject_aif_context = use_active_inference
-
   seed = seed if seed is not None else random.getrandbits(63)
-  random.seed(seed)
   rng = random.Random(seed)
 
-  # Select agents (use extended profiles for large communities)
-  all_profiles = social_data.get_all_agent_profiles(community_size)
+  # Select agents
   if agents_to_use is None:
-    all_names = list(all_profiles.keys())
+    all_names = list(social_data.AGENT_PROFILES.keys())
     if community_size > len(all_names):
       community_size = len(all_names)
     agents_to_use = rng.sample(all_names, community_size)
 
   people = list(agents_to_use)
   player_roles = {
-      name: all_profiles[name]["role"]
+      name: social_data.AGENT_PROFILES[name]["role"]
       for name in people
   }
 
@@ -1286,30 +1234,17 @@ def run_simulation(
       people, relational_matrix, rng
   )
 
-  # Stress schedule — progressive environmental pressure
-  # If stress_types is specified, only include those types.
-  # This enables matched comparisons (e.g. --stress_types=contributor_dropout
-  # to match Rohira's dropout-only experiments).
-  allowed_stress = set(stress_types) if stress_types else None
+  # Stress schedule
   stress_schedule: dict[int, str] = {}
   dropout_name = None
-  if enable_stress:
-    def _include(stype: str) -> bool:
-      return allowed_stress is None or stype in allowed_stress
-    if num_sprints >= 3:
-      if _include("contributor_dropout"):
-        contributors = [n for n, r in player_roles.items() if r == social_data.Role.CONTRIBUTOR]
-        if len(contributors) >= 2:
-          dropout_name = rng.choice(contributors)
-          stress_schedule[2] = "contributor_dropout"
-      if _include("task_overload"):
-        stress_schedule[3] = "task_overload"
-    if num_sprints >= 4 and _include("funding_cut"):
-      stress_schedule[4] = "funding_cut"
-    if num_sprints >= 5 and _include("dependency_crisis"):
-      stress_schedule[5] = "dependency_crisis"
-    if num_sprints >= 6 and _include("fork_threat"):
-      stress_schedule[6] = "fork_threat"
+  if enable_stress and num_sprints >= 3:
+    # Sprint 2: contributor dropout
+    contributors = [n for n, r in player_roles.items() if r == social_data.Role.CONTRIBUTOR]
+    if contributors:
+      dropout_name = rng.choice(contributors)
+      stress_schedule[2] = "contributor_dropout"
+    # Sprint 3: task overload
+    stress_schedule[3] = "task_overload"
 
   # Configure scenes
   scenes, sprint_task_data = configure_scenes(
@@ -1322,17 +1257,13 @@ def run_simulation(
       dropout_name=dropout_name,
       skip_conversation=skip_conversation,
       governance=governance,
-      code_tasks=code_tasks,
   )
 
   # Build the combined task_type_map across all sprints (for payoff engine)
   combined_task_type_map: dict[str, str] = {}
-  combined_task_issue_map: dict[str, int] = {}
   all_task_options: list[str] = []
-  for task_labels, task_type_map, task_issue_map in sprint_task_data:
+  for task_labels, task_type_map in sprint_task_data:
     combined_task_type_map.update(task_type_map)
-    if task_issue_map:
-      combined_task_issue_map.update(task_issue_map)
     all_task_options.extend(task_labels)
 
   # Initialize player tools
@@ -1352,34 +1283,18 @@ def run_simulation(
       num_sprints=num_sprints,
       player_tools=player_tools,
       stress_schedule=stress_schedule,
-      code_tasks=code_tasks,
-      model=model,
+      dropout_name=dropout_name,
   )
-  payoff._task_issue_map = combined_task_issue_map
   global _CURRENT_PAYOFF
   _CURRENT_PAYOFF = payoff
 
   # Add common tools to each player's toolset
   common_tools = [
       sustain_tools.ProjectStatsTool(payoff),
-      sustain_tools.MentorshipTool(player_roles, all_profiles),
+      sustain_tools.MentorshipTool(player_roles, social_data.AGENT_PROFILES),
   ]
   for name in people:
     player_tools[name].extend(common_tools)
-
-  # Create Active Inference agents (one per player) for hybrid reasoning
-  aif_agents: dict[str, aif.ActiveInferenceAgent] = {}
-  if use_active_inference and inject_aif_context:
-    for name in people:
-      role = player_roles[name]
-      aif_agents[name] = aif.ActiveInferenceAgent(
-          name=name,
-          role=role.name.lower(),
-          gamma=1.0,
-          alpha=16.0,
-          learning_rate=0.1,
-          health_prior='uncertain',
-      )
 
   # Load prefabs
   prefabs = {
@@ -1397,7 +1312,7 @@ def run_simulation(
   player_specific_memories: dict[str, list[str]] = {}
 
   for name in people:
-    profile = all_profiles[name]
+    profile = social_data.AGENT_PROFILES[name]
     role = profile["role"]
     expertise = profile["expertise"]
     preferred_task = social_data.ROLE_PREFERRED_TASKS[role]
@@ -1421,8 +1336,6 @@ def run_simulation(
                 "goal": goal,
                 "tools": player_tools[name],
                 "use_active_inference": use_active_inference,
-                "aif_agent": aif_agents.get(name),
-                "inject_aif_context": inject_aif_context,
             },
         )
     )
@@ -1580,6 +1493,5 @@ def run_simulation(
       "relational_matrix": dict(relational_matrix),
       "structured_log": structured_log,
       "seed": seed,
-      "governance": governance,
   }
 
