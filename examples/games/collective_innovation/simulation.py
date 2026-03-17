@@ -434,7 +434,14 @@ class InnovationPayoff:
       Mapping of agent name to the score earned this step.
     """
     self._latest_joint_action = dict(joint_action)
-    self.current_step += 1
+
+    # Check if this is a sharing scene (all actions are long narrative text).
+    # Only count combination steps toward the step limit.
+    all_values = list(joint_action.values())
+    is_sharing = all(len(v) > 100 for v in all_values if v)
+    if not is_sharing:
+      self.current_step += 1
+
     scores: dict[str, float] = {}
     step_record: dict[str, Any] = {
         "step": self.current_step,
@@ -448,14 +455,22 @@ class InnovationPayoff:
 
       if elem1 is None or elem2 is None:
         # Could not parse a valid pair.
-        scores[player] = -0.1
-        self.inventories[player].failed_attempts.append(
-            (self.current_step, action_str, "")
-        )
-        step_record["results"][player] = {
-            "status": "parse_error",
-            "action": action_str,
-        }
+        # Long text is likely from a sharing scene — score neutral (0).
+        if len(action_str) > 200:
+          scores[player] = 0.0
+          step_record["results"][player] = {
+              "status": "sharing",
+              "action": action_str[:100] + "...",
+          }
+        else:
+          scores[player] = -0.1
+          self.inventories[player].failed_attempts.append(
+              (self.current_step, action_str, "")
+          )
+          step_record["results"][player] = {
+              "status": "parse_error",
+              "action": action_str,
+          }
         continue
 
       # Normalise to lower case.
@@ -654,6 +669,10 @@ class InnovationPayoff:
     if not action_str:
       return None, None
 
+    # Skip obviously narrative text (e.g., from sharing scenes).
+    if len(action_str) > 200:
+      return None, None
+
     # Remove common prefixes an LLM might add.
     cleaned = action_str.strip()
     for prefix in ["I choose ", "I combine ", "I want to combine ",
@@ -677,7 +696,7 @@ class InnovationPayoff:
     # This handles narrative responses like "I want to try combining
     # water and fire to see what happens."
     text_lower = action_str.lower()
-    all_elements = set(self.recipe_book._entities)
+    all_elements = set(self.recipe_book._all_elements)
     # Sort by length descending to match longer names first
     sorted_elements = sorted(all_elements, key=len, reverse=True)
     found = []
@@ -808,14 +827,18 @@ class PayoffBasedTerminator(entity_component.ComponentWithLogging):
 
   def pre_act(self, action_spec: entity_lib.ActionSpec) -> str:
     if action_spec.output_type == entity_lib.OutputType.TERMINATE:
+      # Check payoff step limit first.
       if self._payoff.should_terminate({}):
         return entity_lib.BINARY_OPTIONS["affirmative"]
-      return entity_lib.BINARY_OPTIONS["negative"]
+      # Delegate to the real scene tracker for scene-based termination.
+      return self._scene_tracker.pre_act(action_spec)
     if action_spec.output_type == entity_lib.OutputType.NEXT_GAME_MASTER:
       if self._payoff.should_terminate({}):
         return "None"
       return self._scene_tracker.pre_act(action_spec)
-    return ""
+    # Delegate all other action types (RESOLVE, etc.) to the real
+    # scene tracker — this is critical for advancing the scene counter.
+    return self._scene_tracker.pre_act(action_spec)
 
   def get_participants(self) -> Sequence[str]:
     if hasattr(self._scene_tracker, "get_participants"):
@@ -885,8 +908,83 @@ class CustomConversationGM(dialogic_and_dramaturgic.GameMaster):
     return gm
 
 
+class DynamicCombinationActionSpec(
+    entity_component.ContextComponent, entity_component.ComponentWithLogging
+):
+  """Wraps NextActionSpecFromSceneSpec, dynamically generating CHOICE options.
+
+  For combination scenes (tag='combination'), replaces the pre-generated
+  option list with one built from the active player's current inventory.
+  For all other scenes, delegates to the original component.
+  """
+
+  def __init__(self, payoff, original_component):
+    super().__init__()
+    self._payoff = payoff
+    self._original = original_component
+
+  def pre_act(self, action_spec: entity_lib.ActionSpec) -> str:
+    if action_spec.output_type != entity_lib.OutputType.NEXT_ACTION_SPEC:
+      return self._original.pre_act(action_spec)
+
+    scene_type = self._original._get_current_scene_type()
+    original_spec = scene_type.action_spec
+    if isinstance(original_spec, Mapping):
+      player = self._original.get_current_active_player()
+      original_spec = original_spec.get(player, original_spec)
+
+    if (getattr(original_spec, 'tag', None) == 'combination'
+        and original_spec.output_type == entity_lib.OutputType.CHOICE):
+      player = self._original.get_current_active_player()
+      inv = self._payoff.inventories.get(player) if player else None
+      if inv and inv.elements:
+        from itertools import combinations as _combos
+        sorted_inv = sorted(inv.elements)
+        pairs = [f"{a}, {b}" for a, b in _combos(sorted_inv, 2)]
+        pairs += [f"{a}, {a}" for a in sorted_inv]
+
+        # Exclude previously tried pairs to force exploration.
+        tried = set()
+        for _, e1, e2 in inv.failed_attempts:
+          tried.add((e1.lower(), e2.lower()))
+          tried.add((e2.lower(), e1.lower()))
+        for _, e1, e2, _ in inv.discovery_history:
+          tried.add((e1.lower(), e2.lower()))
+          tried.add((e2.lower(), e1.lower()))
+        untried = [
+            p for p in pairs
+            if tuple(x.strip().lower() for x in p.split(',')) not in tried
+        ]
+        if untried:
+          pairs = untried
+
+        dynamic_spec = entity_lib.ActionSpec(
+            call_to_action=original_spec.call_to_action,
+            output_type=entity_lib.OutputType.CHOICE,
+            options=tuple(pairs),
+            tag=original_spec.tag,
+        )
+        from concordia.environment import engine as engine_lib
+        result = engine_lib.action_spec_to_string(dynamic_spec)
+        self._logging_channel({
+            'Action spec': result,
+            'Player': player,
+            'Num options': len(pairs),
+        })
+        return result
+
+    # Fallback: delegate to original component.
+    return self._original.pre_act(action_spec)
+
+  def get_state(self) -> entity_component.ComponentState:
+    return self._original.get_state()
+
+  def set_state(self, state: entity_component.ComponentState) -> None:
+    self._original.set_state(state)
+
+
 class CustomDecisionGM(game_theoretic_and_dramaturgic.GameMaster):
-  """Decision GM with payoff-based termination."""
+  """Decision GM with payoff-based termination and dynamic combination options."""
 
   def build(self, model, memory_bank):
     gm = super().build(model, memory_bank)
@@ -903,6 +1001,18 @@ class CustomDecisionGM(game_theoretic_and_dramaturgic.GameMaster):
           gm_components.terminate.DEFAULT_TERMINATE_COMPONENT_KEY
       ] = terminator
       gm._context_components[scene_tracker_key] = terminator
+
+      # Replace the NextActionSpec component with one that dynamically
+      # generates CHOICE options from the active player's current inventory.
+      action_spec_key = (
+          gm_components.next_acting.DEFAULT_NEXT_ACTION_SPEC_COMPONENT_KEY
+      )
+      original_action_spec = gm._context_components[action_spec_key]
+      dynamic_action_spec = DynamicCombinationActionSpec(
+          payoff=_CURRENT_PAYOFF,
+          original_component=original_action_spec,
+      )
+      gm._context_components[action_spec_key] = dynamic_action_spec
     return gm
 
 
@@ -953,7 +1063,7 @@ def configure_scenes(
 
         sharing_scene_type = scene_lib.SceneTypeSpec(
             name=f"step_{step_num}_sharing_g{gidx}",
-            game_master_name="conversation rules",
+            game_master_name="decision rules",
             action_spec=entity_lib.free_action_spec(
                 call_to_action=social_data.SHARE_CALL_TO_SPEECH,
                 tag="sharing",
@@ -1261,30 +1371,17 @@ def run_simulation(
             role=prefab_lib.Role.INITIALIZER,
             params={
                 "name": "initial setup rules",
-                "next_game_master_name": "conversation rules",
+                "next_game_master_name": "decision rules",
                 "shared_memories": shared_memories,
                 "player_specific_memories": player_specific_memories,
             },
         )
     )
 
-  # Conversation GM (for sharing scenes).
-  instances.append(
-      prefab_lib.InstanceConfig(
-          prefab="conversation_rules__GameMaster",
-          role=(
-              prefab_lib.Role.INITIALIZER
-              if skip_backstory
-              else prefab_lib.Role.GAME_MASTER
-          ),
-          params={
-              "name": "conversation rules",
-              "scenes": scenes,
-          },
-      )
-  )
-
-  # Decision GM (for combination scenes with payoff matrix).
+  # Single GM handles both sharing (FREE) and combination (CHOICE) scenes.
+  # Using a single GM avoids scene-counter desync that occurs when two GMs
+  # maintain separate memories — their scene trackers drift apart, causing
+  # the wrong action spec (FREE instead of CHOICE) to be served.
   instances.append(
       prefab_lib.InstanceConfig(
           prefab="decision_rules__GameMaster",
