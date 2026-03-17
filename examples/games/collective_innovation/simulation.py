@@ -99,8 +99,13 @@ class RecipeBook:
           os.path.dirname(os.path.abspath(__file__)), "alchemy_data.json"
       )
 
-    with open(data_path, "r") as f:
-      raw_data = json.load(f)
+    try:
+      with open(data_path, "r") as f:
+        raw_data = json.load(f)
+    except (OSError, json.JSONDecodeError) as e:
+      raise RuntimeError(
+          f"Failed to load recipe book from {data_path!r}: {e}"
+      ) from e
 
     entities = raw_data["entities"]
 
@@ -328,11 +333,11 @@ class ConnectivityManager:
         if num_groups < 2:
           continue  # nowhere to visit
         # Pick an adjacent group (wrap around).
-        adjacent_options = []
-        if base_gidx > 0:
-          adjacent_options.append(base_gidx - 1)
-        if base_gidx < num_groups - 1:
-          adjacent_options.append(base_gidx + 1)
+        adjacent_options = [
+            (base_gidx - 1) % num_groups,
+            (base_gidx + 1) % num_groups,
+        ]
+        adjacent_options = [g for g in adjacent_options if g != base_gidx]
         if not adjacent_options:
           continue
         dest_gidx = self._rng.choice(adjacent_options)
@@ -501,7 +506,7 @@ class InnovationPayoff:
             "elem1": elem1,
             "elem2": elem2,
         }
-      elif result.lower() in {e.lower() for e in inv.elements}:
+      elif result in inv.elements or result.lower() in {e.lower() for e in inv.elements}:
         # Redundant -- agent already knows this element.
         scores[player] = 0.0
         step_record["results"][player] = {
@@ -519,11 +524,11 @@ class InnovationPayoff:
           score += 2.0
 
         scores[player] = score
-        inv.elements.add(result)
+        inv.elements.add(result.lower())
         inv.discovery_history.append(
             (self.current_step, elem1, elem2, result)
         )
-        self.global_discoveries.add(result)
+        self.global_discoveries.add(result.lower())
         step_record["results"][player] = {
             "status": "discovery",
             "elem1": elem1,
@@ -725,6 +730,8 @@ class InnovationPayoff:
     if not self.step_history:
       return 0.0
     recent = self.step_history[-window:]
+    if len(recent) == 0:
+      return 0.0
     total_new = 0
     for record in recent:
       for result_info in record.get("results", {}).values():
@@ -958,6 +965,14 @@ class DynamicCombinationActionSpec(
         if untried:
           pairs = untried
 
+        # Guard: if pairs is somehow empty, fall back to all possible
+        # pairs (allow retrying) or provide a skip option.
+        if not pairs:
+          pairs = [f"{a}, {b}" for a, b in _combos(sorted_inv, 2)]
+          pairs += [f"{a}, {a}" for a in sorted_inv]
+        if not pairs:
+          pairs = ["Skip this step"]
+
         dynamic_spec = entity_lib.ActionSpec(
             call_to_action=original_spec.call_to_action,
             output_type=entity_lib.OutputType.CHOICE,
@@ -1101,7 +1116,6 @@ def configure_scenes(
     from itertools import combinations as _iter_combos
 
     combination_premise: dict[str, list[str | Callable]] = {}
-    per_agent_options: dict[str, list[str]] = {}
 
     for name in people:
       inv = payoff.inventories[name]
@@ -1115,8 +1129,6 @@ def configure_scenes(
       ]
       # Also allow same-element combos (e.g. water + water = sea).
       pairs += [f"{a}, {a}" for a in sorted_inv]
-      per_agent_options[name] = pairs
-
       premise_parts: list[str | Callable] = [
           (
               f"Step {step_num} of the alchemy experiment. {name} has "

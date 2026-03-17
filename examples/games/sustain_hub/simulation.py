@@ -441,6 +441,11 @@ class NormTracker:
     return list(self._history)
 
   @property
+  def norms(self) -> dict[str, float]:
+    """Current norm strengths."""
+    return dict(self._norms)
+
+  @property
   def compliance_history(self) -> list[dict[str, float]]:
     return list(self._compliance_history)
 
@@ -980,8 +985,7 @@ class SustainHubPayoff:
       success_prob = max(0.05, min(0.95, success_prob))
 
       # Stochastic success (calibrated from empirical OSS data)
-      import random as _random
-      if _random.random() < success_prob:
+      if random.random() < success_prob:
         reward = (
             social_data.REWARD_PREFERRED_SUCCESS if is_preferred
             else social_data.REWARD_NONPREFERRED_SUCCESS
@@ -1059,7 +1063,7 @@ class SustainHubPayoff:
           prev_sprint=prev_sprint,
           stress_type=stress_type,
       )
-      norm_strengths = dict(self._norm_tracker._norms)
+      norm_strengths = self._norm_tracker.norms
 
     # --- Update burnout tracker ---
     burnout_snapshot = None
@@ -2056,7 +2060,9 @@ def run_simulation(
       # Step numbers in logs are 1-based and might include setup. 
       # We look for 'SituationPerception' component logs for this agent.
       agent_logs = log_interface.filter_entries(entity_name=name, component_name='SituationPerception', include_content=True)
-      if i < len(agent_logs):
+      if i >= len(agent_logs):
+        logging.warning('Missing log for %s at sprint %d', name, i)
+      else:
         data = agent_logs[i].get('data', {})
         sprint_reasoning[name] = {
             'Pragmatic': data.get('Pragmatic Assessment', ''),
