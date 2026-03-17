@@ -111,9 +111,11 @@ def main(argv):
     )
   elif FLAGS.nvidia_nim:
     from concordia.contrib.language_models import vllm_remote
-    nim_key = os.environ.get('NVIDIA_API_KEY', '')
+    nim_key = (os.environ.get('NVIDIA_API_KEY', '')
+               or os.environ.get('NGC_API_KEY', ''))
     if not nim_key:
-      print('Error: NVIDIA_API_KEY not set. Get a free key at build.nvidia.com')
+      print('Error: NVIDIA_API_KEY or NGC_API_KEY not set. '
+            'Get a free key at build.nvidia.com')
       return
     nim_model = (
         FLAGS.model_name
