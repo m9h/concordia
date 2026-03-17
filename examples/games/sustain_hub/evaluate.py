@@ -23,7 +23,9 @@ import os
 import subprocess
 import sys
 import time
+from typing import Any
 
+import numpy as np
 from absl import app
 from absl import flags
 
@@ -205,6 +207,353 @@ def compute_chs(hi: float, mean_brs: float, sue: float, rq: float,
     return w1 * hi + w2 * (1.0 - mean_brs) + w3 * sue + w4 * rq
 
 
+def _jsd(p: np.ndarray, q: np.ndarray) -> float:
+    """Jensen-Shannon divergence between two probability distributions."""
+    p = np.asarray(p, dtype=np.float64)
+    q = np.asarray(q, dtype=np.float64)
+    # Ensure valid distributions
+    p = np.maximum(p, 1e-12)
+    q = np.maximum(q, 1e-12)
+    p = p / p.sum()
+    q = q / q.sum()
+    m = 0.5 * (p + q)
+    # KL(p||m) + KL(q||m), each clamped to avoid log(0)
+    kl_pm = np.sum(p * np.log(p / m))
+    kl_qm = np.sum(q * np.log(q / m))
+    return float(0.5 * kl_pm + 0.5 * kl_qm)
+
+
+def compute_belief_alignment(sprint_history: list) -> dict:
+    """Compute Belief Alignment Index (BAI) per sprint.
+
+    BAI = 1 - mean_pairwise_JSD over agents' health belief vectors.
+    Range [0, 1]: 1 = perfect alignment, 0 = maximum divergence.
+
+    Args:
+        sprint_history: List of sprint dicts, each potentially containing
+            'belief_snapshots' with per-agent belief state summaries.
+
+    Returns:
+        Dict with 'bai_per_sprint' (list of floats) and 'mean_bai' (float).
+    """
+    bai_per_sprint = []
+    for sprint in sprint_history:
+        snapshots = sprint.get('belief_snapshots', {})
+        if len(snapshots) < 2:
+            bai_per_sprint.append(1.0)
+            continue
+
+        # Extract health belief vectors
+        health_beliefs = []
+        for agent_state in snapshots.values():
+            beliefs_health = agent_state.get('beliefs_health', {})
+            if beliefs_health:
+                vec = np.array(list(beliefs_health.values()), dtype=np.float64)
+                health_beliefs.append(vec)
+
+        if len(health_beliefs) < 2:
+            bai_per_sprint.append(1.0)
+            continue
+
+        # Compute mean pairwise JSD
+        n = len(health_beliefs)
+        total_jsd = 0.0
+        count = 0
+        for i in range(n):
+            for j in range(i + 1, n):
+                total_jsd += _jsd(health_beliefs[i], health_beliefs[j])
+                count += 1
+        mean_jsd = total_jsd / count if count > 0 else 0.0
+        # JSD is bounded in [0, ln(2)] ≈ 0.693; normalize to [0, 1]
+        normalized_jsd = mean_jsd / math.log(2)
+        bai = max(0.0, 1.0 - normalized_jsd)
+        bai_per_sprint.append(bai)
+
+    mean_bai = sum(bai_per_sprint) / len(bai_per_sprint) if bai_per_sprint else 1.0
+    return {
+        'bai_per_sprint': bai_per_sprint,
+        'mean_bai': mean_bai,
+    }
+
+
+DIALOGUE_ACT_CATEGORIES = [
+    'propose_task',
+    'request_help',
+    'offer_mentoring',
+    'express_concern',
+    'free_ride_justify',
+    'coordinate',
+    'criticize',
+    'encourage',
+]
+
+# Keyword patterns for rule-based dialogue act classification.
+# Each category maps to a list of patterns (case-insensitive substring match).
+_DIALOGUE_ACT_PATTERNS: dict[str, list[str]] = {
+    'propose_task': [
+        'should work on', 'i\'ll take', 'i will handle', 'let me do',
+        'we need someone on', 'i\'ll focus on', 'plan to work on',
+        'going to tackle', 'pick up the', 'volunteer for',
+    ],
+    'request_help': [
+        'could use help', 'need assistance', 'anyone available',
+        'struggling with', 'can someone', 'help me with',
+        'not sure how to', 'would appreciate',
+    ],
+    'offer_mentoring': [
+        'i can show you', 'let me help', 'i\'ll mentor', 'teach you',
+        'walk you through', 'pair with', 'guide you', 'show you how',
+    ],
+    'express_concern': [
+        'worried about', 'concerned that', 'risk of', 'falling behind',
+        'burnout', 'unsustainable', 'declining', 'neglected',
+        'no one is covering', 'project health',
+    ],
+    'free_ride_justify': [
+        'prefer to stick with', 'best at', 'most productive when',
+        'my expertise is in', 'not my area', 'someone else should',
+        'i\'ll skip', 'rather focus on what i know',
+    ],
+    'coordinate': [
+        'let\'s divide', 'coordinate', 'make sure we cover',
+        'who wants to', 'split the work', 'balance', 'distribute',
+        'between us', 'take turns', 'collectively',
+    ],
+    'criticize': [
+        'not pulling weight', 'always picks', 'free riding',
+        'shirking', 'should have', 'disappointed', 'unfair',
+        'why didn\'t', 'never helps with',
+    ],
+    'encourage': [
+        'great job', 'well done', 'appreciate', 'thank you',
+        'keep it up', 'good work', 'proud of', 'nice effort',
+        'team is doing', 'progress',
+    ],
+}
+
+
+def classify_dialogue_acts(
+    narrative_history: list[dict[str, dict[str, str]]],
+) -> dict[str, Any]:
+    """Classify dialogue acts from agent conversation logs.
+
+    Uses rule-based keyword matching for fast, reproducible classification.
+    For richer analysis, an LLM classifier could be substituted.
+
+    Args:
+        narrative_history: List of per-sprint dicts, each mapping
+            agent_name -> {Pragmatic, Epistemic, Uncertainty, Strategy}.
+
+    Returns:
+        Dict with:
+          'act_counts': {category: count} total across all sprints
+          'per_sprint': list of {category: count} per sprint
+          'per_agent': {agent: {category: count}}
+          'coordination_index': fraction of utterances that are coordination acts
+          'social_pressure_index': ratio of (criticize + express_concern) to
+              (encourage + offer_mentoring)
+    """
+    total_counts: dict[str, int] = {cat: 0 for cat in DIALOGUE_ACT_CATEGORIES}
+    per_sprint: list[dict[str, int]] = []
+    per_agent: dict[str, dict[str, int]] = {}
+    total_utterances = 0
+
+    for sprint_reasoning in narrative_history:
+        sprint_counts: dict[str, int] = {cat: 0 for cat in DIALOGUE_ACT_CATEGORIES}
+        for agent_name, reasoning in sprint_reasoning.items():
+            if agent_name not in per_agent:
+                per_agent[agent_name] = {cat: 0 for cat in DIALOGUE_ACT_CATEGORIES}
+
+            # Combine all reasoning text for this agent-sprint
+            text = ' '.join(str(v) for v in reasoning.values()).lower()
+            if not text.strip():
+                continue
+            total_utterances += 1
+
+            for category, patterns in _DIALOGUE_ACT_PATTERNS.items():
+                if any(p in text for p in patterns):
+                    total_counts[category] += 1
+                    sprint_counts[category] += 1
+                    per_agent[agent_name][category] += 1
+
+        per_sprint.append(sprint_counts)
+
+    # Coordination Index: fraction of utterances with coordination acts
+    coordination_index = (
+        total_counts['coordinate'] / total_utterances
+        if total_utterances > 0 else 0.0
+    )
+
+    # Social Pressure Index: negative pressure / positive support
+    negative = total_counts['criticize'] + total_counts['express_concern']
+    positive = total_counts['encourage'] + total_counts['offer_mentoring']
+    social_pressure_index = negative / max(positive, 1)
+
+    return {
+        'act_counts': total_counts,
+        'per_sprint': per_sprint,
+        'per_agent': per_agent,
+        'coordination_index': coordination_index,
+        'social_pressure_index': social_pressure_index,
+    }
+
+
+def compute_trust_metrics(data: dict) -> dict:
+    """Compute trust dynamics metrics from simulation results.
+
+    Args:
+        data: Results dict containing trust_final, trust_reciprocity,
+            trust_centralization, and trust_history.
+
+    Returns:
+        Dict with trust_reciprocity, trust_centralization,
+        mean_trust, trust_evolution (delta from initial to final).
+    """
+    trust_final = data.get('trust_final', {})
+    reciprocity = data.get('trust_reciprocity', 1.0)
+    centralization = data.get('trust_centralization', 0.0)
+    trust_history = data.get('trust_history', [])
+
+    # Mean trust across all pairs
+    trust_values = []
+    for row in trust_final.values():
+        trust_values.extend(row.values())
+    mean_trust = sum(trust_values) / len(trust_values) if trust_values else 0.0
+
+    # Trust evolution: compare first and last snapshots
+    trust_delta = 0.0
+    if len(trust_history) >= 2:
+        first = trust_history[0]
+        last = trust_history[-1]
+        first_vals = [v for row in first.values() for v in row.values()]
+        last_vals = [v for row in last.values() for v in row.values()]
+        if first_vals and last_vals:
+            trust_delta = (
+                sum(last_vals) / len(last_vals)
+                - sum(first_vals) / len(first_vals)
+            )
+
+    return {
+        'trust_reciprocity': reciprocity,
+        'trust_centralization': centralization,
+        'mean_trust': mean_trust,
+        'trust_delta': trust_delta,
+    }
+
+
+def detect_coalitions(sprint_history: list) -> dict:
+    """Detect coalitions via belief clustering per sprint.
+
+    Groups agents by Jensen-Shannon divergence of their health beliefs.
+    Uses simple agglomerative clustering: agents within JSD < threshold
+    form a coalition.
+
+    Args:
+        sprint_history: List of sprint dicts with 'belief_snapshots'.
+
+    Returns:
+        Dict with:
+          'coalitions_per_sprint': list of list-of-lists (agent name groups)
+          'stable_coalitions': coalitions that persist across >50% of sprints
+          'num_coalitions_per_sprint': list of int
+    """
+    threshold = 0.15  # JSD threshold for same coalition
+    coalitions_per_sprint: list[list[list[str]]] = []
+
+    for sprint in sprint_history:
+        snapshots = sprint.get('belief_snapshots', {})
+        if len(snapshots) < 2:
+            coalitions_per_sprint.append([list(snapshots.keys())])
+            continue
+
+        # Extract health belief vectors
+        agents = []
+        beliefs = []
+        for name, state in snapshots.items():
+            bh = state.get('beliefs_health', {})
+            if bh:
+                agents.append(name)
+                beliefs.append(np.array(list(bh.values()), dtype=np.float64))
+
+        if len(agents) < 2:
+            coalitions_per_sprint.append([agents])
+            continue
+
+        # Simple agglomerative clustering
+        n = len(agents)
+        # Compute pairwise JSD matrix
+        jsd_matrix = np.zeros((n, n))
+        for i in range(n):
+            for j in range(i + 1, n):
+                d = _jsd(beliefs[i], beliefs[j])
+                jsd_matrix[i, j] = d
+                jsd_matrix[j, i] = d
+
+        # Greedy single-linkage: if JSD(i,j) < threshold, same cluster
+        cluster_ids = list(range(n))
+        for i in range(n):
+            for j in range(i + 1, n):
+                if jsd_matrix[i, j] < threshold:
+                    # Merge clusters
+                    old_id = cluster_ids[j]
+                    new_id = cluster_ids[i]
+                    for k in range(n):
+                        if cluster_ids[k] == old_id:
+                            cluster_ids[k] = new_id
+
+        # Group agents by cluster
+        clusters: dict[int, list[str]] = {}
+        for idx, cid in enumerate(cluster_ids):
+            clusters.setdefault(cid, []).append(agents[idx])
+        coalitions_per_sprint.append(list(clusters.values()))
+
+    # Find stable coalitions (appear in >50% of sprints)
+    # Represent coalitions as frozensets and count
+    coalition_counts: dict[frozenset, int] = {}
+    for sprint_coalitions in coalitions_per_sprint:
+        for group in sprint_coalitions:
+            if len(group) >= 2:  # Solo agents aren't coalitions
+                key = frozenset(group)
+                coalition_counts[key] = coalition_counts.get(key, 0) + 1
+
+    num_sprints = len(coalitions_per_sprint)
+    stable = [
+        sorted(list(members))
+        for members, count in coalition_counts.items()
+        if count > num_sprints * 0.5
+    ]
+
+    return {
+        'coalitions_per_sprint': [
+            [sorted(g) for g in sprint]
+            for sprint in coalitions_per_sprint
+        ],
+        'stable_coalitions': stable,
+        'num_coalitions_per_sprint': [
+            len(sprint) for sprint in coalitions_per_sprint
+        ],
+    }
+
+
+def compute_burnout_cascade_metrics(data: dict) -> dict:
+    """Extract burnout cascade metrics from simulation results."""
+    return {
+        'cascade_count': data.get('burnout_cascade_count', 0),
+        'mean_burnout': data.get('mean_burnout', 0.0),
+        'peak_burnout': data.get('peak_burnout', 0.0),
+    }
+
+
+def compute_norm_metrics(data: dict) -> dict:
+    """Extract norm emergence metrics from simulation results."""
+    return {
+        'norm_emergence_rate': data.get('norm_emergence_rate', 0.0),
+        'norm_stability_index': data.get('norm_stability_index', 1.0),
+        'norm_compliance_rate': data.get('norm_compliance_rate', 1.0),
+        'active_norms': data.get('active_norms', {}),
+    }
+
+
 def compute_sustain_score(data: dict) -> dict:
     """Compute composite SustainScore from results.json data."""
     hi = data.get('harmony_index', 0.0)
@@ -227,6 +576,25 @@ def compute_sustain_score(data: dict) -> dict:
     sue = compute_sue(sprint_history, player_roles)
     chs = compute_chs(hi, mean_brs, sue, rq)
 
+    # Belief Alignment Index (requires AIF loop to be closed)
+    bai_result = compute_belief_alignment(sprint_history)
+
+    # Dialogue act analysis
+    narrative_history = data.get('narrative_history', [])
+    dialogue_result = classify_dialogue_acts(narrative_history)
+
+    # Trust dynamics
+    trust_result = compute_trust_metrics(data)
+
+    # Norm emergence
+    norm_result = compute_norm_metrics(data)
+
+    # Burnout cascades
+    burnout_cascade_result = compute_burnout_cascade_metrics(data)
+
+    # Coalition detection
+    coalition_result = detect_coalitions(sprint_history)
+
     return {
         'sustain_score': sustain_score,
         'harmony_index': hi,
@@ -238,6 +606,22 @@ def compute_sustain_score(data: dict) -> dict:
         'mean_brs': mean_brs,
         'sue': sue,
         'chs': chs,
+        'belief_alignment': bai_result,
+        'mean_bai': bai_result['mean_bai'],
+        'dialogue_acts': dialogue_result,
+        'coordination_index': dialogue_result['coordination_index'],
+        'social_pressure_index': dialogue_result['social_pressure_index'],
+        'trust_metrics': trust_result,
+        'trust_reciprocity': trust_result['trust_reciprocity'],
+        'mean_trust': trust_result['mean_trust'],
+        'norm_metrics': norm_result,
+        'norm_emergence_rate': norm_result['norm_emergence_rate'],
+        'norm_compliance_rate': norm_result['norm_compliance_rate'],
+        'burnout_cascade': burnout_cascade_result,
+        'burnout_cascade_count': burnout_cascade_result['cascade_count'],
+        'mean_burnout': burnout_cascade_result['mean_burnout'],
+        'coalitions': coalition_result,
+        'num_stable_coalitions': len(coalition_result['stable_coalitions']),
     }
 
 
@@ -325,6 +709,8 @@ def main(argv):
         print(f'  SustainScore={r["sustain_score"]:.4f}  '
               f'HI={r["harmony_index"]:.4f}  RQ={r["resilience_quotient"]:.4f}  '
               f'Fair={r["fairness"]:.2f}  Div={r["strategy_diversity"]:.2f}  '
+              f'BRS={r["mean_brs"]:.4f}  SUE={r["sue"]:.4f}  CHS={r["chs"]:.4f}  '
+              f'BAI={r.get("mean_bai", 0):.4f}  '
               f'({r["duration"]:.0f}s)  [{r["status"]}]')
 
     ok_results = [r for r in results if r['status'] == 'ok']
@@ -343,6 +729,7 @@ def main(argv):
     avg_brs = avg('mean_brs')
     avg_sue = avg('sue')
     avg_chs = avg('chs')
+    avg_bai = avg('mean_bai')
     total_duration = sum(r['duration'] for r in results)
 
     print(f'\n{"="*60}')
@@ -356,6 +743,7 @@ def main(argv):
     print(f'  Mean BRS:            {avg_brs:.4f}')
     print(f'  SUE:                 {avg_sue:.4f}')
     print(f'  CHS:                 {avg_chs:.4f}')
+    print(f'  Belief Alignment:    {avg_bai:.4f}')
     print(f'  Total time:          {total_duration:.0f}s')
 
     if FLAGS.log:

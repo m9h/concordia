@@ -42,7 +42,10 @@ import random
 import types
 from typing import Any, Callable, Mapping, Sequence
 
+import numpy as np
+
 from absl import logging
+from examples.games.sustain_hub import active_inference
 from examples.games.sustain_hub import social_data
 from examples.games.sustain_hub import tools as sustain_tools
 from concordia.agents import entity_agent_with_logging
@@ -263,6 +266,468 @@ class SustainHubEntity(basic.Entity):
 
 
 # =============================================================================
+# Dynamic Trust Network
+# =============================================================================
+
+
+class TrustNetwork:
+  """Bayesian trust network that evolves with cooperation/defection.
+
+  Trust between agents i and j updates after each sprint:
+    T_ij(t+1) = clip(T_ij(t) + η * signal, -1, 1)
+
+  Cooperation signal:
+    +1 if both agents covered different neglected task types (complementary)
+    +0.5 if both worked on same task (solidarity, but less useful)
+    -0.5 if agent j skipped while agent i worked on neglected task
+    -1 if agent j free-rode (preferred task) while neglected tasks remained
+
+  This replaces the static relational_matrix with dynamic trust that
+  captures the "cheap talk" problem: do agents follow through on stated
+  intentions from conversation scenes?
+  """
+
+  def __init__(
+      self,
+      player_names: Sequence[str],
+      initial_matrix: Mapping[str, Mapping[str, float]],
+      learning_rate: float = 0.15,
+  ):
+    self._players = list(player_names)
+    self._lr = learning_rate
+    # Initialize from static relational matrix
+    self._trust: dict[str, dict[str, float]] = {}
+    for p in self._players:
+      self._trust[p] = {}
+      for q in self._players:
+        if p != q:
+          self._trust[p][q] = float(
+              initial_matrix.get(p, {}).get(q, 0.0)
+          )
+    self._history: list[dict[str, dict[str, float]]] = []
+
+  @property
+  def matrix(self) -> dict[str, dict[str, float]]:
+    """Current trust matrix (read-only copy)."""
+    return {p: dict(row) for p, row in self._trust.items()}
+
+  @property
+  def history(self) -> list[dict[str, dict[str, float]]]:
+    return list(self._history)
+
+  def get(self, i: str, j: str) -> float:
+    return self._trust.get(i, {}).get(j, 0.0)
+
+  def update_after_sprint(
+      self,
+      joint_action: Mapping[str, str],
+      task_type_map: Mapping[str, str],
+      player_roles: Mapping[str, social_data.Role],
+      scores: Mapping[str, float],
+  ) -> None:
+    """Update trust based on observed cooperation/defection patterns."""
+    # Determine which task types were covered and which were neglected
+    addressed_types: set[str] = set()
+    player_task_types: dict[str, str] = {}
+    for name, task in joint_action.items():
+      tt = task_type_map.get(task, 'unknown')
+      if tt != 'unknown':
+        addressed_types.add(tt)
+      player_task_types[name] = tt
+
+    neglected = set(social_data.TASK_TYPES) - addressed_types
+
+    for i in self._players:
+      for j in self._players:
+        if i == j:
+          continue
+
+        i_task = player_task_types.get(i, 'unknown')
+        j_task = player_task_types.get(j, 'unknown')
+        i_preferred = social_data.ROLE_PREFERRED_TASKS.get(
+            player_roles.get(i, social_data.Role.CONTRIBUTOR), 'bug_fix')
+        j_preferred = social_data.ROLE_PREFERRED_TASKS.get(
+            player_roles.get(j, social_data.Role.CONTRIBUTOR), 'bug_fix')
+
+        signal = 0.0
+
+        # Both covered different non-preferred tasks → strong cooperation
+        if (i_task != i_preferred and j_task != j_preferred
+            and i_task != j_task and i_task != 'unknown'
+            and j_task != 'unknown'):
+          signal = 1.0
+        # j skipped while neglected tasks existed
+        elif j_task == 'unknown' and neglected:
+          signal = -0.5
+        # j free-rode (preferred) while neglected tasks remained
+        elif j_task == j_preferred and neglected and i_task != i_preferred:
+          signal = -0.3
+        # Both worked on same task type (solidarity)
+        elif i_task == j_task and i_task != 'unknown':
+          signal = 0.3
+        # j worked on non-preferred → positive signal
+        elif j_task != j_preferred and j_task != 'unknown':
+          signal = 0.2
+
+        self._trust[i][j] = max(-1.0, min(1.0,
+            self._trust[i][j] + self._lr * signal
+        ))
+
+    # Record snapshot
+    self._history.append(self.matrix)
+
+  def reciprocity(self) -> float:
+    """Pearson-like reciprocity: correlation of T_ij with T_ji."""
+    pairs_ij = []
+    pairs_ji = []
+    for i in self._players:
+      for j in self._players:
+        if i < j:
+          pairs_ij.append(self._trust[i][j])
+          pairs_ji.append(self._trust[j][i])
+    if len(pairs_ij) < 2:
+      return 1.0
+    arr_ij = np.array(pairs_ij)
+    arr_ji = np.array(pairs_ji)
+    std_ij = arr_ij.std()
+    std_ji = arr_ji.std()
+    if std_ij < 1e-10 or std_ji < 1e-10:
+      return 1.0
+    return float(np.corrcoef(arr_ij, arr_ji)[0, 1])
+
+  def centralization(self) -> float:
+    """Trust centralization: variance of mean incoming trust per agent."""
+    if len(self._players) < 2:
+      return 0.0
+    incoming = []
+    for j in self._players:
+      total = sum(self._trust[i][j] for i in self._players if i != j)
+      incoming.append(total / (len(self._players) - 1))
+    return float(np.std(incoming))
+
+
+# =============================================================================
+# Norm Emergence Tracking
+# =============================================================================
+
+
+class NormTracker:
+  """Tracks emergent governance norms in the community.
+
+  Norms can be proposed (from conversation/retrospective scenes), adopted
+  by majority observation of behavior, and decay if not reinforced.
+
+  Each norm has a strength in [0, 1]:
+    - 0 = not established
+    - >0.5 = active norm (majority compliance)
+    - 1.0 = universal compliance
+  """
+
+  def __init__(self, player_names: Sequence[str]):
+    self._players = list(player_names)
+    self._norms: dict[str, float] = {
+        name: 0.0 for name in social_data.EMERGENT_NORMS
+    }
+    self._history: list[dict[str, float]] = []
+    self._compliance_history: list[dict[str, float]] = []
+
+  @property
+  def active_norms(self) -> dict[str, float]:
+    """Return norms with strength > 0.5 (established)."""
+    return {n: s for n, s in self._norms.items() if s > 0.5}
+
+  @property
+  def history(self) -> list[dict[str, float]]:
+    return list(self._history)
+
+  @property
+  def compliance_history(self) -> list[dict[str, float]]:
+    return list(self._compliance_history)
+
+  def update_after_sprint(
+      self,
+      joint_action: Mapping[str, str],
+      task_type_map: Mapping[str, str],
+      player_roles: Mapping[str, social_data.Role],
+      prev_sprint: dict[str, Any] | None = None,
+      stress_type: str | None = None,
+  ) -> dict[str, float]:
+    """Update norm strengths based on observed behavior.
+
+    Returns compliance rates for this sprint.
+    """
+    # Determine task types chosen
+    player_task_types: dict[str, str] = {}
+    addressed_types: set[str] = set()
+    for name, task in joint_action.items():
+      tt = task_type_map.get(task, 'unknown')
+      player_task_types[name] = tt
+      if tt != 'unknown':
+        addressed_types.add(tt)
+
+    prev_addressed: set[str] = set()
+    if prev_sprint:
+      for task in prev_sprint.get('joint_action', {}).values():
+        tt = task_type_map.get(task, 'unknown')
+        if tt != 'unknown':
+          prev_addressed.add(tt)
+    prev_neglected = set(social_data.TASK_TYPES) - prev_addressed
+
+    compliance: dict[str, float] = {}
+
+    for norm_name, norm_def in social_data.EMERGENT_NORMS.items():
+      rate = self._check_compliance(
+          norm_name, norm_def, joint_action, player_task_types,
+          addressed_types, prev_neglected, player_roles, stress_type,
+      )
+      compliance[norm_name] = rate
+
+      # Strengthen norm if high compliance, decay otherwise
+      if rate >= 0.5:
+        # Norm is reinforced
+        self._norms[norm_name] = min(1.0,
+            self._norms[norm_name] + 0.2 * rate)
+      else:
+        # Norm decays
+        decay = norm_def.get('decay_rate', 0.1)
+        self._norms[norm_name] = max(0.0,
+            self._norms[norm_name] - decay)
+
+    self._history.append(dict(self._norms))
+    self._compliance_history.append(compliance)
+    return compliance
+
+  def _check_compliance(
+      self,
+      norm_name: str,
+      norm_def: dict,
+      joint_action: Mapping[str, str],
+      player_task_types: dict[str, str],
+      addressed_types: set[str],
+      prev_neglected: set[str],
+      player_roles: Mapping[str, social_data.Role],
+      stress_type: str | None,
+  ) -> float:
+    """Check compliance rate for a specific norm. Returns [0, 1]."""
+    ctype = norm_def.get('compliance_type', '')
+
+    if ctype == 'coverage':
+      # Did agents cover previously neglected types?
+      if not prev_neglected:
+        return 1.0  # Nothing was neglected, trivially compliant
+      covered = prev_neglected & addressed_types
+      return len(covered) / len(prev_neglected)
+
+    elif ctype == 'variety':
+      # No agent picked preferred task when neglected types exist
+      neglected_now = set(social_data.TASK_TYPES) - addressed_types
+      if not neglected_now:
+        return 1.0
+      violators = 0
+      for name in self._players:
+        tt = player_task_types.get(name, 'unknown')
+        preferred = social_data.ROLE_PREFERRED_TASKS.get(
+            player_roles.get(name, social_data.Role.CONTRIBUTOR), 'bug_fix')
+        if tt == preferred and neglected_now:
+          violators += 1
+      return 1.0 - (violators / len(self._players))
+
+    elif ctype == 'mentoring':
+      # Check if mentoring happens during newcomer_influx
+      if stress_type != 'newcomer_influx':
+        return 1.0  # Not applicable
+      has_mentor = any(
+          tt == 'mentor' for tt in player_task_types.values()
+      )
+      return 1.0 if has_mentor else 0.0
+
+    elif ctype == 'rotation':
+      # Code review rotation (hard to check in 1 sprint; return 1.0 baseline)
+      reviewers = [
+          n for n, tt in player_task_types.items()
+          if tt == 'code_review'
+      ]
+      return 1.0 if len(reviewers) <= 1 else 0.5
+
+    elif ctype == 'balance':
+      # Workload balance
+      counts = [1 for tt in player_task_types.values() if tt != 'unknown']
+      if not counts:
+        return 1.0
+      avg_load = len(counts) / len(self._players) if self._players else 1
+      # Since each agent picks exactly 1 task, workload is always balanced
+      return 1.0
+
+    return 0.5  # Unknown norm type
+
+  def norm_emergence_rate(self) -> float:
+    """Fraction of norms that reached active status (>0.5) at any point."""
+    ever_active = set()
+    for snapshot in self._history:
+      for name, strength in snapshot.items():
+        if strength > 0.5:
+          ever_active.add(name)
+    total = len(social_data.EMERGENT_NORMS)
+    return len(ever_active) / total if total > 0 else 0.0
+
+  def norm_stability_index(self) -> float:
+    """How stable are active norms? Low variance = high stability."""
+    if len(self._history) < 2:
+      return 1.0
+    stabilities = []
+    for norm_name in social_data.EMERGENT_NORMS:
+      strengths = [h.get(norm_name, 0.0) for h in self._history]
+      if max(strengths) > 0.5:  # Only measure stability of emerged norms
+        variance = np.var(strengths)
+        stabilities.append(1.0 - min(1.0, variance * 4))  # Scale
+    return sum(stabilities) / len(stabilities) if stabilities else 1.0
+
+  def mean_compliance_rate(self) -> float:
+    """Mean compliance across all norms and sprints."""
+    if not self._compliance_history:
+      return 1.0
+    all_rates = []
+    for sprint_compliance in self._compliance_history:
+      all_rates.extend(sprint_compliance.values())
+    return sum(all_rates) / len(all_rates) if all_rates else 1.0
+
+
+# =============================================================================
+# Burnout Cascade Modeling
+# =============================================================================
+
+
+class BurnoutTracker:
+  """Tracks burnout levels per agent with contagion through the trust network.
+
+  Burnout level is a float in [0, 1]:
+    - 0.0 = fully energized
+    - 0.5 = at risk
+    - 1.0 = burned out (likely to skip or underperform)
+
+  Burnout increases when:
+    - Agent works on non-preferred tasks consecutively
+    - Agent's score is negative (task failure)
+    - Trusted colleagues are burned out (contagion)
+
+  Burnout decreases when:
+    - Agent receives mentoring
+    - Agent works on preferred task and succeeds
+    - Team harmony is high
+  """
+
+  def __init__(self, player_names: Sequence[str]):
+    self._players = list(player_names)
+    self._burnout: dict[str, float] = {n: 0.0 for n in player_names}
+    self._history: list[dict[str, float]] = []
+    self._cascades: list[dict[str, Any]] = []
+
+  @property
+  def levels(self) -> dict[str, float]:
+    return dict(self._burnout)
+
+  @property
+  def history(self) -> list[dict[str, float]]:
+    return list(self._history)
+
+  @property
+  def cascades(self) -> list[dict[str, Any]]:
+    return list(self._cascades)
+
+  def update_after_sprint(
+      self,
+      joint_action: Mapping[str, str],
+      task_type_map: Mapping[str, str],
+      player_roles: Mapping[str, social_data.Role],
+      scores: Mapping[str, float],
+      hi: float,
+      trust_network: TrustNetwork | None = None,
+  ) -> None:
+    """Update burnout levels after a sprint."""
+    cascade_affected: list[str] = []
+
+    for player in self._players:
+      chosen_task = joint_action.get(player, '')
+      task_type = task_type_map.get(chosen_task, 'unknown')
+      preferred = social_data.ROLE_PREFERRED_TASKS.get(
+          player_roles.get(player, social_data.Role.CONTRIBUTOR), 'bug_fix')
+      score = scores.get(player, 0.0)
+
+      delta = 0.0
+
+      # Non-preferred task increases burnout
+      if task_type != preferred and task_type not in ('unknown', 'mentor'):
+        delta += 0.08
+
+      # Task failure increases burnout
+      if score < 0:
+        delta += 0.12
+
+      # Skip slightly increases burnout (disengagement spiral)
+      if not chosen_task or chosen_task.lower().startswith('skip'):
+        delta += 0.05
+
+      # Preferred task + success decreases burnout
+      if task_type == preferred and score >= 1.0:
+        delta -= 0.15
+
+      # High team harmony decreases burnout
+      if hi > 0.7:
+        delta -= 0.05
+
+      # Mentoring recovery
+      if task_type == 'mentor':
+        delta -= 0.10
+
+      self._burnout[player] = max(0.0, min(1.0,
+          self._burnout[player] + delta))
+
+    # Contagion phase: burned out agents affect trusted colleagues
+    if trust_network is not None:
+      contagion_delta: dict[str, float] = {n: 0.0 for n in self._players}
+      for player in self._players:
+        if self._burnout[player] > 0.6:  # Contagious threshold
+          for other in self._players:
+            if other != player:
+              trust = trust_network.get(other, player)
+              if trust > 0:
+                # Higher trust = more susceptible to contagion
+                contagion = 0.05 * trust * self._burnout[player]
+                contagion_delta[other] += contagion
+                if contagion > 0.02:
+                  cascade_affected.append(other)
+
+      for player in self._players:
+        self._burnout[player] = max(0.0, min(1.0,
+            self._burnout[player] + contagion_delta[player]))
+
+    self._history.append(dict(self._burnout))
+
+    if cascade_affected:
+      self._cascades.append({
+          'sprint': len(self._history),
+          'sources': [p for p in self._players if self._burnout[p] > 0.6],
+          'affected': list(set(cascade_affected)),
+      })
+
+  def cascade_count(self) -> int:
+    """Number of sprints where burnout contagion occurred."""
+    return len(self._cascades)
+
+  def mean_burnout(self) -> float:
+    """Current mean burnout across all agents."""
+    vals = list(self._burnout.values())
+    return sum(vals) / len(vals) if vals else 0.0
+
+  def peak_burnout(self) -> float:
+    """Maximum burnout observed across all agents and all sprints."""
+    peak = 0.0
+    for snapshot in self._history:
+      peak = max(peak, max(snapshot.values()) if snapshot else 0.0)
+    return peak
+
+
+# =============================================================================
 # Payoff engine
 # =============================================================================
 
@@ -294,6 +759,10 @@ class SustainHubPayoff:
       ),
       stress_schedule: Mapping[int, str] | None = None,
       dropout_name: str | None = None,
+      aif_agents: Mapping[str, 'active_inference.ActiveInferenceAgent'] | None = None,
+      trust_network: 'TrustNetwork | None' = None,
+      norm_tracker: 'NormTracker | None' = None,
+      burnout_tracker: 'BurnoutTracker | None' = None,
   ):
     self._player_names = list(player_names)
     self._player_roles = player_roles
@@ -305,6 +774,10 @@ class SustainHubPayoff:
     self._player_tools = player_tools
     self._stress_schedule = dict(stress_schedule) if stress_schedule else {}
     self._dropout_name = dropout_name
+    self._aif_agents = dict(aif_agents or {})
+    self._trust_network = trust_network
+    self._norm_tracker = norm_tracker
+    self._burnout_tracker = burnout_tracker
     self._latest_joint_action: dict[str, str] = {}
     self._cumulative_scores: dict[str, float] = {n: 0.0 for n in player_names}
     self._task_counts: dict[str, int] = {n: 0 for n in player_names}
@@ -474,10 +947,14 @@ class SustainHubPayoff:
         base_prob += 0.10
 
       # Collaboration bonus: if a friend chose the same task, teamwork bonus
+      # Use dynamic trust network if available, else fall back to static matrix
       collab_bonus = 0.0
       for other in task_choosers[chosen_task]:
         if other != player:
-          rel = self._relational_matrix.get(player, {}).get(other, 0.0)
+          if self._trust_network is not None:
+            rel = self._trust_network.get(player, other)
+          else:
+            rel = self._relational_matrix.get(player, {}).get(other, 0.0)
           collab_bonus += 0.05 * rel
 
       # Check if an agent used AutoCodeRover tool (usage_count increased)
@@ -523,14 +1000,93 @@ class SustainHubPayoff:
       self._cumulative_scores[player] += reward
       self._task_counts[player] += 1
 
+    hi = self.harmony_index()
+
+    # --- Close the AIF loop: observe + learn ---
+    belief_snapshots: dict[str, dict[str, Any]] = {}
+    if self._aif_agents:
+      # Map HI to observation level
+      if hi > 0.7:
+        hi_level = 'high'
+      elif hi > 0.4:
+        hi_level = 'medium'
+      else:
+        hi_level = 'low'
+
+      for player in self._player_names:
+        agent = self._aif_agents.get(player)
+        if agent is None:
+          continue
+
+        # Map individual score to task outcome
+        score = scores.get(player, 0.0)
+        if score >= 1.0:
+          task_outcome = 'success'
+        elif score >= 0.0:
+          task_outcome = 'partial'
+        else:
+          task_outcome = 'failure'
+
+        # Update beliefs from this sprint's observations
+        agent.observe(hi_level, task_outcome)
+        # Update habits from outcome valence (normalize to [-1, 1])
+        valence = max(-1.0, min(1.0, score / social_data.REWARD_PREFERRED_SUCCESS))
+        agent.learn(valence)
+
+        # Record belief snapshot for analysis
+        belief_snapshots[player] = agent.get_state_summary()
+
+    # --- Update dynamic trust network ---
+    trust_snapshot = None
+    if self._trust_network is not None:
+      self._trust_network.update_after_sprint(
+          joint_action=joint_action,
+          task_type_map=self._task_type_map,
+          player_roles=self._player_roles,
+          scores=scores,
+      )
+      trust_snapshot = self._trust_network.matrix
+
+    # --- Update norm tracker ---
+    norm_compliance = None
+    norm_strengths = None
+    if self._norm_tracker is not None:
+      prev_sprint = self._sprint_history[-1] if self._sprint_history else None
+      norm_compliance = self._norm_tracker.update_after_sprint(
+          joint_action=joint_action,
+          task_type_map=self._task_type_map,
+          player_roles=self._player_roles,
+          prev_sprint=prev_sprint,
+          stress_type=stress_type,
+      )
+      norm_strengths = dict(self._norm_tracker._norms)
+
+    # --- Update burnout tracker ---
+    burnout_snapshot = None
+    if self._burnout_tracker is not None:
+      self._burnout_tracker.update_after_sprint(
+          joint_action=joint_action,
+          task_type_map=self._task_type_map,
+          player_roles=self._player_roles,
+          scores=scores,
+          hi=hi,
+          trust_network=self._trust_network,
+      )
+      burnout_snapshot = self._burnout_tracker.levels
+
     # Record sprint results
     sprint_num = len(self._sprint_history) + 1
     self._sprint_history.append({
         "joint_action": dict(joint_action),
         "scores": dict(scores),
-        "harmony_index": self.harmony_index(),
+        "harmony_index": hi,
         "policy": self.current_policy,
-        "stress": self._stress_schedule.get(sprint_num),
+        "stress": stress_type,
+        "belief_snapshots": belief_snapshots,
+        "trust_snapshot": trust_snapshot,
+        "norm_compliance": norm_compliance,
+        "norm_strengths": norm_strengths,
+        "burnout_snapshot": burnout_snapshot,
     })
 
     return scores
@@ -1273,6 +1829,33 @@ def run_simulation(
         sustain_tools.AutoCodeRover(agent_name=name),
     ]
 
+  # Create Active Inference agents (one per player) for hybrid reasoning
+  # Must be created before payoff engine so they can be passed in.
+  aif_agents: dict[str, active_inference.ActiveInferenceAgent] = {}
+  if use_active_inference:
+    for name in people:
+      role = player_roles[name]
+      aif_agents[name] = active_inference.ActiveInferenceAgent(
+          name=name,
+          role=role.name.lower(),
+          gamma=1.0,
+          alpha=16.0,
+          learning_rate=0.1,
+          health_prior='uncertain',
+      )
+
+  # Create dynamic trust network from static relational matrix
+  trust_network = TrustNetwork(
+      player_names=people,
+      initial_matrix=relational_matrix,
+  )
+
+  # Create norm tracker
+  norm_tracker = NormTracker(player_names=people)
+
+  # Create burnout tracker
+  burnout_tracker = BurnoutTracker(player_names=people)
+
   # Initialize payoff engine
   payoff = SustainHubPayoff(
       player_names=people,
@@ -1284,6 +1867,10 @@ def run_simulation(
       player_tools=player_tools,
       stress_schedule=stress_schedule,
       dropout_name=dropout_name,
+      aif_agents=aif_agents,
+      trust_network=trust_network,
+      norm_tracker=norm_tracker,
+      burnout_tracker=burnout_tracker,
   )
   global _CURRENT_PAYOFF
   _CURRENT_PAYOFF = payoff
@@ -1479,6 +2066,19 @@ def run_simulation(
         }
     narrative_history.append(sprint_reasoning)
 
+  # Collect final AIF agent states for analysis
+  aif_final_states: dict[str, dict[str, Any]] = {}
+  aif_belief_trajectories: dict[str, list] = {}
+  for name, agent in aif_agents.items():
+    aif_final_states[name] = agent.get_state_summary()
+    aif_belief_trajectories[name] = [
+        {
+            'health': [float(x) for x in snapshot[0]],
+            'urgency': [float(x) for x in snapshot[1]],
+        }
+        for snapshot in agent.belief_history
+    ]
+
   # Compile results
   return {
       "scores": payoff.cumulative_scores,
@@ -1493,5 +2093,22 @@ def run_simulation(
       "relational_matrix": dict(relational_matrix),
       "structured_log": structured_log,
       "seed": seed,
+      "governance": governance,
+      "aif_final_states": aif_final_states,
+      "aif_belief_trajectories": aif_belief_trajectories,
+      "trust_final": trust_network.matrix,
+      "trust_reciprocity": trust_network.reciprocity(),
+      "trust_centralization": trust_network.centralization(),
+      "trust_history": trust_network.history,
+      "norm_emergence_rate": norm_tracker.norm_emergence_rate(),
+      "norm_stability_index": norm_tracker.norm_stability_index(),
+      "norm_compliance_rate": norm_tracker.mean_compliance_rate(),
+      "active_norms": norm_tracker.active_norms,
+      "norm_history": norm_tracker.history,
+      "burnout_cascade_count": burnout_tracker.cascade_count(),
+      "mean_burnout": burnout_tracker.mean_burnout(),
+      "peak_burnout": burnout_tracker.peak_burnout(),
+      "burnout_cascades": burnout_tracker.cascades,
+      "burnout_history": burnout_tracker.history,
   }
 

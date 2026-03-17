@@ -45,6 +45,7 @@ if [ "$1" = "--docker" ]; then
         --gpus all \
         --shm-size=16g \
         -p ${PORT}:${PORT} \
+        -e NVIDIA_DISABLE_REQUIRE=1 \
         -e HUGGING_FACE_HUB_TOKEN="${HUGGING_FACE_HUB_TOKEN}" \
         -v "${HOME}/.cache/huggingface:/root/.cache/huggingface" \
         nvcr.io/nvidia/vllm:${VLLM_TAG} \

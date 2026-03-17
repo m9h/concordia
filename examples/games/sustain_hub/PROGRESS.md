@@ -96,6 +96,50 @@ Rohira's reported HI ≈ 0.81. Our 3-seed mean matches exactly, but need 5 seeds
 | LLAMOSC | Auth, 10 contrib, 10 issues | 0.488±0.034 | 5 |
 | LLAMOSC | Decentral, 10 contrib, 10 issues | 0.488±0.038 | 5 |
 
+### Step 6: Community Dynamics Research Infrastructure (Phase 1-2)
+
+Implemented the full Phase 1-2 roadmap from the Community Dynamics plan:
+
+**Phase 1.1: Closed the AIF Loop** (CRITICAL)
+- `SustainHubPayoff.action_to_scores()` now calls `agent.observe()` + `agent.learn()` after each sprint
+- HI → observation mapping: >0.7='high', >0.4='medium', ≤0.4='low'
+- Score → task outcome: ≥1.0='success', ≥0.0='partial', <0.0='failure'
+- Belief snapshots recorded in `sprint_history` per sprint
+- `aif_final_states` and `aif_belief_trajectories` in results dict
+
+**Phase 1.2: Belief Alignment Index (BAI)**
+- `evaluate.compute_belief_alignment()`: JSD-based alignment metric
+- BAI = 1 - mean_pairwise_JSD (normalized). Range [0,1]
+- Uniquely Concordia — impossible in RL (no explicit beliefs)
+
+**Phase 1.3: Dialogue Acts Classification**
+- `evaluate.classify_dialogue_acts()`: rule-based keyword matching
+- 8 categories: propose_task, request_help, offer_mentoring, express_concern, free_ride_justify, coordinate, criticize, encourage
+- Coordination Index, Social Pressure Index metrics
+
+**Phase 2.1: Dynamic Trust Network**
+- `simulation.TrustNetwork`: Bayesian trust updating T_ij(t+1) = clip(T_ij(t) + η*signal, -1, 1)
+- Cooperation signals from complementary coverage, free-riding, solidarity
+- Replaces static `relational_matrix` for collaboration bonus
+- Trust reciprocity and centralization metrics
+
+**Phase 2.2: Norm Emergence Tracking**
+- 5 `EMERGENT_NORMS` in `social_data.py`: cover_neglected, no_free_riding, mentor_newcomers, rotate_reviews, balance_workload
+- `simulation.NormTracker`: strength [0,1], compliance rates, emergence/stability/compliance metrics
+
+**Phase 2.3: Burnout Cascade Modeling**
+- `simulation.BurnoutTracker`: per-agent burnout [0,1] with contagion through trust network
+- Increase from non-preferred tasks, failures, skipping; decrease from success, high HI, mentoring
+- Cascade detection when burned-out agents affect trusted colleagues
+
+**Phase 2.4: Coalition Detection**
+- `evaluate.detect_coalitions()`: single-linkage clustering on belief JSD
+- Detects stable coalitions persisting across >50% of sprints
+
+**Wiring**
+- All new metrics in `compute_sustain_score()`, results dict, `run_three_way_comparison.py`
+- DGX Spark `setup_vllm.sh` fixed: `NVIDIA_DISABLE_REQUIRE=1` for driver 580 compat
+
 ---
 
 ## Remaining Work (Priority Order)
@@ -125,9 +169,9 @@ Rohira's reported HI ≈ 0.81. Our 3-seed mean matches exactly, but need 5 seeds
 
 | File | Status | Purpose |
 |------|--------|---------|
-| `simulation.py` | Complete | Core simulation with governance modes |
-| `evaluate.py` | Complete | All metrics (HI, RQ, BRS, SUE, CHS, SustainScore) |
-| `social_data.py` | Complete | 30 agents, governance configs, reward alignment |
+| `simulation.py` | Complete | Core simulation + TrustNetwork, NormTracker, BurnoutTracker, closed AIF loop |
+| `evaluate.py` | Complete | All metrics (HI, RQ, BRS, SUE, CHS, BAI, dialogue acts, trust, norms, burnout, coalitions) |
+| `social_data.py` | Complete | 30 agents, governance configs, reward alignment, emergent norms |
 | `tools.py` | Complete | Grounded difficulty distributions |
 | `experiments.py` | Complete | 8-level ladder + comparison suite |
 | `run.py` | Complete | CLI with all flags |

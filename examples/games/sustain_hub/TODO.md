@@ -3,13 +3,14 @@
 ## Critical Path (Must Have)
 
 ### 1. Wire `code_tasks` into `simulation.py`
-- [ ] Add `--code_tasks` flag to `run.py`
-- [ ] In `simulation.py`, when `code_tasks=True`:
+- [x] Add `--code_tasks` flag to `run.py`
+- [x] In `simulation.py`, when `code_tasks=True`:
   - Call `code_tasks.get_task_pool()` to replace abstract task queue
   - After agent selects a task, call `code_tasks.generate_patch()` to have LLM write a fix
   - Call `code_tasks.score_code_task()` for pytest-based reward instead of stochastic
-- [ ] Test with mock model first, then NIM cloud
+- [x] Test with mock model first, then NIM cloud
 - **Why**: This is the "apples-to-apples" LLAMOSC comparison piece
+- **Status**: DONE (wired in PROGRESS.md Step 4)
 
 ### 2. Complete A-series experiments (Rohira comparison)
 - [x] A1: 3/5 seeds complete (HI mean = 0.811 from 3 seeds)
@@ -62,6 +63,17 @@
 - [ ] Closer match to LLAMOSC's AutoCodeRover approach
 
 ---
+
+## Recently Completed (Phase 1-2 Community Dynamics)
+
+- [x] **1.1 Close AIF Loop**: `observe()` + `learn()` called after each sprint (was open-loop)
+- [x] **1.2 Belief Alignment Index**: JSD-based BAI metric in `evaluate.py`
+- [x] **1.3 Dialogue Acts**: 8-category classification + Coordination/Social Pressure indices
+- [x] **2.1 Dynamic Trust Network**: Bayesian trust updating, replaces static relational matrix
+- [x] **2.2 Norm Emergence Tracking**: 5 norms, compliance/strength/emergence metrics
+- [x] **2.3 Burnout Cascade Modeling**: per-agent burnout with contagion through trust network
+- [x] **2.4 Coalition Detection**: belief clustering per sprint, stable coalition identification
+- [x] **DGX Spark vLLM fix**: `NVIDIA_DISABLE_REQUIRE=1` for driver 580 compat
 
 ## Current Results Summary
 

@@ -174,6 +174,11 @@ def load_result(name, exp):
             'brs': d.get('mean_brs_mean'),
             'sue': d.get('sue_mean'),
             'chs': d.get('chs_mean'),
+            'bai': d.get('mean_bai_mean', d.get('mean_bai')),
+            'trust_recip': d.get('trust_reciprocity_mean', d.get('trust_reciprocity')),
+            'norm_emerg': d.get('norm_emergence_rate_mean', d.get('norm_emergence_rate')),
+            'coord_idx': d.get('coordination_index_mean', d.get('coordination_index')),
+            'burnout': d.get('mean_burnout_mean', d.get('mean_burnout')),
             'seeds': d.get('num_ok', d.get('num_seeds')),
             'raw': d,
         }
@@ -266,6 +271,22 @@ def print_comparison_table(results):
             ro_val = r['ro']
             print(f"{'':25s} {'':>8s} {'RO='+f'{ro_val:.3f}':>10s}")
 
+        # Show Concordia-specific enriched metrics
+        if r['system'] == 'concordia':
+            extras = []
+            if r.get('bai') is not None:
+                extras.append(f"BAI={r['bai']:.3f}")
+            if r.get('trust_recip') is not None:
+                extras.append(f"TrustRecip={r['trust_recip']:.3f}")
+            if r.get('norm_emerg') is not None:
+                extras.append(f"NormEmerg={r['norm_emerg']:.2f}")
+            if r.get('coord_idx') is not None:
+                extras.append(f"CoordIdx={r['coord_idx']:.3f}")
+            if r.get('burnout') is not None:
+                extras.append(f"Burnout={r['burnout']:.3f}")
+            if extras:
+                print(f"{'':25s} {'':>8s} {' '.join(extras)}")
+
     print('-' * 100)
     print()
 
@@ -273,7 +294,8 @@ def print_comparison_table(results):
 def export_csv(results, csv_path):
     """Export comparison results to CSV."""
     fieldnames = ['name', 'system', 'description', 'hi', 'hi_std', 'rq',
-                  'brs', 'sue', 'chs', 'seeds']
+                  'brs', 'sue', 'chs', 'bai', 'trust_recip', 'norm_emerg',
+                  'coord_idx', 'burnout', 'seeds']
     with open(csv_path, 'w', newline='') as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction='ignore')
         writer.writeheader()

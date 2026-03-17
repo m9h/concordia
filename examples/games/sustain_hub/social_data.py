@@ -492,6 +492,71 @@ CALL_TO_REVIEW_DECISION = (
 
 GOVERNANCE_MODES = ["free_choice", "dictator", "meritocratic"]
 
+# =============================================================================
+# Governance Norms (for Norm Emergence Tracking)
+# =============================================================================
+
+# Norms that can emerge from agent interaction. Each norm has:
+#   - description: natural language description
+#   - compliance_check: which task-type pattern satisfies it
+#   - decay_rate: how fast it weakens if not reinforced (per sprint)
+
+EMERGENT_NORMS = {
+    'cover_neglected': {
+        'description': (
+            'At least one agent should work on any task type that was '
+            'neglected in the previous sprint.'
+        ),
+        'compliance_type': 'coverage',
+        'decay_rate': 0.15,
+    },
+    'no_free_riding': {
+        'description': (
+            'No agent should choose their preferred task more than '
+            '2 sprints in a row when other task types are neglected.'
+        ),
+        'compliance_type': 'variety',
+        'decay_rate': 0.10,
+    },
+    'mentor_newcomers': {
+        'description': (
+            'At least one senior/expert agent should choose mentoring '
+            'when a newcomer influx stress event is active.'
+        ),
+        'compliance_type': 'mentoring',
+        'decay_rate': 0.20,
+    },
+    'rotate_reviews': {
+        'description': (
+            'Code review responsibility should rotate among agents '
+            'rather than being handled by the same person every sprint.'
+        ),
+        'compliance_type': 'rotation',
+        'decay_rate': 0.12,
+    },
+    'balance_workload': {
+        'description': (
+            'No single agent should take on more than twice the average '
+            'workload (measured by task count).'
+        ),
+        'compliance_type': 'balance',
+        'decay_rate': 0.10,
+    },
+}
+
+# Governance proposal templates for retrospective scenes
+GOVERNANCE_PROPOSALS = [
+    'I propose that we ensure all task types are covered each sprint.',
+    'I suggest we rotate code review duties to prevent burnout.',
+    'We should have at least one mentor available when new contributors join.',
+    'I think agents who always pick their preferred task should switch it up.',
+    'Can we agree that workload should be more evenly distributed?',
+]
+
+# =============================================================================
+# Governance mode assignment templates
+# =============================================================================
+
 DICTATOR_ASSIGNMENT_PREMISE = (
     "The Project Lead has reviewed the current sprint's tasks and each "
     "contributor's expertise. The Project Lead will now assign tasks to "
