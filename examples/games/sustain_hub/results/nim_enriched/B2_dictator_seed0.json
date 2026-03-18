@@ -1,0 +1,3090 @@
+{
+  "scores": {
+    "Fatima": -1.0,
+    "Hiroshi": 15.0,
+    "Lin": 11.0,
+    "Priya": 11.0,
+    "Elena": 15.0,
+    "Zoe": 9.0,
+    "Sam": 11.0,
+    "Chen": 1.0
+  },
+  "harmony_index": 0.76,
+  "resilience_quotient": 1.0,
+  "sprint_history": [
+    {
+      "joint_action": {
+        "Fatima": "Docs: Rewrite the quickstart guide for new contributors.",
+        "Hiroshi": "Fix: Authentication token refresh fails silently after 24 hours.",
+        "Lin": "Review: Evaluate the WebSocket PR for security and performance.",
+        "Priya": "Fix: Incorrect timezone handling in the scheduler module.",
+        "Elena": "Docs: Document the CI/CD pipeline and release process.",
+        "Zoe": "Feature: Add dark mode toggle with persistent user preference.",
+        "Sam": "Fix: Null pointer exception when user profile has no avatar.",
+        "Chen": "Docs: Rewrite the quickstart guide for new contributors."
+      },
+      "scores": {
+        "Fatima": -1.0,
+        "Hiroshi": 3.0,
+        "Lin": 3.0,
+        "Priya": 3.0,
+        "Elena": 3.0,
+        "Zoe": 3.0,
+        "Sam": 3.0,
+        "Chen": 1.0
+      },
+      "harmony_index": 0.85,
+      "stress_type": null,
+      "policy": "None",
+      "task_difficulties": {
+        "Fatima": "medium",
+        "Hiroshi": "medium",
+        "Lin": "medium",
+        "Priya": "medium",
+        "Elena": "easy",
+        "Zoe": "hard",
+        "Sam": "easy",
+        "Chen": "medium"
+      },
+      "belief_snapshots": {
+        "Fatima": {
+          "name": "Fatima",
+          "role": "innovator",
+          "beliefs_health": {
+            "healthy": 5.952380952382208e-19,
+            "stressed": 2.911453230926689e-14,
+            "declining": 0.9999999999999709
+          },
+          "beliefs_urgency": {
+            "balanced": 7.142857142857598e-18,
+            "bugs_critical": 1.0,
+            "docs_neglected": 7.142857142857598e-18,
+            "review_backlog": 7.142857142857598e-18
+          },
+          "habits": {
+            "bug_fix": 0.2,
+            "feature": 0.4,
+            "documentation": 0.1,
+            "code_review": 0.1,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Hiroshi": {
+          "name": "Hiroshi",
+          "role": "contributor",
+          "beliefs_health": {
+            "healthy": 1.0,
+            "stressed": 6.555981158384496e-17,
+            "declining": 1.020408163265304e-18
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 7.142857142857125e-18,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.4,
+            "feature": 0.2,
+            "documentation": 0.1,
+            "code_review": 0.1,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Lin": {
+          "name": "Lin",
+          "role": "maintainer",
+          "beliefs_health": {
+            "healthy": 1.0,
+            "stressed": 6.555981158384496e-17,
+            "declining": 1.020408163265304e-18
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 7.142857142857125e-18,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.1,
+            "feature": 0.1,
+            "documentation": 0.2,
+            "code_review": 0.4,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Priya": {
+          "name": "Priya",
+          "role": "contributor",
+          "beliefs_health": {
+            "healthy": 1.0,
+            "stressed": 6.555981158384496e-17,
+            "declining": 1.020408163265304e-18
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 7.142857142857125e-18,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.4,
+            "feature": 0.2,
+            "documentation": 0.1,
+            "code_review": 0.1,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Elena": {
+          "name": "Elena",
+          "role": "knowledge_curator",
+          "beliefs_health": {
+            "healthy": 1.0,
+            "stressed": 6.555981158384496e-17,
+            "declining": 1.020408163265304e-18
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 7.142857142857125e-18,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.1,
+            "feature": 0.1,
+            "documentation": 0.4,
+            "code_review": 0.2,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Zoe": {
+          "name": "Zoe",
+          "role": "innovator",
+          "beliefs_health": {
+            "healthy": 1.0,
+            "stressed": 6.555981158384496e-17,
+            "declining": 1.020408163265304e-18
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 7.142857142857125e-18,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.2,
+            "feature": 0.4,
+            "documentation": 0.1,
+            "code_review": 0.1,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Sam": {
+          "name": "Sam",
+          "role": "contributor",
+          "beliefs_health": {
+            "healthy": 1.0,
+            "stressed": 6.555981158384496e-17,
+            "declining": 1.020408163265304e-18
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 7.142857142857125e-18,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.4,
+            "feature": 0.2,
+            "documentation": 0.1,
+            "code_review": 0.1,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Chen": {
+          "name": "Chen",
+          "role": "maintainer",
+          "beliefs_health": {
+            "healthy": 1.0,
+            "stressed": 6.555981158384496e-17,
+            "declining": 1.020408163265304e-18
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 7.142857142857125e-18,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.1,
+            "feature": 0.1,
+            "documentation": 0.2,
+            "code_review": 0.4,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        }
+      },
+      "trust_snapshot": {
+        "Fatima": {
+          "Hiroshi": 0.5,
+          "Lin": 0.2,
+          "Priya": 0.5,
+          "Elena": 0.745,
+          "Zoe": 0.7,
+          "Sam": 0.7,
+          "Chen": 0.14500000000000002
+        },
+        "Hiroshi": {
+          "Fatima": 0.53,
+          "Lin": 0.5,
+          "Priya": 0.745,
+          "Elena": 0.3,
+          "Zoe": 0.7,
+          "Sam": 0.8450000000000001,
+          "Chen": 0.73
+        },
+        "Lin": {
+          "Fatima": 0.23,
+          "Hiroshi": 0.5,
+          "Priya": 0.7,
+          "Elena": 0.7,
+          "Zoe": 0.1,
+          "Sam": 0.5,
+          "Chen": 0.73
+        },
+        "Priya": {
+          "Fatima": 0.53,
+          "Hiroshi": 0.745,
+          "Lin": 0.7,
+          "Elena": 0.7,
+          "Zoe": 0.3,
+          "Sam": 1.0,
+          "Chen": 0.53
+        },
+        "Elena": {
+          "Fatima": 0.745,
+          "Hiroshi": 0.3,
+          "Lin": 0.7,
+          "Priya": 0.7,
+          "Zoe": 0.5,
+          "Sam": 0.7,
+          "Chen": 0.345
+        },
+        "Zoe": {
+          "Fatima": 0.73,
+          "Hiroshi": 0.7,
+          "Lin": 0.1,
+          "Priya": 0.3,
+          "Elena": 0.5,
+          "Sam": 0.5,
+          "Chen": 0.23
+        },
+        "Sam": {
+          "Fatima": 0.73,
+          "Hiroshi": 0.8450000000000001,
+          "Lin": 0.5,
+          "Priya": 1.0,
+          "Elena": 0.7,
+          "Zoe": 0.5,
+          "Chen": 0.53
+        },
+        "Chen": {
+          "Fatima": 0.14500000000000002,
+          "Hiroshi": 0.7,
+          "Lin": 0.7,
+          "Priya": 0.5,
+          "Elena": 0.345,
+          "Zoe": 0.2,
+          "Sam": 0.5
+        }
+      },
+      "norm_compliance": {
+        "cover_neglected": 1.0,
+        "no_free_riding": 1.0,
+        "mentor_newcomers": 1.0,
+        "rotate_reviews": 1.0,
+        "balance_workload": 1.0
+      },
+      "norm_strengths": {
+        "cover_neglected": 0.2,
+        "no_free_riding": 0.2,
+        "mentor_newcomers": 0.2,
+        "rotate_reviews": 0.2,
+        "balance_workload": 0.2
+      },
+      "burnout_snapshot": {
+        "Fatima": 0.15000000000000002,
+        "Hiroshi": 0.0,
+        "Lin": 0.0,
+        "Priya": 0.0,
+        "Elena": 0.0,
+        "Zoe": 0.0,
+        "Sam": 0.0,
+        "Chen": 0.03
+      }
+    },
+    {
+      "joint_action": {
+        "Fatima": "Docs: Rewrite the quickstart guide for new contributors.",
+        "Hiroshi": "Fix: Authentication token refresh fails silently after 24 hours.",
+        "Lin": "Review: Evaluate the WebSocket PR for security and performance.",
+        "Priya": "Fix: Incorrect timezone handling in the scheduler module.",
+        "Elena": "Docs: Document the CI/CD pipeline and release process.",
+        "Zoe": "Docs: Rewrite the quickstart guide for new contributors.",
+        "Sam": "Fix: Authentication token refresh fails silently after 24 hours.",
+        "Chen": "Docs: Rewrite the quickstart guide for new contributors."
+      },
+      "scores": {
+        "Fatima": -1.0,
+        "Hiroshi": 3.0,
+        "Lin": 3.0,
+        "Priya": 3.0,
+        "Elena": 3.0,
+        "Zoe": 1.0,
+        "Sam": 3.0,
+        "Chen": -1.0
+      },
+      "harmony_index": 0.8,
+      "stress_type": "contributor_dropout",
+      "policy": "None",
+      "task_difficulties": {
+        "Fatima": "easy",
+        "Hiroshi": "medium",
+        "Lin": "medium",
+        "Priya": "medium",
+        "Elena": "easy",
+        "Zoe": "medium",
+        "Sam": "medium",
+        "Chen": "easy"
+      },
+      "belief_snapshots": {
+        "Fatima": {
+          "name": "Fatima",
+          "role": "innovator",
+          "beliefs_health": {
+            "healthy": 5.952380952380943e-19,
+            "stressed": 1.190476190476188e-17,
+            "declining": 1.0
+          },
+          "beliefs_urgency": {
+            "balanced": 7.142857142857142e-18,
+            "bugs_critical": 1.0,
+            "docs_neglected": 7.142857142857142e-18,
+            "review_backlog": 7.142857142857142e-18
+          },
+          "habits": {
+            "bug_fix": 0.2,
+            "feature": 0.4,
+            "documentation": 0.1,
+            "code_review": 0.1,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Hiroshi": {
+          "name": "Hiroshi",
+          "role": "contributor",
+          "beliefs_health": {
+            "healthy": 1.0,
+            "stressed": 9.183673469387693e-18,
+            "declining": 1.020408163265304e-18
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 7.142857142857125e-18,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.4,
+            "feature": 0.2,
+            "documentation": 0.1,
+            "code_review": 0.1,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Lin": {
+          "name": "Lin",
+          "role": "maintainer",
+          "beliefs_health": {
+            "healthy": 1.0,
+            "stressed": 9.183673469387693e-18,
+            "declining": 1.020408163265304e-18
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 7.142857142857125e-18,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.1,
+            "feature": 0.1,
+            "documentation": 0.2,
+            "code_review": 0.4,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Priya": {
+          "name": "Priya",
+          "role": "contributor",
+          "beliefs_health": {
+            "healthy": 1.0,
+            "stressed": 9.183673469387693e-18,
+            "declining": 1.020408163265304e-18
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 7.142857142857125e-18,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.4,
+            "feature": 0.2,
+            "documentation": 0.1,
+            "code_review": 0.1,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Elena": {
+          "name": "Elena",
+          "role": "knowledge_curator",
+          "beliefs_health": {
+            "healthy": 1.0,
+            "stressed": 9.183673469387693e-18,
+            "declining": 1.020408163265304e-18
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 7.142857142857125e-18,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.1,
+            "feature": 0.1,
+            "documentation": 0.4,
+            "code_review": 0.2,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Zoe": {
+          "name": "Zoe",
+          "role": "innovator",
+          "beliefs_health": {
+            "healthy": 1.0,
+            "stressed": 9.183673469387693e-18,
+            "declining": 1.020408163265304e-18
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 7.142857142857125e-18,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.2,
+            "feature": 0.4,
+            "documentation": 0.1,
+            "code_review": 0.1,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Sam": {
+          "name": "Sam",
+          "role": "contributor",
+          "beliefs_health": {
+            "healthy": 1.0,
+            "stressed": 9.183673469387693e-18,
+            "declining": 1.020408163265304e-18
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 7.142857142857125e-18,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.4,
+            "feature": 0.2,
+            "documentation": 0.1,
+            "code_review": 0.1,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Chen": {
+          "name": "Chen",
+          "role": "maintainer",
+          "beliefs_health": {
+            "healthy": 1.0,
+            "stressed": 8.571428571428581e-17,
+            "declining": 8.571428571428581e-17
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 7.142857142857125e-18,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.1,
+            "feature": 0.1,
+            "documentation": 0.2,
+            "code_review": 0.4,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        }
+      },
+      "trust_snapshot": {
+        "Fatima": {
+          "Hiroshi": 0.455,
+          "Lin": 0.15500000000000003,
+          "Priya": 0.455,
+          "Elena": 0.7,
+          "Zoe": 0.745,
+          "Sam": 0.6549999999999999,
+          "Chen": 0.19
+        },
+        "Hiroshi": {
+          "Fatima": 0.56,
+          "Lin": 0.5,
+          "Priya": 0.79,
+          "Elena": 0.3,
+          "Zoe": 0.73,
+          "Sam": 0.8900000000000001,
+          "Chen": 0.76
+        },
+        "Lin": {
+          "Fatima": 0.26,
+          "Hiroshi": 0.5,
+          "Priya": 0.7,
+          "Elena": 0.7,
+          "Zoe": 0.13,
+          "Sam": 0.5,
+          "Chen": 0.76
+        },
+        "Priya": {
+          "Fatima": 0.56,
+          "Hiroshi": 0.79,
+          "Lin": 0.7,
+          "Elena": 0.7,
+          "Zoe": 0.32999999999999996,
+          "Sam": 1.0,
+          "Chen": 0.56
+        },
+        "Elena": {
+          "Fatima": 0.79,
+          "Hiroshi": 0.3,
+          "Lin": 0.7,
+          "Priya": 0.7,
+          "Zoe": 0.545,
+          "Sam": 0.7,
+          "Chen": 0.38999999999999996
+        },
+        "Zoe": {
+          "Fatima": 0.775,
+          "Hiroshi": 0.6549999999999999,
+          "Lin": 0.05500000000000001,
+          "Priya": 0.255,
+          "Elena": 0.455,
+          "Sam": 0.455,
+          "Chen": 0.275
+        },
+        "Sam": {
+          "Fatima": 0.76,
+          "Hiroshi": 0.8900000000000001,
+          "Lin": 0.5,
+          "Priya": 1.0,
+          "Elena": 0.7,
+          "Zoe": 0.53,
+          "Chen": 0.56
+        },
+        "Chen": {
+          "Fatima": 0.19,
+          "Hiroshi": 0.6549999999999999,
+          "Lin": 0.6549999999999999,
+          "Priya": 0.455,
+          "Elena": 0.3,
+          "Zoe": 0.245,
+          "Sam": 0.455
+        }
+      },
+      "norm_compliance": {
+        "cover_neglected": 1.0,
+        "no_free_riding": 0.375,
+        "mentor_newcomers": 1.0,
+        "rotate_reviews": 1.0,
+        "balance_workload": 1.0
+      },
+      "norm_strengths": {
+        "cover_neglected": 0.4,
+        "no_free_riding": 0.1,
+        "mentor_newcomers": 0.4,
+        "rotate_reviews": 0.4,
+        "balance_workload": 0.4
+      },
+      "burnout_snapshot": {
+        "Fatima": 0.30000000000000004,
+        "Hiroshi": 0.0,
+        "Lin": 0.0,
+        "Priya": 0.0,
+        "Elena": 0.0,
+        "Zoe": 0.03,
+        "Sam": 0.0,
+        "Chen": 0.18000000000000002
+      }
+    },
+    {
+      "joint_action": {
+        "Fatima": "Docs: Rewrite the quickstart guide for new contributors.",
+        "Hiroshi": "Fix: Authentication token refresh fails silently after 24 hours.",
+        "Lin": "Docs: Rewrite the quickstart guide for new contributors.",
+        "Priya": "Fix: Incorrect timezone handling in the scheduler module.",
+        "Elena": "Docs: Document the CI/CD pipeline and release process.",
+        "Zoe": "Docs: Rewrite the quickstart guide for new contributors.",
+        "Sam": "Fix: Null pointer exception when user profile has no avatar.",
+        "Chen": "Docs: Document the CI/CD pipeline and release process."
+      },
+      "scores": {
+        "Fatima": -1.0,
+        "Hiroshi": 3.0,
+        "Lin": -1.0,
+        "Priya": 3.0,
+        "Elena": 3.0,
+        "Zoe": 1.0,
+        "Sam": 3.0,
+        "Chen": -1.0
+      },
+      "harmony_index": 0.75,
+      "stress_type": "task_overload",
+      "policy": "None",
+      "task_difficulties": {
+        "Fatima": "hard",
+        "Hiroshi": "easy",
+        "Lin": "medium",
+        "Priya": "medium",
+        "Elena": "medium",
+        "Zoe": "medium",
+        "Sam": "medium",
+        "Chen": "medium"
+      },
+      "belief_snapshots": {
+        "Fatima": {
+          "name": "Fatima",
+          "role": "innovator",
+          "beliefs_health": {
+            "healthy": 5.952380952380943e-19,
+            "stressed": 1.190476190476188e-17,
+            "declining": 1.0
+          },
+          "beliefs_urgency": {
+            "balanced": 7.142857142857142e-18,
+            "bugs_critical": 1.0,
+            "docs_neglected": 7.142857142857142e-18,
+            "review_backlog": 7.142857142857142e-18
+          },
+          "habits": {
+            "bug_fix": 0.2,
+            "feature": 0.4,
+            "documentation": 0.1,
+            "code_review": 0.1,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Hiroshi": {
+          "name": "Hiroshi",
+          "role": "contributor",
+          "beliefs_health": {
+            "healthy": 1.0,
+            "stressed": 9.183673469387693e-18,
+            "declining": 1.020408163265304e-18
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 7.142857142857125e-18,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.4,
+            "feature": 0.2,
+            "documentation": 0.1,
+            "code_review": 0.1,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Lin": {
+          "name": "Lin",
+          "role": "maintainer",
+          "beliefs_health": {
+            "healthy": 1.0,
+            "stressed": 8.571428571428581e-17,
+            "declining": 8.571428571428581e-17
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 7.142857142857125e-18,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.1,
+            "feature": 0.1,
+            "documentation": 0.2,
+            "code_review": 0.4,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Priya": {
+          "name": "Priya",
+          "role": "contributor",
+          "beliefs_health": {
+            "healthy": 1.0,
+            "stressed": 9.183673469387693e-18,
+            "declining": 1.020408163265304e-18
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 7.142857142857125e-18,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.4,
+            "feature": 0.2,
+            "documentation": 0.1,
+            "code_review": 0.1,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Elena": {
+          "name": "Elena",
+          "role": "knowledge_curator",
+          "beliefs_health": {
+            "healthy": 1.0,
+            "stressed": 9.183673469387693e-18,
+            "declining": 1.020408163265304e-18
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 7.142857142857125e-18,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.1,
+            "feature": 0.1,
+            "documentation": 0.4,
+            "code_review": 0.2,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Zoe": {
+          "name": "Zoe",
+          "role": "innovator",
+          "beliefs_health": {
+            "healthy": 1.0,
+            "stressed": 9.183673469387693e-18,
+            "declining": 1.020408163265304e-18
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 7.142857142857125e-18,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.2,
+            "feature": 0.4,
+            "documentation": 0.1,
+            "code_review": 0.1,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Sam": {
+          "name": "Sam",
+          "role": "contributor",
+          "beliefs_health": {
+            "healthy": 1.0,
+            "stressed": 9.183673469387693e-18,
+            "declining": 1.020408163265304e-18
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 7.142857142857125e-18,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.4,
+            "feature": 0.2,
+            "documentation": 0.1,
+            "code_review": 0.1,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Chen": {
+          "name": "Chen",
+          "role": "maintainer",
+          "beliefs_health": {
+            "healthy": 1.0,
+            "stressed": 8.571428571428581e-17,
+            "declining": 8.571428571428581e-17
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 7.142857142857125e-18,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.1,
+            "feature": 0.1,
+            "documentation": 0.2,
+            "code_review": 0.4,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        }
+      },
+      "trust_snapshot": {
+        "Fatima": {
+          "Hiroshi": 0.41000000000000003,
+          "Lin": 0.2,
+          "Priya": 0.41000000000000003,
+          "Elena": 0.6549999999999999,
+          "Zoe": 0.79,
+          "Sam": 0.6099999999999999,
+          "Chen": 0.235
+        },
+        "Hiroshi": {
+          "Fatima": 0.5900000000000001,
+          "Lin": 0.53,
+          "Priya": 0.8350000000000001,
+          "Elena": 0.3,
+          "Zoe": 0.76,
+          "Sam": 0.9350000000000002,
+          "Chen": 0.79
+        },
+        "Lin": {
+          "Fatima": 0.305,
+          "Hiroshi": 0.455,
+          "Priya": 0.6549999999999999,
+          "Elena": 0.6549999999999999,
+          "Zoe": 0.175,
+          "Sam": 0.455,
+          "Chen": 0.805
+        },
+        "Priya": {
+          "Fatima": 0.5900000000000001,
+          "Hiroshi": 0.8350000000000001,
+          "Lin": 0.73,
+          "Elena": 0.7,
+          "Zoe": 0.36,
+          "Sam": 1.0,
+          "Chen": 0.5900000000000001
+        },
+        "Elena": {
+          "Fatima": 0.8350000000000001,
+          "Hiroshi": 0.3,
+          "Lin": 0.745,
+          "Priya": 0.7,
+          "Zoe": 0.5900000000000001,
+          "Sam": 0.7,
+          "Chen": 0.43499999999999994
+        },
+        "Zoe": {
+          "Fatima": 0.8200000000000001,
+          "Hiroshi": 0.6099999999999999,
+          "Lin": 0.1,
+          "Priya": 0.21000000000000002,
+          "Elena": 0.41000000000000003,
+          "Sam": 0.41000000000000003,
+          "Chen": 0.32
+        },
+        "Sam": {
+          "Fatima": 0.79,
+          "Hiroshi": 0.9350000000000002,
+          "Lin": 0.53,
+          "Priya": 1.0,
+          "Elena": 0.7,
+          "Zoe": 0.56,
+          "Chen": 0.5900000000000001
+        },
+        "Chen": {
+          "Fatima": 0.235,
+          "Hiroshi": 0.6099999999999999,
+          "Lin": 0.7,
+          "Priya": 0.41000000000000003,
+          "Elena": 0.255,
+          "Zoe": 0.29,
+          "Sam": 0.41000000000000003
+        }
+      },
+      "norm_compliance": {
+        "cover_neglected": 0.0,
+        "no_free_riding": 0.5,
+        "mentor_newcomers": 1.0,
+        "rotate_reviews": 1.0,
+        "balance_workload": 1.0
+      },
+      "norm_strengths": {
+        "cover_neglected": 0.25,
+        "no_free_riding": 0.2,
+        "mentor_newcomers": 0.6000000000000001,
+        "rotate_reviews": 0.6000000000000001,
+        "balance_workload": 0.6000000000000001
+      },
+      "burnout_snapshot": {
+        "Fatima": 0.45000000000000007,
+        "Hiroshi": 0.0,
+        "Lin": 0.15000000000000002,
+        "Priya": 0.0,
+        "Elena": 0.0,
+        "Zoe": 0.06,
+        "Sam": 0.0,
+        "Chen": 0.33000000000000007
+      }
+    },
+    {
+      "joint_action": {
+        "Fatima": "Docs: Rewrite the quickstart guide for new contributors.",
+        "Hiroshi": "Fix: Authentication token refresh fails silently after 24 hours.",
+        "Lin": "Review: Evaluate the WebSocket PR for security and performance.",
+        "Priya": "Fix: Incorrect timezone handling in the scheduler module.",
+        "Elena": "Docs: Rewrite the quickstart guide for new contributors.",
+        "Zoe": "Feature: Add dark mode toggle with persistent user preference.",
+        "Sam": "Fix: Null pointer exception when user profile has no avatar.",
+        "Chen": "Review: Evaluate the WebSocket PR for security and performance."
+      },
+      "scores": {
+        "Fatima": 1.0,
+        "Hiroshi": 3.0,
+        "Lin": 3.0,
+        "Priya": 3.0,
+        "Elena": 3.0,
+        "Zoe": 3.0,
+        "Sam": -1.0,
+        "Chen": 3.0
+      },
+      "harmony_index": 0.775,
+      "stress_type": "funding_cut",
+      "policy": "None",
+      "task_difficulties": {
+        "Fatima": "easy",
+        "Hiroshi": "easy",
+        "Lin": "medium",
+        "Priya": "easy",
+        "Elena": "easy",
+        "Zoe": "hard",
+        "Sam": "hard",
+        "Chen": "medium"
+      },
+      "belief_snapshots": {
+        "Fatima": {
+          "name": "Fatima",
+          "role": "innovator",
+          "beliefs_health": {
+            "healthy": 4.999999999999971e-17,
+            "stressed": 3.0158627559578e-16,
+            "declining": 0.9999999999999996
+          },
+          "beliefs_urgency": {
+            "balanced": 7.142857142857142e-18,
+            "bugs_critical": 1.0,
+            "docs_neglected": 7.142857142857142e-18,
+            "review_backlog": 7.142857142857142e-18
+          },
+          "habits": {
+            "bug_fix": 0.2,
+            "feature": 0.4,
+            "documentation": 0.1,
+            "code_review": 0.1,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Hiroshi": {
+          "name": "Hiroshi",
+          "role": "contributor",
+          "beliefs_health": {
+            "healthy": 1.0,
+            "stressed": 9.183673469387693e-18,
+            "declining": 1.020408163265304e-18
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 7.142857142857125e-18,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.4,
+            "feature": 0.2,
+            "documentation": 0.1,
+            "code_review": 0.1,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Lin": {
+          "name": "Lin",
+          "role": "maintainer",
+          "beliefs_health": {
+            "healthy": 1.0,
+            "stressed": 9.183673469387693e-18,
+            "declining": 1.020408163265304e-18
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 7.142857142857125e-18,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.1,
+            "feature": 0.1,
+            "documentation": 0.2,
+            "code_review": 0.4,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Priya": {
+          "name": "Priya",
+          "role": "contributor",
+          "beliefs_health": {
+            "healthy": 1.0,
+            "stressed": 9.183673469387693e-18,
+            "declining": 1.020408163265304e-18
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 7.142857142857125e-18,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.4,
+            "feature": 0.2,
+            "documentation": 0.1,
+            "code_review": 0.1,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Elena": {
+          "name": "Elena",
+          "role": "knowledge_curator",
+          "beliefs_health": {
+            "healthy": 1.0,
+            "stressed": 9.183673469387693e-18,
+            "declining": 1.020408163265304e-18
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 7.142857142857125e-18,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.1,
+            "feature": 0.1,
+            "documentation": 0.4,
+            "code_review": 0.2,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Zoe": {
+          "name": "Zoe",
+          "role": "innovator",
+          "beliefs_health": {
+            "healthy": 1.0,
+            "stressed": 9.183673469387693e-18,
+            "declining": 1.020408163265304e-18
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 7.142857142857125e-18,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.2,
+            "feature": 0.4,
+            "documentation": 0.1,
+            "code_review": 0.1,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Sam": {
+          "name": "Sam",
+          "role": "contributor",
+          "beliefs_health": {
+            "healthy": 1.0,
+            "stressed": 8.571428571428581e-17,
+            "declining": 8.571428571428581e-17
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 7.142857142857125e-18,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.4,
+            "feature": 0.2,
+            "documentation": 0.1,
+            "code_review": 0.1,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Chen": {
+          "name": "Chen",
+          "role": "maintainer",
+          "beliefs_health": {
+            "healthy": 1.0,
+            "stressed": 9.183673469387693e-18,
+            "declining": 1.020408163265304e-18
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 7.142857142857125e-18,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.1,
+            "feature": 0.1,
+            "documentation": 0.2,
+            "code_review": 0.4,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        }
+      },
+      "trust_snapshot": {
+        "Fatima": {
+          "Hiroshi": 0.41000000000000003,
+          "Lin": 0.2,
+          "Priya": 0.41000000000000003,
+          "Elena": 0.7,
+          "Zoe": 0.79,
+          "Sam": 0.6099999999999999,
+          "Chen": 0.235
+        },
+        "Hiroshi": {
+          "Fatima": 0.6200000000000001,
+          "Lin": 0.53,
+          "Priya": 0.8800000000000001,
+          "Elena": 0.3,
+          "Zoe": 0.76,
+          "Sam": 0.9800000000000002,
+          "Chen": 0.79
+        },
+        "Lin": {
+          "Fatima": 0.33499999999999996,
+          "Hiroshi": 0.455,
+          "Priya": 0.6549999999999999,
+          "Elena": 0.6549999999999999,
+          "Zoe": 0.175,
+          "Sam": 0.455,
+          "Chen": 0.8500000000000001
+        },
+        "Priya": {
+          "Fatima": 0.6200000000000001,
+          "Hiroshi": 0.8800000000000001,
+          "Lin": 0.73,
+          "Elena": 0.7,
+          "Zoe": 0.36,
+          "Sam": 1.0,
+          "Chen": 0.5900000000000001
+        },
+        "Elena": {
+          "Fatima": 0.8800000000000001,
+          "Hiroshi": 0.3,
+          "Lin": 0.745,
+          "Priya": 0.7,
+          "Zoe": 0.5900000000000001,
+          "Sam": 0.7,
+          "Chen": 0.43499999999999994
+        },
+        "Zoe": {
+          "Fatima": 0.8500000000000001,
+          "Hiroshi": 0.6099999999999999,
+          "Lin": 0.1,
+          "Priya": 0.21000000000000002,
+          "Elena": 0.41000000000000003,
+          "Sam": 0.41000000000000003,
+          "Chen": 0.32
+        },
+        "Sam": {
+          "Fatima": 0.8200000000000001,
+          "Hiroshi": 0.9800000000000002,
+          "Lin": 0.53,
+          "Priya": 1.0,
+          "Elena": 0.7,
+          "Zoe": 0.56,
+          "Chen": 0.5900000000000001
+        },
+        "Chen": {
+          "Fatima": 0.265,
+          "Hiroshi": 0.6099999999999999,
+          "Lin": 0.745,
+          "Priya": 0.41000000000000003,
+          "Elena": 0.255,
+          "Zoe": 0.29,
+          "Sam": 0.41000000000000003
+        }
+      },
+      "norm_compliance": {
+        "cover_neglected": 1.0,
+        "no_free_riding": 1.0,
+        "mentor_newcomers": 1.0,
+        "rotate_reviews": 0.5,
+        "balance_workload": 1.0
+      },
+      "norm_strengths": {
+        "cover_neglected": 0.45,
+        "no_free_riding": 0.4,
+        "mentor_newcomers": 0.8,
+        "rotate_reviews": 0.7000000000000001,
+        "balance_workload": 0.8
+      },
+      "burnout_snapshot": {
+        "Fatima": 0.4800000000000001,
+        "Hiroshi": 0.0,
+        "Lin": 0.0,
+        "Priya": 0.0,
+        "Elena": 0.0,
+        "Zoe": 0.0,
+        "Sam": 0.06999999999999999,
+        "Chen": 0.13000000000000006
+      }
+    },
+    {
+      "joint_action": {
+        "Fatima": "Docs: Rewrite the quickstart guide for new contributors.",
+        "Hiroshi": "Fix: Authentication token refresh fails silently after 24 hours.",
+        "Lin": "Review: Evaluate the WebSocket PR for security and performance.",
+        "Priya": "Fix: Incorrect timezone handling in the scheduler module.",
+        "Elena": "Docs: Document the CI/CD pipeline and release process.",
+        "Zoe": "Docs: Rewrite the quickstart guide for new contributors.",
+        "Sam": "Fix: Null pointer exception when user profile has no avatar.",
+        "Chen": "Review: Evaluate the WebSocket PR for security and performance."
+      },
+      "scores": {
+        "Fatima": 1.0,
+        "Hiroshi": 3.0,
+        "Lin": 3.0,
+        "Priya": -1.0,
+        "Elena": 3.0,
+        "Zoe": 1.0,
+        "Sam": 3.0,
+        "Chen": -1.0
+      },
+      "harmony_index": 0.76,
+      "stress_type": "dependency_crisis",
+      "policy": "None",
+      "task_difficulties": {
+        "Fatima": "easy",
+        "Hiroshi": "easy",
+        "Lin": "easy",
+        "Priya": "hard",
+        "Elena": "medium",
+        "Zoe": "medium",
+        "Sam": "easy",
+        "Chen": "easy"
+      },
+      "belief_snapshots": {
+        "Fatima": {
+          "name": "Fatima",
+          "role": "innovator",
+          "beliefs_health": {
+            "healthy": 4.999999999999969e-17,
+            "stressed": 9.09542816277341e-16,
+            "declining": 0.9999999999999991
+          },
+          "beliefs_urgency": {
+            "balanced": 7.142857142857142e-18,
+            "bugs_critical": 1.0,
+            "docs_neglected": 7.142857142857142e-18,
+            "review_backlog": 7.142857142857142e-18
+          },
+          "habits": {
+            "bug_fix": 0.2,
+            "feature": 0.4,
+            "documentation": 0.1,
+            "code_review": 0.1,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Hiroshi": {
+          "name": "Hiroshi",
+          "role": "contributor",
+          "beliefs_health": {
+            "healthy": 1.0,
+            "stressed": 9.183673469387693e-18,
+            "declining": 1.020408163265304e-18
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 7.142857142857125e-18,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.4,
+            "feature": 0.2,
+            "documentation": 0.1,
+            "code_review": 0.1,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Lin": {
+          "name": "Lin",
+          "role": "maintainer",
+          "beliefs_health": {
+            "healthy": 1.0,
+            "stressed": 9.183673469387693e-18,
+            "declining": 1.020408163265304e-18
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 7.142857142857125e-18,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.1,
+            "feature": 0.1,
+            "documentation": 0.2,
+            "code_review": 0.4,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Priya": {
+          "name": "Priya",
+          "role": "contributor",
+          "beliefs_health": {
+            "healthy": 1.0,
+            "stressed": 8.571428571428581e-17,
+            "declining": 8.571428571428581e-17
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 7.142857142857125e-18,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.4,
+            "feature": 0.2,
+            "documentation": 0.1,
+            "code_review": 0.1,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Elena": {
+          "name": "Elena",
+          "role": "knowledge_curator",
+          "beliefs_health": {
+            "healthy": 1.0,
+            "stressed": 9.183673469387693e-18,
+            "declining": 1.020408163265304e-18
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 7.142857142857125e-18,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.1,
+            "feature": 0.1,
+            "documentation": 0.4,
+            "code_review": 0.2,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Zoe": {
+          "name": "Zoe",
+          "role": "innovator",
+          "beliefs_health": {
+            "healthy": 1.0,
+            "stressed": 9.183673469387693e-18,
+            "declining": 1.020408163265304e-18
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 7.142857142857125e-18,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.2,
+            "feature": 0.4,
+            "documentation": 0.1,
+            "code_review": 0.1,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Sam": {
+          "name": "Sam",
+          "role": "contributor",
+          "beliefs_health": {
+            "healthy": 1.0,
+            "stressed": 9.183673469387693e-18,
+            "declining": 1.020408163265304e-18
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 7.142857142857125e-18,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.4,
+            "feature": 0.2,
+            "documentation": 0.1,
+            "code_review": 0.1,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Chen": {
+          "name": "Chen",
+          "role": "maintainer",
+          "beliefs_health": {
+            "healthy": 1.0,
+            "stressed": 8.571428571428581e-17,
+            "declining": 8.571428571428581e-17
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 7.142857142857125e-18,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.1,
+            "feature": 0.1,
+            "documentation": 0.2,
+            "code_review": 0.4,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        }
+      },
+      "trust_snapshot": {
+        "Fatima": {
+          "Hiroshi": 0.36500000000000005,
+          "Lin": 0.15500000000000003,
+          "Priya": 0.36500000000000005,
+          "Elena": 0.6549999999999999,
+          "Zoe": 0.8350000000000001,
+          "Sam": 0.5649999999999998,
+          "Chen": 0.19
+        },
+        "Hiroshi": {
+          "Fatima": 0.6500000000000001,
+          "Lin": 0.53,
+          "Priya": 0.9250000000000002,
+          "Elena": 0.3,
+          "Zoe": 0.79,
+          "Sam": 1.0,
+          "Chen": 0.79
+        },
+        "Lin": {
+          "Fatima": 0.365,
+          "Hiroshi": 0.455,
+          "Priya": 0.6549999999999999,
+          "Elena": 0.6549999999999999,
+          "Zoe": 0.205,
+          "Sam": 0.455,
+          "Chen": 0.8950000000000001
+        },
+        "Priya": {
+          "Fatima": 0.6500000000000001,
+          "Hiroshi": 0.9250000000000002,
+          "Lin": 0.73,
+          "Elena": 0.7,
+          "Zoe": 0.39,
+          "Sam": 1.0,
+          "Chen": 0.5900000000000001
+        },
+        "Elena": {
+          "Fatima": 0.9250000000000002,
+          "Hiroshi": 0.3,
+          "Lin": 0.745,
+          "Priya": 0.7,
+          "Zoe": 0.6350000000000001,
+          "Sam": 0.7,
+          "Chen": 0.43499999999999994
+        },
+        "Zoe": {
+          "Fatima": 0.8950000000000001,
+          "Hiroshi": 0.5649999999999998,
+          "Lin": 0.05500000000000001,
+          "Priya": 0.16500000000000004,
+          "Elena": 0.36500000000000005,
+          "Sam": 0.36500000000000005,
+          "Chen": 0.275
+        },
+        "Sam": {
+          "Fatima": 0.8500000000000001,
+          "Hiroshi": 1.0,
+          "Lin": 0.53,
+          "Priya": 1.0,
+          "Elena": 0.7,
+          "Zoe": 0.5900000000000001,
+          "Chen": 0.5900000000000001
+        },
+        "Chen": {
+          "Fatima": 0.29500000000000004,
+          "Hiroshi": 0.6099999999999999,
+          "Lin": 0.79,
+          "Priya": 0.41000000000000003,
+          "Elena": 0.255,
+          "Zoe": 0.31999999999999995,
+          "Sam": 0.41000000000000003
+        }
+      },
+      "norm_compliance": {
+        "cover_neglected": 1.0,
+        "no_free_riding": 0.25,
+        "mentor_newcomers": 1.0,
+        "rotate_reviews": 0.5,
+        "balance_workload": 1.0
+      },
+      "norm_strengths": {
+        "cover_neglected": 0.65,
+        "no_free_riding": 0.30000000000000004,
+        "mentor_newcomers": 1.0,
+        "rotate_reviews": 0.8,
+        "balance_workload": 1.0
+      },
+      "burnout_snapshot": {
+        "Fatima": 0.5100000000000001,
+        "Hiroshi": 0.0,
+        "Lin": 0.0,
+        "Priya": 0.06999999999999999,
+        "Elena": 0.0,
+        "Zoe": 0.03,
+        "Sam": 0.0,
+        "Chen": 0.20000000000000007
+      }
+    }
+  ],
+  "narrative_history": [
+    {},
+    {},
+    {},
+    {},
+    {}
+  ],
+  "final_policy": "None",
+  "player_roles": {
+    "Fatima": "Innovator",
+    "Hiroshi": "Contributor",
+    "Lin": "Maintainer",
+    "Priya": "Contributor",
+    "Elena": "Knowledge Curator",
+    "Zoe": "Innovator",
+    "Sam": "Contributor",
+    "Chen": "Maintainer"
+  },
+  "stress_schedule": {
+    "2": "contributor_dropout",
+    "3": "task_overload",
+    "4": "funding_cut",
+    "5": "dependency_crisis"
+  },
+  "dropout_name": "Hiroshi",
+  "relational_matrix": {
+    "Fatima": {
+      "Fatima": 1.0,
+      "Hiroshi": 0.5,
+      "Lin": 0.2,
+      "Priya": 0.5,
+      "Elena": 0.7,
+      "Zoe": 0.7,
+      "Sam": 0.7,
+      "Chen": 0.1
+    },
+    "Hiroshi": {
+      "Fatima": 0.5,
+      "Hiroshi": 1.0,
+      "Lin": 0.5,
+      "Priya": 0.7,
+      "Elena": 0.3,
+      "Zoe": 0.7,
+      "Sam": 0.8,
+      "Chen": 0.7
+    },
+    "Lin": {
+      "Fatima": 0.2,
+      "Hiroshi": 0.5,
+      "Lin": 1.0,
+      "Priya": 0.7,
+      "Elena": 0.7,
+      "Zoe": 0.1,
+      "Sam": 0.5,
+      "Chen": 0.7
+    },
+    "Priya": {
+      "Fatima": 0.5,
+      "Hiroshi": 0.7,
+      "Lin": 0.7,
+      "Priya": 1.0,
+      "Elena": 0.7,
+      "Zoe": 0.3,
+      "Sam": 1.0,
+      "Chen": 0.5
+    },
+    "Elena": {
+      "Fatima": 0.7,
+      "Hiroshi": 0.3,
+      "Lin": 0.7,
+      "Priya": 0.7,
+      "Elena": 1.0,
+      "Zoe": 0.5,
+      "Sam": 0.7,
+      "Chen": 0.3
+    },
+    "Zoe": {
+      "Fatima": 0.7,
+      "Hiroshi": 0.7,
+      "Lin": 0.1,
+      "Priya": 0.3,
+      "Elena": 0.5,
+      "Zoe": 1.0,
+      "Sam": 0.5,
+      "Chen": 0.2
+    },
+    "Sam": {
+      "Fatima": 0.7,
+      "Hiroshi": 0.8,
+      "Lin": 0.5,
+      "Priya": 1.0,
+      "Elena": 0.7,
+      "Zoe": 0.5,
+      "Sam": 1.0,
+      "Chen": 0.5
+    },
+    "Chen": {
+      "Fatima": 0.1,
+      "Hiroshi": 0.7,
+      "Lin": 0.7,
+      "Priya": 0.5,
+      "Elena": 0.3,
+      "Zoe": 0.2,
+      "Sam": 0.5,
+      "Chen": 1.0
+    }
+  },
+  "seed": 0,
+  "governance": "dictator",
+  "aif_final_states": {
+    "Fatima": {
+      "name": "Fatima",
+      "role": "innovator",
+      "beliefs_health": {
+        "healthy": 4.999999999999969e-17,
+        "stressed": 9.09542816277341e-16,
+        "declining": 0.9999999999999991
+      },
+      "beliefs_urgency": {
+        "balanced": 7.142857142857142e-18,
+        "bugs_critical": 1.0,
+        "docs_neglected": 7.142857142857142e-18,
+        "review_backlog": 7.142857142857142e-18
+      },
+      "habits": {
+        "bug_fix": 0.2,
+        "feature": 0.4,
+        "documentation": 0.1,
+        "code_review": 0.1,
+        "mentor": 0.1,
+        "skip": 0.1
+      },
+      "gamma": 1.0,
+      "alpha": 16.0
+    },
+    "Hiroshi": {
+      "name": "Hiroshi",
+      "role": "contributor",
+      "beliefs_health": {
+        "healthy": 1.0,
+        "stressed": 9.183673469387693e-18,
+        "declining": 1.020408163265304e-18
+      },
+      "beliefs_urgency": {
+        "balanced": 0.3333333333333333,
+        "bugs_critical": 7.142857142857125e-18,
+        "docs_neglected": 0.3333333333333333,
+        "review_backlog": 0.3333333333333333
+      },
+      "habits": {
+        "bug_fix": 0.4,
+        "feature": 0.2,
+        "documentation": 0.1,
+        "code_review": 0.1,
+        "mentor": 0.1,
+        "skip": 0.1
+      },
+      "gamma": 1.0,
+      "alpha": 16.0
+    },
+    "Lin": {
+      "name": "Lin",
+      "role": "maintainer",
+      "beliefs_health": {
+        "healthy": 1.0,
+        "stressed": 9.183673469387693e-18,
+        "declining": 1.020408163265304e-18
+      },
+      "beliefs_urgency": {
+        "balanced": 0.3333333333333333,
+        "bugs_critical": 7.142857142857125e-18,
+        "docs_neglected": 0.3333333333333333,
+        "review_backlog": 0.3333333333333333
+      },
+      "habits": {
+        "bug_fix": 0.1,
+        "feature": 0.1,
+        "documentation": 0.2,
+        "code_review": 0.4,
+        "mentor": 0.1,
+        "skip": 0.1
+      },
+      "gamma": 1.0,
+      "alpha": 16.0
+    },
+    "Priya": {
+      "name": "Priya",
+      "role": "contributor",
+      "beliefs_health": {
+        "healthy": 1.0,
+        "stressed": 8.571428571428581e-17,
+        "declining": 8.571428571428581e-17
+      },
+      "beliefs_urgency": {
+        "balanced": 0.3333333333333333,
+        "bugs_critical": 7.142857142857125e-18,
+        "docs_neglected": 0.3333333333333333,
+        "review_backlog": 0.3333333333333333
+      },
+      "habits": {
+        "bug_fix": 0.4,
+        "feature": 0.2,
+        "documentation": 0.1,
+        "code_review": 0.1,
+        "mentor": 0.1,
+        "skip": 0.1
+      },
+      "gamma": 1.0,
+      "alpha": 16.0
+    },
+    "Elena": {
+      "name": "Elena",
+      "role": "knowledge_curator",
+      "beliefs_health": {
+        "healthy": 1.0,
+        "stressed": 9.183673469387693e-18,
+        "declining": 1.020408163265304e-18
+      },
+      "beliefs_urgency": {
+        "balanced": 0.3333333333333333,
+        "bugs_critical": 7.142857142857125e-18,
+        "docs_neglected": 0.3333333333333333,
+        "review_backlog": 0.3333333333333333
+      },
+      "habits": {
+        "bug_fix": 0.1,
+        "feature": 0.1,
+        "documentation": 0.4,
+        "code_review": 0.2,
+        "mentor": 0.1,
+        "skip": 0.1
+      },
+      "gamma": 1.0,
+      "alpha": 16.0
+    },
+    "Zoe": {
+      "name": "Zoe",
+      "role": "innovator",
+      "beliefs_health": {
+        "healthy": 1.0,
+        "stressed": 9.183673469387693e-18,
+        "declining": 1.020408163265304e-18
+      },
+      "beliefs_urgency": {
+        "balanced": 0.3333333333333333,
+        "bugs_critical": 7.142857142857125e-18,
+        "docs_neglected": 0.3333333333333333,
+        "review_backlog": 0.3333333333333333
+      },
+      "habits": {
+        "bug_fix": 0.2,
+        "feature": 0.4,
+        "documentation": 0.1,
+        "code_review": 0.1,
+        "mentor": 0.1,
+        "skip": 0.1
+      },
+      "gamma": 1.0,
+      "alpha": 16.0
+    },
+    "Sam": {
+      "name": "Sam",
+      "role": "contributor",
+      "beliefs_health": {
+        "healthy": 1.0,
+        "stressed": 9.183673469387693e-18,
+        "declining": 1.020408163265304e-18
+      },
+      "beliefs_urgency": {
+        "balanced": 0.3333333333333333,
+        "bugs_critical": 7.142857142857125e-18,
+        "docs_neglected": 0.3333333333333333,
+        "review_backlog": 0.3333333333333333
+      },
+      "habits": {
+        "bug_fix": 0.4,
+        "feature": 0.2,
+        "documentation": 0.1,
+        "code_review": 0.1,
+        "mentor": 0.1,
+        "skip": 0.1
+      },
+      "gamma": 1.0,
+      "alpha": 16.0
+    },
+    "Chen": {
+      "name": "Chen",
+      "role": "maintainer",
+      "beliefs_health": {
+        "healthy": 1.0,
+        "stressed": 8.571428571428581e-17,
+        "declining": 8.571428571428581e-17
+      },
+      "beliefs_urgency": {
+        "balanced": 0.3333333333333333,
+        "bugs_critical": 7.142857142857125e-18,
+        "docs_neglected": 0.3333333333333333,
+        "review_backlog": 0.3333333333333333
+      },
+      "habits": {
+        "bug_fix": 0.1,
+        "feature": 0.1,
+        "documentation": 0.2,
+        "code_review": 0.4,
+        "mentor": 0.1,
+        "skip": 0.1
+      },
+      "gamma": 1.0,
+      "alpha": 16.0
+    }
+  },
+  "aif_belief_trajectories": {
+    "Fatima": [
+      {
+        "health": [
+          5.952380952382208e-19,
+          2.911453230926689e-14,
+          0.9999999999999709
+        ],
+        "urgency": [
+          7.142857142857598e-18,
+          1.0,
+          7.142857142857598e-18,
+          7.142857142857598e-18
+        ]
+      },
+      {
+        "health": [
+          5.952380952380943e-19,
+          1.190476190476188e-17,
+          1.0
+        ],
+        "urgency": [
+          7.142857142857142e-18,
+          1.0,
+          7.142857142857142e-18,
+          7.142857142857142e-18
+        ]
+      },
+      {
+        "health": [
+          5.952380952380943e-19,
+          1.190476190476188e-17,
+          1.0
+        ],
+        "urgency": [
+          7.142857142857142e-18,
+          1.0,
+          7.142857142857142e-18,
+          7.142857142857142e-18
+        ]
+      },
+      {
+        "health": [
+          4.999999999999971e-17,
+          3.0158627559578e-16,
+          0.9999999999999996
+        ],
+        "urgency": [
+          7.142857142857142e-18,
+          1.0,
+          7.142857142857142e-18,
+          7.142857142857142e-18
+        ]
+      },
+      {
+        "health": [
+          4.999999999999969e-17,
+          9.09542816277341e-16,
+          0.9999999999999991
+        ],
+        "urgency": [
+          7.142857142857142e-18,
+          1.0,
+          7.142857142857142e-18,
+          7.142857142857142e-18
+        ]
+      }
+    ],
+    "Hiroshi": [
+      {
+        "health": [
+          1.0,
+          6.555981158384496e-17,
+          1.020408163265304e-18
+        ],
+        "urgency": [
+          0.3333333333333333,
+          7.142857142857125e-18,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      },
+      {
+        "health": [
+          1.0,
+          9.183673469387693e-18,
+          1.020408163265304e-18
+        ],
+        "urgency": [
+          0.3333333333333333,
+          7.142857142857125e-18,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      },
+      {
+        "health": [
+          1.0,
+          9.183673469387693e-18,
+          1.020408163265304e-18
+        ],
+        "urgency": [
+          0.3333333333333333,
+          7.142857142857125e-18,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      },
+      {
+        "health": [
+          1.0,
+          9.183673469387693e-18,
+          1.020408163265304e-18
+        ],
+        "urgency": [
+          0.3333333333333333,
+          7.142857142857125e-18,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      },
+      {
+        "health": [
+          1.0,
+          9.183673469387693e-18,
+          1.020408163265304e-18
+        ],
+        "urgency": [
+          0.3333333333333333,
+          7.142857142857125e-18,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      }
+    ],
+    "Lin": [
+      {
+        "health": [
+          1.0,
+          6.555981158384496e-17,
+          1.020408163265304e-18
+        ],
+        "urgency": [
+          0.3333333333333333,
+          7.142857142857125e-18,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      },
+      {
+        "health": [
+          1.0,
+          9.183673469387693e-18,
+          1.020408163265304e-18
+        ],
+        "urgency": [
+          0.3333333333333333,
+          7.142857142857125e-18,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      },
+      {
+        "health": [
+          1.0,
+          8.571428571428581e-17,
+          8.571428571428581e-17
+        ],
+        "urgency": [
+          0.3333333333333333,
+          7.142857142857125e-18,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      },
+      {
+        "health": [
+          1.0,
+          9.183673469387693e-18,
+          1.020408163265304e-18
+        ],
+        "urgency": [
+          0.3333333333333333,
+          7.142857142857125e-18,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      },
+      {
+        "health": [
+          1.0,
+          9.183673469387693e-18,
+          1.020408163265304e-18
+        ],
+        "urgency": [
+          0.3333333333333333,
+          7.142857142857125e-18,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      }
+    ],
+    "Priya": [
+      {
+        "health": [
+          1.0,
+          6.555981158384496e-17,
+          1.020408163265304e-18
+        ],
+        "urgency": [
+          0.3333333333333333,
+          7.142857142857125e-18,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      },
+      {
+        "health": [
+          1.0,
+          9.183673469387693e-18,
+          1.020408163265304e-18
+        ],
+        "urgency": [
+          0.3333333333333333,
+          7.142857142857125e-18,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      },
+      {
+        "health": [
+          1.0,
+          9.183673469387693e-18,
+          1.020408163265304e-18
+        ],
+        "urgency": [
+          0.3333333333333333,
+          7.142857142857125e-18,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      },
+      {
+        "health": [
+          1.0,
+          9.183673469387693e-18,
+          1.020408163265304e-18
+        ],
+        "urgency": [
+          0.3333333333333333,
+          7.142857142857125e-18,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      },
+      {
+        "health": [
+          1.0,
+          8.571428571428581e-17,
+          8.571428571428581e-17
+        ],
+        "urgency": [
+          0.3333333333333333,
+          7.142857142857125e-18,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      }
+    ],
+    "Elena": [
+      {
+        "health": [
+          1.0,
+          6.555981158384496e-17,
+          1.020408163265304e-18
+        ],
+        "urgency": [
+          0.3333333333333333,
+          7.142857142857125e-18,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      },
+      {
+        "health": [
+          1.0,
+          9.183673469387693e-18,
+          1.020408163265304e-18
+        ],
+        "urgency": [
+          0.3333333333333333,
+          7.142857142857125e-18,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      },
+      {
+        "health": [
+          1.0,
+          9.183673469387693e-18,
+          1.020408163265304e-18
+        ],
+        "urgency": [
+          0.3333333333333333,
+          7.142857142857125e-18,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      },
+      {
+        "health": [
+          1.0,
+          9.183673469387693e-18,
+          1.020408163265304e-18
+        ],
+        "urgency": [
+          0.3333333333333333,
+          7.142857142857125e-18,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      },
+      {
+        "health": [
+          1.0,
+          9.183673469387693e-18,
+          1.020408163265304e-18
+        ],
+        "urgency": [
+          0.3333333333333333,
+          7.142857142857125e-18,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      }
+    ],
+    "Zoe": [
+      {
+        "health": [
+          1.0,
+          6.555981158384496e-17,
+          1.020408163265304e-18
+        ],
+        "urgency": [
+          0.3333333333333333,
+          7.142857142857125e-18,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      },
+      {
+        "health": [
+          1.0,
+          9.183673469387693e-18,
+          1.020408163265304e-18
+        ],
+        "urgency": [
+          0.3333333333333333,
+          7.142857142857125e-18,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      },
+      {
+        "health": [
+          1.0,
+          9.183673469387693e-18,
+          1.020408163265304e-18
+        ],
+        "urgency": [
+          0.3333333333333333,
+          7.142857142857125e-18,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      },
+      {
+        "health": [
+          1.0,
+          9.183673469387693e-18,
+          1.020408163265304e-18
+        ],
+        "urgency": [
+          0.3333333333333333,
+          7.142857142857125e-18,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      },
+      {
+        "health": [
+          1.0,
+          9.183673469387693e-18,
+          1.020408163265304e-18
+        ],
+        "urgency": [
+          0.3333333333333333,
+          7.142857142857125e-18,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      }
+    ],
+    "Sam": [
+      {
+        "health": [
+          1.0,
+          6.555981158384496e-17,
+          1.020408163265304e-18
+        ],
+        "urgency": [
+          0.3333333333333333,
+          7.142857142857125e-18,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      },
+      {
+        "health": [
+          1.0,
+          9.183673469387693e-18,
+          1.020408163265304e-18
+        ],
+        "urgency": [
+          0.3333333333333333,
+          7.142857142857125e-18,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      },
+      {
+        "health": [
+          1.0,
+          9.183673469387693e-18,
+          1.020408163265304e-18
+        ],
+        "urgency": [
+          0.3333333333333333,
+          7.142857142857125e-18,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      },
+      {
+        "health": [
+          1.0,
+          8.571428571428581e-17,
+          8.571428571428581e-17
+        ],
+        "urgency": [
+          0.3333333333333333,
+          7.142857142857125e-18,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      },
+      {
+        "health": [
+          1.0,
+          9.183673469387693e-18,
+          1.020408163265304e-18
+        ],
+        "urgency": [
+          0.3333333333333333,
+          7.142857142857125e-18,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      }
+    ],
+    "Chen": [
+      {
+        "health": [
+          1.0,
+          6.555981158384496e-17,
+          1.020408163265304e-18
+        ],
+        "urgency": [
+          0.3333333333333333,
+          7.142857142857125e-18,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      },
+      {
+        "health": [
+          1.0,
+          8.571428571428581e-17,
+          8.571428571428581e-17
+        ],
+        "urgency": [
+          0.3333333333333333,
+          7.142857142857125e-18,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      },
+      {
+        "health": [
+          1.0,
+          8.571428571428581e-17,
+          8.571428571428581e-17
+        ],
+        "urgency": [
+          0.3333333333333333,
+          7.142857142857125e-18,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      },
+      {
+        "health": [
+          1.0,
+          9.183673469387693e-18,
+          1.020408163265304e-18
+        ],
+        "urgency": [
+          0.3333333333333333,
+          7.142857142857125e-18,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      },
+      {
+        "health": [
+          1.0,
+          8.571428571428581e-17,
+          8.571428571428581e-17
+        ],
+        "urgency": [
+          0.3333333333333333,
+          7.142857142857125e-18,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      }
+    ]
+  },
+  "trust_final": {
+    "Fatima": {
+      "Hiroshi": 0.36500000000000005,
+      "Lin": 0.15500000000000003,
+      "Priya": 0.36500000000000005,
+      "Elena": 0.6549999999999999,
+      "Zoe": 0.8350000000000001,
+      "Sam": 0.5649999999999998,
+      "Chen": 0.19
+    },
+    "Hiroshi": {
+      "Fatima": 0.6500000000000001,
+      "Lin": 0.53,
+      "Priya": 0.9250000000000002,
+      "Elena": 0.3,
+      "Zoe": 0.79,
+      "Sam": 1.0,
+      "Chen": 0.79
+    },
+    "Lin": {
+      "Fatima": 0.365,
+      "Hiroshi": 0.455,
+      "Priya": 0.6549999999999999,
+      "Elena": 0.6549999999999999,
+      "Zoe": 0.205,
+      "Sam": 0.455,
+      "Chen": 0.8950000000000001
+    },
+    "Priya": {
+      "Fatima": 0.6500000000000001,
+      "Hiroshi": 0.9250000000000002,
+      "Lin": 0.73,
+      "Elena": 0.7,
+      "Zoe": 0.39,
+      "Sam": 1.0,
+      "Chen": 0.5900000000000001
+    },
+    "Elena": {
+      "Fatima": 0.9250000000000002,
+      "Hiroshi": 0.3,
+      "Lin": 0.745,
+      "Priya": 0.7,
+      "Zoe": 0.6350000000000001,
+      "Sam": 0.7,
+      "Chen": 0.43499999999999994
+    },
+    "Zoe": {
+      "Fatima": 0.8950000000000001,
+      "Hiroshi": 0.5649999999999998,
+      "Lin": 0.05500000000000001,
+      "Priya": 0.16500000000000004,
+      "Elena": 0.36500000000000005,
+      "Sam": 0.36500000000000005,
+      "Chen": 0.275
+    },
+    "Sam": {
+      "Fatima": 0.8500000000000001,
+      "Hiroshi": 1.0,
+      "Lin": 0.53,
+      "Priya": 1.0,
+      "Elena": 0.7,
+      "Zoe": 0.5900000000000001,
+      "Chen": 0.5900000000000001
+    },
+    "Chen": {
+      "Fatima": 0.29500000000000004,
+      "Hiroshi": 0.6099999999999999,
+      "Lin": 0.79,
+      "Priya": 0.41000000000000003,
+      "Elena": 0.255,
+      "Zoe": 0.31999999999999995,
+      "Sam": 0.41000000000000003
+    }
+  },
+  "trust_reciprocity": 0.7750045742508046,
+  "trust_centralization": 0.05518637254146821,
+  "trust_history": [
+    {
+      "Fatima": {
+        "Hiroshi": 0.5,
+        "Lin": 0.2,
+        "Priya": 0.5,
+        "Elena": 0.745,
+        "Zoe": 0.7,
+        "Sam": 0.7,
+        "Chen": 0.14500000000000002
+      },
+      "Hiroshi": {
+        "Fatima": 0.53,
+        "Lin": 0.5,
+        "Priya": 0.745,
+        "Elena": 0.3,
+        "Zoe": 0.7,
+        "Sam": 0.8450000000000001,
+        "Chen": 0.73
+      },
+      "Lin": {
+        "Fatima": 0.23,
+        "Hiroshi": 0.5,
+        "Priya": 0.7,
+        "Elena": 0.7,
+        "Zoe": 0.1,
+        "Sam": 0.5,
+        "Chen": 0.73
+      },
+      "Priya": {
+        "Fatima": 0.53,
+        "Hiroshi": 0.745,
+        "Lin": 0.7,
+        "Elena": 0.7,
+        "Zoe": 0.3,
+        "Sam": 1.0,
+        "Chen": 0.53
+      },
+      "Elena": {
+        "Fatima": 0.745,
+        "Hiroshi": 0.3,
+        "Lin": 0.7,
+        "Priya": 0.7,
+        "Zoe": 0.5,
+        "Sam": 0.7,
+        "Chen": 0.345
+      },
+      "Zoe": {
+        "Fatima": 0.73,
+        "Hiroshi": 0.7,
+        "Lin": 0.1,
+        "Priya": 0.3,
+        "Elena": 0.5,
+        "Sam": 0.5,
+        "Chen": 0.23
+      },
+      "Sam": {
+        "Fatima": 0.73,
+        "Hiroshi": 0.8450000000000001,
+        "Lin": 0.5,
+        "Priya": 1.0,
+        "Elena": 0.7,
+        "Zoe": 0.5,
+        "Chen": 0.53
+      },
+      "Chen": {
+        "Fatima": 0.14500000000000002,
+        "Hiroshi": 0.7,
+        "Lin": 0.7,
+        "Priya": 0.5,
+        "Elena": 0.345,
+        "Zoe": 0.2,
+        "Sam": 0.5
+      }
+    },
+    {
+      "Fatima": {
+        "Hiroshi": 0.455,
+        "Lin": 0.15500000000000003,
+        "Priya": 0.455,
+        "Elena": 0.7,
+        "Zoe": 0.745,
+        "Sam": 0.6549999999999999,
+        "Chen": 0.19
+      },
+      "Hiroshi": {
+        "Fatima": 0.56,
+        "Lin": 0.5,
+        "Priya": 0.79,
+        "Elena": 0.3,
+        "Zoe": 0.73,
+        "Sam": 0.8900000000000001,
+        "Chen": 0.76
+      },
+      "Lin": {
+        "Fatima": 0.26,
+        "Hiroshi": 0.5,
+        "Priya": 0.7,
+        "Elena": 0.7,
+        "Zoe": 0.13,
+        "Sam": 0.5,
+        "Chen": 0.76
+      },
+      "Priya": {
+        "Fatima": 0.56,
+        "Hiroshi": 0.79,
+        "Lin": 0.7,
+        "Elena": 0.7,
+        "Zoe": 0.32999999999999996,
+        "Sam": 1.0,
+        "Chen": 0.56
+      },
+      "Elena": {
+        "Fatima": 0.79,
+        "Hiroshi": 0.3,
+        "Lin": 0.7,
+        "Priya": 0.7,
+        "Zoe": 0.545,
+        "Sam": 0.7,
+        "Chen": 0.38999999999999996
+      },
+      "Zoe": {
+        "Fatima": 0.775,
+        "Hiroshi": 0.6549999999999999,
+        "Lin": 0.05500000000000001,
+        "Priya": 0.255,
+        "Elena": 0.455,
+        "Sam": 0.455,
+        "Chen": 0.275
+      },
+      "Sam": {
+        "Fatima": 0.76,
+        "Hiroshi": 0.8900000000000001,
+        "Lin": 0.5,
+        "Priya": 1.0,
+        "Elena": 0.7,
+        "Zoe": 0.53,
+        "Chen": 0.56
+      },
+      "Chen": {
+        "Fatima": 0.19,
+        "Hiroshi": 0.6549999999999999,
+        "Lin": 0.6549999999999999,
+        "Priya": 0.455,
+        "Elena": 0.3,
+        "Zoe": 0.245,
+        "Sam": 0.455
+      }
+    },
+    {
+      "Fatima": {
+        "Hiroshi": 0.41000000000000003,
+        "Lin": 0.2,
+        "Priya": 0.41000000000000003,
+        "Elena": 0.6549999999999999,
+        "Zoe": 0.79,
+        "Sam": 0.6099999999999999,
+        "Chen": 0.235
+      },
+      "Hiroshi": {
+        "Fatima": 0.5900000000000001,
+        "Lin": 0.53,
+        "Priya": 0.8350000000000001,
+        "Elena": 0.3,
+        "Zoe": 0.76,
+        "Sam": 0.9350000000000002,
+        "Chen": 0.79
+      },
+      "Lin": {
+        "Fatima": 0.305,
+        "Hiroshi": 0.455,
+        "Priya": 0.6549999999999999,
+        "Elena": 0.6549999999999999,
+        "Zoe": 0.175,
+        "Sam": 0.455,
+        "Chen": 0.805
+      },
+      "Priya": {
+        "Fatima": 0.5900000000000001,
+        "Hiroshi": 0.8350000000000001,
+        "Lin": 0.73,
+        "Elena": 0.7,
+        "Zoe": 0.36,
+        "Sam": 1.0,
+        "Chen": 0.5900000000000001
+      },
+      "Elena": {
+        "Fatima": 0.8350000000000001,
+        "Hiroshi": 0.3,
+        "Lin": 0.745,
+        "Priya": 0.7,
+        "Zoe": 0.5900000000000001,
+        "Sam": 0.7,
+        "Chen": 0.43499999999999994
+      },
+      "Zoe": {
+        "Fatima": 0.8200000000000001,
+        "Hiroshi": 0.6099999999999999,
+        "Lin": 0.1,
+        "Priya": 0.21000000000000002,
+        "Elena": 0.41000000000000003,
+        "Sam": 0.41000000000000003,
+        "Chen": 0.32
+      },
+      "Sam": {
+        "Fatima": 0.79,
+        "Hiroshi": 0.9350000000000002,
+        "Lin": 0.53,
+        "Priya": 1.0,
+        "Elena": 0.7,
+        "Zoe": 0.56,
+        "Chen": 0.5900000000000001
+      },
+      "Chen": {
+        "Fatima": 0.235,
+        "Hiroshi": 0.6099999999999999,
+        "Lin": 0.7,
+        "Priya": 0.41000000000000003,
+        "Elena": 0.255,
+        "Zoe": 0.29,
+        "Sam": 0.41000000000000003
+      }
+    },
+    {
+      "Fatima": {
+        "Hiroshi": 0.41000000000000003,
+        "Lin": 0.2,
+        "Priya": 0.41000000000000003,
+        "Elena": 0.7,
+        "Zoe": 0.79,
+        "Sam": 0.6099999999999999,
+        "Chen": 0.235
+      },
+      "Hiroshi": {
+        "Fatima": 0.6200000000000001,
+        "Lin": 0.53,
+        "Priya": 0.8800000000000001,
+        "Elena": 0.3,
+        "Zoe": 0.76,
+        "Sam": 0.9800000000000002,
+        "Chen": 0.79
+      },
+      "Lin": {
+        "Fatima": 0.33499999999999996,
+        "Hiroshi": 0.455,
+        "Priya": 0.6549999999999999,
+        "Elena": 0.6549999999999999,
+        "Zoe": 0.175,
+        "Sam": 0.455,
+        "Chen": 0.8500000000000001
+      },
+      "Priya": {
+        "Fatima": 0.6200000000000001,
+        "Hiroshi": 0.8800000000000001,
+        "Lin": 0.73,
+        "Elena": 0.7,
+        "Zoe": 0.36,
+        "Sam": 1.0,
+        "Chen": 0.5900000000000001
+      },
+      "Elena": {
+        "Fatima": 0.8800000000000001,
+        "Hiroshi": 0.3,
+        "Lin": 0.745,
+        "Priya": 0.7,
+        "Zoe": 0.5900000000000001,
+        "Sam": 0.7,
+        "Chen": 0.43499999999999994
+      },
+      "Zoe": {
+        "Fatima": 0.8500000000000001,
+        "Hiroshi": 0.6099999999999999,
+        "Lin": 0.1,
+        "Priya": 0.21000000000000002,
+        "Elena": 0.41000000000000003,
+        "Sam": 0.41000000000000003,
+        "Chen": 0.32
+      },
+      "Sam": {
+        "Fatima": 0.8200000000000001,
+        "Hiroshi": 0.9800000000000002,
+        "Lin": 0.53,
+        "Priya": 1.0,
+        "Elena": 0.7,
+        "Zoe": 0.56,
+        "Chen": 0.5900000000000001
+      },
+      "Chen": {
+        "Fatima": 0.265,
+        "Hiroshi": 0.6099999999999999,
+        "Lin": 0.745,
+        "Priya": 0.41000000000000003,
+        "Elena": 0.255,
+        "Zoe": 0.29,
+        "Sam": 0.41000000000000003
+      }
+    },
+    {
+      "Fatima": {
+        "Hiroshi": 0.36500000000000005,
+        "Lin": 0.15500000000000003,
+        "Priya": 0.36500000000000005,
+        "Elena": 0.6549999999999999,
+        "Zoe": 0.8350000000000001,
+        "Sam": 0.5649999999999998,
+        "Chen": 0.19
+      },
+      "Hiroshi": {
+        "Fatima": 0.6500000000000001,
+        "Lin": 0.53,
+        "Priya": 0.9250000000000002,
+        "Elena": 0.3,
+        "Zoe": 0.79,
+        "Sam": 1.0,
+        "Chen": 0.79
+      },
+      "Lin": {
+        "Fatima": 0.365,
+        "Hiroshi": 0.455,
+        "Priya": 0.6549999999999999,
+        "Elena": 0.6549999999999999,
+        "Zoe": 0.205,
+        "Sam": 0.455,
+        "Chen": 0.8950000000000001
+      },
+      "Priya": {
+        "Fatima": 0.6500000000000001,
+        "Hiroshi": 0.9250000000000002,
+        "Lin": 0.73,
+        "Elena": 0.7,
+        "Zoe": 0.39,
+        "Sam": 1.0,
+        "Chen": 0.5900000000000001
+      },
+      "Elena": {
+        "Fatima": 0.9250000000000002,
+        "Hiroshi": 0.3,
+        "Lin": 0.745,
+        "Priya": 0.7,
+        "Zoe": 0.6350000000000001,
+        "Sam": 0.7,
+        "Chen": 0.43499999999999994
+      },
+      "Zoe": {
+        "Fatima": 0.8950000000000001,
+        "Hiroshi": 0.5649999999999998,
+        "Lin": 0.05500000000000001,
+        "Priya": 0.16500000000000004,
+        "Elena": 0.36500000000000005,
+        "Sam": 0.36500000000000005,
+        "Chen": 0.275
+      },
+      "Sam": {
+        "Fatima": 0.8500000000000001,
+        "Hiroshi": 1.0,
+        "Lin": 0.53,
+        "Priya": 1.0,
+        "Elena": 0.7,
+        "Zoe": 0.5900000000000001,
+        "Chen": 0.5900000000000001
+      },
+      "Chen": {
+        "Fatima": 0.29500000000000004,
+        "Hiroshi": 0.6099999999999999,
+        "Lin": 0.79,
+        "Priya": 0.41000000000000003,
+        "Elena": 0.255,
+        "Zoe": 0.31999999999999995,
+        "Sam": 0.41000000000000003
+      }
+    }
+  ],
+  "norm_emergence_rate": 0.8,
+  "norm_stability_index": 0.7682,
+  "norm_compliance_rate": 0.845,
+  "active_norms": {
+    "cover_neglected": 0.65,
+    "mentor_newcomers": 1.0,
+    "rotate_reviews": 0.8,
+    "balance_workload": 1.0
+  },
+  "norm_history": [
+    {
+      "cover_neglected": 0.2,
+      "no_free_riding": 0.2,
+      "mentor_newcomers": 0.2,
+      "rotate_reviews": 0.2,
+      "balance_workload": 0.2
+    },
+    {
+      "cover_neglected": 0.4,
+      "no_free_riding": 0.1,
+      "mentor_newcomers": 0.4,
+      "rotate_reviews": 0.4,
+      "balance_workload": 0.4
+    },
+    {
+      "cover_neglected": 0.25,
+      "no_free_riding": 0.2,
+      "mentor_newcomers": 0.6000000000000001,
+      "rotate_reviews": 0.6000000000000001,
+      "balance_workload": 0.6000000000000001
+    },
+    {
+      "cover_neglected": 0.45,
+      "no_free_riding": 0.4,
+      "mentor_newcomers": 0.8,
+      "rotate_reviews": 0.7000000000000001,
+      "balance_workload": 0.8
+    },
+    {
+      "cover_neglected": 0.65,
+      "no_free_riding": 0.30000000000000004,
+      "mentor_newcomers": 1.0,
+      "rotate_reviews": 0.8,
+      "balance_workload": 1.0
+    }
+  ],
+  "burnout_cascade_count": 0,
+  "mean_burnout": 0.10125000000000002,
+  "peak_burnout": 0.5100000000000001,
+  "burnout_cascades": [],
+  "burnout_history": [
+    {
+      "Fatima": 0.15000000000000002,
+      "Hiroshi": 0.0,
+      "Lin": 0.0,
+      "Priya": 0.0,
+      "Elena": 0.0,
+      "Zoe": 0.0,
+      "Sam": 0.0,
+      "Chen": 0.03
+    },
+    {
+      "Fatima": 0.30000000000000004,
+      "Hiroshi": 0.0,
+      "Lin": 0.0,
+      "Priya": 0.0,
+      "Elena": 0.0,
+      "Zoe": 0.03,
+      "Sam": 0.0,
+      "Chen": 0.18000000000000002
+    },
+    {
+      "Fatima": 0.45000000000000007,
+      "Hiroshi": 0.0,
+      "Lin": 0.15000000000000002,
+      "Priya": 0.0,
+      "Elena": 0.0,
+      "Zoe": 0.06,
+      "Sam": 0.0,
+      "Chen": 0.33000000000000007
+    },
+    {
+      "Fatima": 0.4800000000000001,
+      "Hiroshi": 0.0,
+      "Lin": 0.0,
+      "Priya": 0.0,
+      "Elena": 0.0,
+      "Zoe": 0.0,
+      "Sam": 0.06999999999999999,
+      "Chen": 0.13000000000000006
+    },
+    {
+      "Fatima": 0.5100000000000001,
+      "Hiroshi": 0.0,
+      "Lin": 0.0,
+      "Priya": 0.06999999999999999,
+      "Elena": 0.0,
+      "Zoe": 0.03,
+      "Sam": 0.0,
+      "Chen": 0.20000000000000007
+    }
+  ]
+}

@@ -1,0 +1,3088 @@
+{
+  "scores": {
+    "Marcus": 1.0,
+    "Hiroshi": 13.0,
+    "Heidi": 11.0,
+    "Raj": 5.0,
+    "Anya": 2.0,
+    "Yuki": 5.0,
+    "Elena": 15.0,
+    "Omar": 3.0
+  },
+  "harmony_index": 0.6730769230769231,
+  "resilience_quotient": 1.0,
+  "sprint_history": [
+    {
+      "joint_action": {
+        "Marcus": "Fix: Memory leak in the connection pool when idle timeout expires.",
+        "Hiroshi": "Fix: Memory leak in the connection pool when idle timeout expires.",
+        "Heidi": "Docs: Update the architecture decision records.",
+        "Raj": "Review: Review the refactored test suite for coverage gaps.",
+        "Anya": "Docs: Document the CI/CD pipeline and release process.",
+        "Yuki": "Docs: Update the architecture decision records.",
+        "Elena": "Docs: Document the CI/CD pipeline and release process.",
+        "Omar": "Docs: Update the architecture decision records."
+      },
+      "scores": {
+        "Marcus": -1.0,
+        "Hiroshi": 3.0,
+        "Heidi": 3.0,
+        "Raj": 3.0,
+        "Anya": 1.0,
+        "Yuki": 1.0,
+        "Elena": 3.0,
+        "Omar": 3.0
+      },
+      "harmony_index": 0.8,
+      "stress_type": null,
+      "policy": "None",
+      "task_difficulties": {
+        "Marcus": "hard",
+        "Hiroshi": "medium",
+        "Heidi": "medium",
+        "Raj": "medium",
+        "Anya": "easy",
+        "Yuki": "hard",
+        "Elena": "easy",
+        "Omar": "medium"
+      },
+      "belief_snapshots": {
+        "Marcus": {
+          "name": "Marcus",
+          "role": "contributor",
+          "beliefs_health": {
+            "healthy": 5.952380952382208e-19,
+            "stressed": 2.911453230926689e-14,
+            "declining": 0.9999999999999709
+          },
+          "beliefs_urgency": {
+            "balanced": 7.142857142857598e-18,
+            "bugs_critical": 1.0,
+            "docs_neglected": 7.142857142857598e-18,
+            "review_backlog": 7.142857142857598e-18
+          },
+          "habits": {
+            "bug_fix": 0.4,
+            "feature": 0.2,
+            "documentation": 0.1,
+            "code_review": 0.1,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Hiroshi": {
+          "name": "Hiroshi",
+          "role": "contributor",
+          "beliefs_health": {
+            "healthy": 1.0,
+            "stressed": 6.555981158384496e-17,
+            "declining": 1.020408163265304e-18
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 7.142857142857125e-18,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.4,
+            "feature": 0.2,
+            "documentation": 0.1,
+            "code_review": 0.1,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Heidi": {
+          "name": "Heidi",
+          "role": "knowledge_curator",
+          "beliefs_health": {
+            "healthy": 1.0,
+            "stressed": 6.555981158384496e-17,
+            "declining": 1.020408163265304e-18
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 7.142857142857125e-18,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.1,
+            "feature": 0.1,
+            "documentation": 0.4,
+            "code_review": 0.2,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Raj": {
+          "name": "Raj",
+          "role": "maintainer",
+          "beliefs_health": {
+            "healthy": 1.0,
+            "stressed": 6.555981158384496e-17,
+            "declining": 1.020408163265304e-18
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 7.142857142857125e-18,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.1,
+            "feature": 0.1,
+            "documentation": 0.2,
+            "code_review": 0.4,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Anya": {
+          "name": "Anya",
+          "role": "innovator",
+          "beliefs_health": {
+            "healthy": 1.0,
+            "stressed": 6.555981158384496e-17,
+            "declining": 1.020408163265304e-18
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 7.142857142857125e-18,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.2,
+            "feature": 0.4,
+            "documentation": 0.1,
+            "code_review": 0.1,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Yuki": {
+          "name": "Yuki",
+          "role": "maintainer",
+          "beliefs_health": {
+            "healthy": 1.0,
+            "stressed": 6.555981158384496e-17,
+            "declining": 1.020408163265304e-18
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 7.142857142857125e-18,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.1,
+            "feature": 0.1,
+            "documentation": 0.2,
+            "code_review": 0.4,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Elena": {
+          "name": "Elena",
+          "role": "knowledge_curator",
+          "beliefs_health": {
+            "healthy": 1.0,
+            "stressed": 6.555981158384496e-17,
+            "declining": 1.020408163265304e-18
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 7.142857142857125e-18,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.1,
+            "feature": 0.1,
+            "documentation": 0.4,
+            "code_review": 0.2,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Omar": {
+          "name": "Omar",
+          "role": "knowledge_curator",
+          "beliefs_health": {
+            "healthy": 1.0,
+            "stressed": 6.555981158384496e-17,
+            "declining": 1.020408163265304e-18
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 7.142857142857125e-18,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.1,
+            "feature": 0.1,
+            "documentation": 0.4,
+            "code_review": 0.2,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        }
+      },
+      "trust_snapshot": {
+        "Marcus": {
+          "Hiroshi": 1.0,
+          "Heidi": 0.3,
+          "Raj": 0.7,
+          "Anya": 0.32999999999999996,
+          "Yuki": 0.73,
+          "Elena": 0.7,
+          "Omar": 0.3
+        },
+        "Hiroshi": {
+          "Marcus": 1.0,
+          "Heidi": 0.5,
+          "Raj": 0.7,
+          "Anya": 0.53,
+          "Yuki": 0.73,
+          "Elena": 0.7,
+          "Omar": 0.5
+        },
+        "Heidi": {
+          "Marcus": 0.3,
+          "Hiroshi": 0.5,
+          "Raj": 0.7,
+          "Anya": 0.545,
+          "Yuki": 0.745,
+          "Elena": 0.8450000000000001,
+          "Omar": 0.745
+        },
+        "Raj": {
+          "Marcus": 0.7,
+          "Hiroshi": 0.7,
+          "Heidi": 0.7,
+          "Anya": 0.13,
+          "Yuki": 0.8300000000000001,
+          "Elena": 0.5,
+          "Omar": 0.5
+        },
+        "Anya": {
+          "Marcus": 0.255,
+          "Hiroshi": 0.455,
+          "Heidi": 0.455,
+          "Raj": 0.05500000000000001,
+          "Yuki": 0.245,
+          "Elena": 0.455,
+          "Omar": 0.6549999999999999
+        },
+        "Yuki": {
+          "Marcus": 0.6549999999999999,
+          "Hiroshi": 0.6549999999999999,
+          "Heidi": 0.6549999999999999,
+          "Raj": 0.755,
+          "Anya": 0.245,
+          "Elena": 0.255,
+          "Omar": 0.6549999999999999
+        },
+        "Elena": {
+          "Marcus": 0.7,
+          "Hiroshi": 0.7,
+          "Heidi": 0.8450000000000001,
+          "Raj": 0.5,
+          "Anya": 0.545,
+          "Yuki": 0.345,
+          "Omar": 0.745
+        },
+        "Omar": {
+          "Marcus": 0.3,
+          "Hiroshi": 0.5,
+          "Heidi": 0.745,
+          "Raj": 0.5,
+          "Anya": 0.745,
+          "Yuki": 0.745,
+          "Elena": 0.745
+        }
+      },
+      "norm_compliance": {
+        "cover_neglected": 0.75,
+        "no_free_riding": 0.25,
+        "mentor_newcomers": 1.0,
+        "rotate_reviews": 1.0,
+        "balance_workload": 1.0
+      },
+      "norm_strengths": {
+        "cover_neglected": 0.15000000000000002,
+        "no_free_riding": 0.0,
+        "mentor_newcomers": 0.2,
+        "rotate_reviews": 0.2,
+        "balance_workload": 0.2
+      },
+      "burnout_snapshot": {
+        "Marcus": 0.06999999999999999,
+        "Hiroshi": 0.0,
+        "Heidi": 0.0,
+        "Raj": 0.0,
+        "Anya": 0.03,
+        "Yuki": 0.03,
+        "Elena": 0.0,
+        "Omar": 0.0
+      }
+    },
+    {
+      "joint_action": {
+        "Marcus": "Docs: Update the architecture decision records.",
+        "Hiroshi": "Fix: Memory leak in the connection pool when idle timeout expires.",
+        "Heidi": "Docs: Update the architecture decision records.",
+        "Raj": "Docs: Update the architecture decision records.",
+        "Anya": "Docs: Document the CI/CD pipeline and release process.",
+        "Yuki": "Fix: Memory leak in the connection pool when idle timeout expires.",
+        "Elena": "Docs: Document the CI/CD pipeline and release process.",
+        "Omar": "Docs: Update the architecture decision records."
+      },
+      "scores": {
+        "Marcus": -1.0,
+        "Hiroshi": 3.0,
+        "Heidi": 3.0,
+        "Raj": -1.0,
+        "Anya": 1.0,
+        "Yuki": 1.0,
+        "Elena": 3.0,
+        "Omar": -1.0
+      },
+      "harmony_index": 0.7,
+      "stress_type": "contributor_dropout",
+      "policy": "None",
+      "task_difficulties": {
+        "Marcus": "easy",
+        "Hiroshi": "medium",
+        "Heidi": "easy",
+        "Raj": "medium",
+        "Anya": "easy",
+        "Yuki": "hard",
+        "Elena": "medium",
+        "Omar": "easy"
+      },
+      "belief_snapshots": {
+        "Marcus": {
+          "name": "Marcus",
+          "role": "contributor",
+          "beliefs_health": {
+            "healthy": 1.1779734925049393e-15,
+            "stressed": 2.9114457960867583e-14,
+            "declining": 0.9999999999999698
+          },
+          "beliefs_urgency": {
+            "balanced": 1.5258090602539645e-05,
+            "bugs_critical": 0.9999542257281924,
+            "docs_neglected": 1.5258090602539645e-05,
+            "review_backlog": 1.5258090602539645e-05
+          },
+          "habits": {
+            "bug_fix": 0.4,
+            "feature": 0.2,
+            "documentation": 0.1,
+            "code_review": 0.1,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Hiroshi": {
+          "name": "Hiroshi",
+          "role": "contributor",
+          "beliefs_health": {
+            "healthy": 0.9999999999999998,
+            "stressed": 1.5694637955863563e-16,
+            "declining": 1.4285714266495648e-17
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333328575521,
+            "bugs_critical": 1.4273434974294594e-09,
+            "docs_neglected": 0.3333333328575521,
+            "review_backlog": 0.3333333328575521
+          },
+          "habits": {
+            "bug_fix": 0.4,
+            "feature": 0.2,
+            "documentation": 0.1,
+            "code_review": 0.1,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Heidi": {
+          "name": "Heidi",
+          "role": "knowledge_curator",
+          "beliefs_health": {
+            "healthy": 0.9999999999999998,
+            "stressed": 1.5694637955863563e-16,
+            "declining": 1.4285714266495648e-17
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333328575521,
+            "bugs_critical": 1.4273434974294594e-09,
+            "docs_neglected": 0.3333333328575521,
+            "review_backlog": 0.3333333328575521
+          },
+          "habits": {
+            "bug_fix": 0.1,
+            "feature": 0.1,
+            "documentation": 0.4,
+            "code_review": 0.2,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Raj": {
+          "name": "Raj",
+          "role": "maintainer",
+          "beliefs_health": {
+            "healthy": 0.04997793774127742,
+            "stressed": 0.02600866495050786,
+            "declining": 0.9240133973082147
+          },
+          "beliefs_urgency": {
+            "balanced": 0.33333333332784104,
+            "bugs_critical": 1.6476876705831634e-11,
+            "docs_neglected": 0.33333333332784104,
+            "review_backlog": 0.33333333332784104
+          },
+          "habits": {
+            "bug_fix": 0.1,
+            "feature": 0.1,
+            "documentation": 0.2,
+            "code_review": 0.4,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Anya": {
+          "name": "Anya",
+          "role": "innovator",
+          "beliefs_health": {
+            "healthy": 0.9999999999999998,
+            "stressed": 1.5694637955863563e-16,
+            "declining": 1.4285714266495648e-17
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333328575521,
+            "bugs_critical": 1.4273434974294594e-09,
+            "docs_neglected": 0.3333333328575521,
+            "review_backlog": 0.3333333328575521
+          },
+          "habits": {
+            "bug_fix": 0.2,
+            "feature": 0.4,
+            "documentation": 0.1,
+            "code_review": 0.1,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Yuki": {
+          "name": "Yuki",
+          "role": "maintainer",
+          "beliefs_health": {
+            "healthy": 0.9999999999999998,
+            "stressed": 1.5694637955863563e-16,
+            "declining": 1.4285714266495648e-17
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333328575521,
+            "bugs_critical": 1.4273434974294594e-09,
+            "docs_neglected": 0.3333333328575521,
+            "review_backlog": 0.3333333328575521
+          },
+          "habits": {
+            "bug_fix": 0.1,
+            "feature": 0.1,
+            "documentation": 0.2,
+            "code_review": 0.4,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Elena": {
+          "name": "Elena",
+          "role": "knowledge_curator",
+          "beliefs_health": {
+            "healthy": 0.9999999999999998,
+            "stressed": 1.5694637955863563e-16,
+            "declining": 1.4285714266495648e-17
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333328575521,
+            "bugs_critical": 1.4273434974294594e-09,
+            "docs_neglected": 0.3333333328575521,
+            "review_backlog": 0.3333333328575521
+          },
+          "habits": {
+            "bug_fix": 0.1,
+            "feature": 0.1,
+            "documentation": 0.4,
+            "code_review": 0.2,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Omar": {
+          "name": "Omar",
+          "role": "knowledge_curator",
+          "beliefs_health": {
+            "healthy": 0.04997793774127742,
+            "stressed": 0.02600866495050786,
+            "declining": 0.9240133973082147
+          },
+          "beliefs_urgency": {
+            "balanced": 0.33333333332784104,
+            "bugs_critical": 1.6476876705831634e-11,
+            "docs_neglected": 0.33333333332784104,
+            "review_backlog": 0.33333333332784104
+          },
+          "habits": {
+            "bug_fix": 0.1,
+            "feature": 0.1,
+            "documentation": 0.4,
+            "code_review": 0.2,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        }
+      },
+      "trust_snapshot": {
+        "Marcus": {
+          "Hiroshi": 0.955,
+          "Heidi": 0.255,
+          "Raj": 0.745,
+          "Anya": 0.37499999999999994,
+          "Yuki": 0.88,
+          "Elena": 0.6549999999999999,
+          "Omar": 0.255
+        },
+        "Hiroshi": {
+          "Marcus": 1.0,
+          "Heidi": 0.5,
+          "Raj": 0.73,
+          "Anya": 0.56,
+          "Yuki": 0.775,
+          "Elena": 0.7,
+          "Omar": 0.5
+        },
+        "Heidi": {
+          "Marcus": 0.345,
+          "Hiroshi": 0.5,
+          "Raj": 0.745,
+          "Anya": 0.5900000000000001,
+          "Yuki": 0.775,
+          "Elena": 0.8900000000000001,
+          "Omar": 0.79
+        },
+        "Raj": {
+          "Marcus": 0.745,
+          "Hiroshi": 0.6549999999999999,
+          "Heidi": 0.6549999999999999,
+          "Anya": 0.175,
+          "Yuki": 0.9800000000000001,
+          "Elena": 0.455,
+          "Omar": 0.455
+        },
+        "Anya": {
+          "Marcus": 0.3,
+          "Hiroshi": 0.41000000000000003,
+          "Heidi": 0.41000000000000003,
+          "Raj": 0.1,
+          "Yuki": 0.395,
+          "Elena": 0.41000000000000003,
+          "Omar": 0.6099999999999999
+        },
+        "Yuki": {
+          "Marcus": 0.8049999999999999,
+          "Hiroshi": 0.6099999999999999,
+          "Heidi": 0.6099999999999999,
+          "Raj": 0.905,
+          "Anya": 0.395,
+          "Elena": 0.21000000000000002,
+          "Omar": 0.6099999999999999
+        },
+        "Elena": {
+          "Marcus": 0.745,
+          "Hiroshi": 0.7,
+          "Heidi": 0.8900000000000001,
+          "Raj": 0.545,
+          "Anya": 0.5900000000000001,
+          "Yuki": 0.375,
+          "Omar": 0.79
+        },
+        "Omar": {
+          "Marcus": 0.345,
+          "Hiroshi": 0.5,
+          "Heidi": 0.79,
+          "Raj": 0.545,
+          "Anya": 0.79,
+          "Yuki": 0.775,
+          "Elena": 0.79
+        }
+      },
+      "norm_compliance": {
+        "cover_neglected": 0.0,
+        "no_free_riding": 0.5,
+        "mentor_newcomers": 1.0,
+        "rotate_reviews": 1.0,
+        "balance_workload": 1.0
+      },
+      "norm_strengths": {
+        "cover_neglected": 2.7755575615628914e-17,
+        "no_free_riding": 0.1,
+        "mentor_newcomers": 0.4,
+        "rotate_reviews": 0.4,
+        "balance_workload": 0.4
+      },
+      "burnout_snapshot": {
+        "Marcus": 0.27,
+        "Hiroshi": 0.0,
+        "Heidi": 0.0,
+        "Raj": 0.2,
+        "Anya": 0.11,
+        "Yuki": 0.11,
+        "Elena": 0.0,
+        "Omar": 0.12
+      }
+    },
+    {
+      "joint_action": {
+        "Marcus": "Fix: Memory leak in the connection pool when idle timeout expires.",
+        "Hiroshi": "Fix: Memory leak in the connection pool when idle timeout expires.",
+        "Heidi": "Docs: Update the architecture decision records.",
+        "Raj": "Docs: Update the architecture decision records.",
+        "Anya": "Docs: Document the CI/CD pipeline and release process.",
+        "Yuki": "Docs: Update the architecture decision records.",
+        "Elena": "Docs: Document the CI/CD pipeline and release process.",
+        "Omar": "Docs: Document the CI/CD pipeline and release process."
+      },
+      "scores": {
+        "Marcus": -1.0,
+        "Hiroshi": 3.0,
+        "Heidi": -1.0,
+        "Raj": 1.0,
+        "Anya": -1.0,
+        "Yuki": 1.0,
+        "Elena": 3.0,
+        "Omar": -1.0
+      },
+      "harmony_index": 0.6333333333333333,
+      "stress_type": "task_overload",
+      "policy": "None",
+      "task_difficulties": {
+        "Marcus": "hard",
+        "Hiroshi": "easy",
+        "Heidi": "medium",
+        "Raj": "medium",
+        "Anya": "medium",
+        "Yuki": "medium",
+        "Elena": "easy",
+        "Omar": "medium"
+      },
+      "belief_snapshots": {
+        "Marcus": {
+          "name": "Marcus",
+          "role": "contributor",
+          "beliefs_health": {
+            "healthy": 8.333349075927105e-18,
+            "stressed": 3.6613951611525455e-15,
+            "declining": 0.9999999999999962
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333332856114813,
+            "bugs_critical": 1.43165556036991e-07,
+            "docs_neglected": 0.3333332856114813,
+            "review_backlog": 0.3333332856114813
+          },
+          "habits": {
+            "bug_fix": 0.4,
+            "feature": 0.2,
+            "documentation": 0.1,
+            "code_review": 0.1,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Hiroshi": {
+          "name": "Hiroshi",
+          "role": "contributor",
+          "beliefs_health": {
+            "healthy": 0.9999999999999998,
+            "stressed": 2.397123440495979e-16,
+            "declining": 1.4015960066298448e-17
+          },
+          "beliefs_urgency": {
+            "balanced": 0.32667789368371697,
+            "bugs_critical": 0.019966318948849086,
+            "docs_neglected": 0.32667789368371697,
+            "review_backlog": 0.32667789368371697
+          },
+          "habits": {
+            "bug_fix": 0.4,
+            "feature": 0.2,
+            "documentation": 0.1,
+            "code_review": 0.1,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Heidi": {
+          "name": "Heidi",
+          "role": "knowledge_curator",
+          "beliefs_health": {
+            "healthy": 0.04977515315245528,
+            "stressed": 0.04023819854131068,
+            "declining": 0.909986648306234
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3332555219019715,
+            "bugs_critical": 0.00023343429408553864,
+            "docs_neglected": 0.3332555219019715,
+            "review_backlog": 0.3332555219019715
+          },
+          "habits": {
+            "bug_fix": 0.1,
+            "feature": 0.1,
+            "documentation": 0.4,
+            "code_review": 0.2,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Raj": {
+          "name": "Raj",
+          "role": "maintainer",
+          "beliefs_health": {
+            "healthy": 0.5504323907734163,
+            "stressed": 0.4495676092262774,
+            "declining": 3.0622121724950424e-13
+          },
+          "beliefs_urgency": {
+            "balanced": 0.333333333329938,
+            "bugs_critical": 1.0186047731145572e-11,
+            "docs_neglected": 0.333333333329938,
+            "review_backlog": 0.333333333329938
+          },
+          "habits": {
+            "bug_fix": 0.1,
+            "feature": 0.1,
+            "documentation": 0.2,
+            "code_review": 0.4,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Anya": {
+          "name": "Anya",
+          "role": "innovator",
+          "beliefs_health": {
+            "healthy": 0.04977515315245528,
+            "stressed": 0.04023819854131068,
+            "declining": 0.909986648306234
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3332555219019715,
+            "bugs_critical": 0.00023343429408553864,
+            "docs_neglected": 0.3332555219019715,
+            "review_backlog": 0.3332555219019715
+          },
+          "habits": {
+            "bug_fix": 0.2,
+            "feature": 0.4,
+            "documentation": 0.1,
+            "code_review": 0.1,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Yuki": {
+          "name": "Yuki",
+          "role": "maintainer",
+          "beliefs_health": {
+            "healthy": 0.9999999999999998,
+            "stressed": 2.397123440495979e-16,
+            "declining": 1.4015960066298448e-17
+          },
+          "beliefs_urgency": {
+            "balanced": 0.32667789368371697,
+            "bugs_critical": 0.019966318948849086,
+            "docs_neglected": 0.32667789368371697,
+            "review_backlog": 0.32667789368371697
+          },
+          "habits": {
+            "bug_fix": 0.1,
+            "feature": 0.1,
+            "documentation": 0.2,
+            "code_review": 0.4,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Elena": {
+          "name": "Elena",
+          "role": "knowledge_curator",
+          "beliefs_health": {
+            "healthy": 0.9999999999999998,
+            "stressed": 2.397123440495979e-16,
+            "declining": 1.4015960066298448e-17
+          },
+          "beliefs_urgency": {
+            "balanced": 0.32667789368371697,
+            "bugs_critical": 0.019966318948849086,
+            "docs_neglected": 0.32667789368371697,
+            "review_backlog": 0.32667789368371697
+          },
+          "habits": {
+            "bug_fix": 0.1,
+            "feature": 0.1,
+            "documentation": 0.4,
+            "code_review": 0.2,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Omar": {
+          "name": "Omar",
+          "role": "knowledge_curator",
+          "beliefs_health": {
+            "healthy": 8.334982613358247e-18,
+            "stressed": 0.0007916544119552476,
+            "declining": 0.9992083455880448
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 2.0003533363617617e-17,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.1,
+            "feature": 0.1,
+            "documentation": 0.4,
+            "code_review": 0.2,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        }
+      },
+      "trust_snapshot": {
+        "Marcus": {
+          "Hiroshi": 1.0,
+          "Heidi": 0.255,
+          "Raj": 0.775,
+          "Anya": 0.4049999999999999,
+          "Yuki": 0.91,
+          "Elena": 0.6549999999999999,
+          "Omar": 0.255
+        },
+        "Hiroshi": {
+          "Marcus": 1.0,
+          "Heidi": 0.5,
+          "Raj": 0.76,
+          "Anya": 0.5900000000000001,
+          "Yuki": 0.805,
+          "Elena": 0.7,
+          "Omar": 0.5
+        },
+        "Heidi": {
+          "Marcus": 0.345,
+          "Hiroshi": 0.5,
+          "Raj": 0.79,
+          "Anya": 0.6350000000000001,
+          "Yuki": 0.8200000000000001,
+          "Elena": 0.9350000000000002,
+          "Omar": 0.8350000000000001
+        },
+        "Raj": {
+          "Marcus": 0.7,
+          "Hiroshi": 0.6099999999999999,
+          "Heidi": 0.6099999999999999,
+          "Anya": 0.21999999999999997,
+          "Yuki": 1.0,
+          "Elena": 0.41000000000000003,
+          "Omar": 0.41000000000000003
+        },
+        "Anya": {
+          "Marcus": 0.255,
+          "Hiroshi": 0.36500000000000005,
+          "Heidi": 0.36500000000000005,
+          "Raj": 0.14500000000000002,
+          "Yuki": 0.44,
+          "Elena": 0.36500000000000005,
+          "Omar": 0.5649999999999998
+        },
+        "Yuki": {
+          "Marcus": 0.7599999999999999,
+          "Hiroshi": 0.5649999999999998,
+          "Heidi": 0.5649999999999998,
+          "Raj": 0.9500000000000001,
+          "Anya": 0.44,
+          "Elena": 0.16500000000000004,
+          "Omar": 0.5649999999999998
+        },
+        "Elena": {
+          "Marcus": 0.745,
+          "Hiroshi": 0.7,
+          "Heidi": 0.9350000000000002,
+          "Raj": 0.5900000000000001,
+          "Anya": 0.6350000000000001,
+          "Yuki": 0.42,
+          "Omar": 0.8350000000000001
+        },
+        "Omar": {
+          "Marcus": 0.345,
+          "Hiroshi": 0.5,
+          "Heidi": 0.8350000000000001,
+          "Raj": 0.5900000000000001,
+          "Anya": 0.8350000000000001,
+          "Yuki": 0.8200000000000001,
+          "Elena": 0.8350000000000001
+        }
+      },
+      "norm_compliance": {
+        "cover_neglected": 0.0,
+        "no_free_riding": 0.375,
+        "mentor_newcomers": 1.0,
+        "rotate_reviews": 1.0,
+        "balance_workload": 1.0
+      },
+      "norm_strengths": {
+        "cover_neglected": 0.0,
+        "no_free_riding": 0.0,
+        "mentor_newcomers": 0.6000000000000001,
+        "rotate_reviews": 0.6000000000000001,
+        "balance_workload": 0.6000000000000001
+      },
+      "burnout_snapshot": {
+        "Marcus": 0.39,
+        "Hiroshi": 0.0,
+        "Heidi": 0.12,
+        "Raj": 0.28,
+        "Anya": 0.31,
+        "Yuki": 0.19,
+        "Elena": 0.0,
+        "Omar": 0.24
+      }
+    },
+    {
+      "joint_action": {
+        "Marcus": "Docs: Update the architecture decision records.",
+        "Hiroshi": "Docs: Update the architecture decision records.",
+        "Heidi": "Docs: Update the architecture decision records.",
+        "Raj": "Review: Review the refactored test suite for coverage gaps.",
+        "Anya": "Skip this sprint",
+        "Yuki": "Docs: Document the CI/CD pipeline and release process.",
+        "Elena": "Docs: Document the CI/CD pipeline and release process.",
+        "Omar": "Docs: Update the architecture decision records."
+      },
+      "scores": {
+        "Marcus": 1.0,
+        "Hiroshi": 1.0,
+        "Heidi": 3.0,
+        "Raj": 3.0,
+        "Anya": 0.0,
+        "Yuki": 1.0,
+        "Elena": 3.0,
+        "Omar": 3.0
+      },
+      "harmony_index": 0.6661290322580645,
+      "stress_type": "funding_cut",
+      "policy": "None",
+      "task_difficulties": {
+        "Marcus": "easy",
+        "Hiroshi": "easy",
+        "Heidi": "medium",
+        "Raj": "easy",
+        "Yuki": "easy",
+        "Elena": "hard",
+        "Omar": "medium"
+      },
+      "belief_snapshots": {
+        "Marcus": {
+          "name": "Marcus",
+          "role": "contributor",
+          "beliefs_health": {
+            "healthy": 0.002782643852693679,
+            "stressed": 0.15990253292227566,
+            "declining": 0.8373148232250307
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 2.0879275189587506e-17,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.4,
+            "feature": 0.2,
+            "documentation": 0.1,
+            "code_review": 0.1,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Hiroshi": {
+          "name": "Hiroshi",
+          "role": "contributor",
+          "beliefs_health": {
+            "healthy": 1.0,
+            "stressed": 9.183887103824903e-18,
+            "declining": 1.0204340929127607e-18
+          },
+          "beliefs_urgency": {
+            "balanced": 1.1462827248302254e-06,
+            "bugs_critical": 0.9999965611518257,
+            "docs_neglected": 1.1462827248302254e-06,
+            "review_backlog": 1.1462827248302254e-06
+          },
+          "habits": {
+            "bug_fix": 0.4,
+            "feature": 0.2,
+            "documentation": 0.1,
+            "code_review": 0.1,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Heidi": {
+          "name": "Heidi",
+          "role": "knowledge_curator",
+          "beliefs_health": {
+            "healthy": 0.44118780745567415,
+            "stressed": 0.5588121925440837,
+            "declining": 2.4225600284078696e-13
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333322860477301,
+            "bugs_critical": 3.141856809778783e-06,
+            "docs_neglected": 0.3333322860477301,
+            "review_backlog": 0.3333322860477301
+          },
+          "habits": {
+            "bug_fix": 0.1,
+            "feature": 0.1,
+            "documentation": 0.4,
+            "code_review": 0.2,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Raj": {
+          "name": "Raj",
+          "role": "maintainer",
+          "beliefs_health": {
+            "healthy": 0.43823799545070274,
+            "stressed": 0.5617620045492973,
+            "declining": 1.406279285532707e-17
+          },
+          "beliefs_urgency": {
+            "balanced": 0.33333333333319626,
+            "bugs_critical": 4.111782545895182e-13,
+            "docs_neglected": 0.33333333333319626,
+            "review_backlog": 0.33333333333319626
+          },
+          "habits": {
+            "bug_fix": 0.1,
+            "feature": 0.1,
+            "documentation": 0.2,
+            "code_review": 0.4,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Anya": {
+          "name": "Anya",
+          "role": "innovator",
+          "beliefs_health": {
+            "healthy": 1.5589497805100233e-11,
+            "stressed": 0.9999999947193026,
+            "declining": 5.265107825269411e-09
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333188,
+            "bugs_critical": 4.347572835859214e-14,
+            "docs_neglected": 0.3333333333333188,
+            "review_backlog": 0.3333333333333188
+          },
+          "habits": {
+            "bug_fix": 0.2,
+            "feature": 0.4,
+            "documentation": 0.1,
+            "code_review": 0.1,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Yuki": {
+          "name": "Yuki",
+          "role": "maintainer",
+          "beliefs_health": {
+            "healthy": 1.0,
+            "stressed": 9.183887103824903e-18,
+            "declining": 1.0204340929127607e-18
+          },
+          "beliefs_urgency": {
+            "balanced": 1.1462827248302254e-06,
+            "bugs_critical": 0.9999965611518257,
+            "docs_neglected": 1.1462827248302254e-06,
+            "review_backlog": 1.1462827248302254e-06
+          },
+          "habits": {
+            "bug_fix": 0.1,
+            "feature": 0.1,
+            "documentation": 0.2,
+            "code_review": 0.4,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Elena": {
+          "name": "Elena",
+          "role": "knowledge_curator",
+          "beliefs_health": {
+            "healthy": 1.0,
+            "stressed": 9.183887103824903e-18,
+            "declining": 1.0204340929127607e-18
+          },
+          "beliefs_urgency": {
+            "balanced": 1.1462827248302254e-06,
+            "bugs_critical": 0.9999965611518257,
+            "docs_neglected": 1.1462827248302254e-06,
+            "review_backlog": 1.1462827248302254e-06
+          },
+          "habits": {
+            "bug_fix": 0.1,
+            "feature": 0.1,
+            "documentation": 0.4,
+            "code_review": 0.2,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Omar": {
+          "name": "Omar",
+          "role": "knowledge_curator",
+          "beliefs_health": {
+            "healthy": 8.048465019486283e-14,
+            "stressed": 0.9999999999757205,
+            "declining": 2.4199170156845875e-11
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 2.499999999986973e-17,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.1,
+            "feature": 0.1,
+            "documentation": 0.4,
+            "code_review": 0.2,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        }
+      },
+      "trust_snapshot": {
+        "Marcus": {
+          "Hiroshi": 1.0,
+          "Heidi": 0.21000000000000002,
+          "Raj": 0.73,
+          "Anya": 0.3299999999999999,
+          "Yuki": 0.9550000000000001,
+          "Elena": 0.6099999999999999,
+          "Omar": 0.21000000000000002
+        },
+        "Hiroshi": {
+          "Marcus": 1.0,
+          "Heidi": 0.455,
+          "Raj": 0.715,
+          "Anya": 0.5150000000000001,
+          "Yuki": 0.8500000000000001,
+          "Elena": 0.6549999999999999,
+          "Omar": 0.455
+        },
+        "Heidi": {
+          "Marcus": 0.38999999999999996,
+          "Hiroshi": 0.545,
+          "Raj": 0.79,
+          "Anya": 0.5600000000000002,
+          "Yuki": 0.8650000000000001,
+          "Elena": 0.9800000000000002,
+          "Omar": 0.8800000000000001
+        },
+        "Raj": {
+          "Marcus": 0.73,
+          "Hiroshi": 0.6399999999999999,
+          "Heidi": 0.6099999999999999,
+          "Anya": 0.14499999999999996,
+          "Yuki": 1.0,
+          "Elena": 0.41000000000000003,
+          "Omar": 0.41000000000000003
+        },
+        "Anya": {
+          "Marcus": 0.28500000000000003,
+          "Hiroshi": 0.395,
+          "Heidi": 0.32000000000000006,
+          "Raj": 0.10000000000000002,
+          "Yuki": 0.47,
+          "Elena": 0.32000000000000006,
+          "Omar": 0.5199999999999998
+        },
+        "Yuki": {
+          "Marcus": 0.8049999999999999,
+          "Hiroshi": 0.6099999999999999,
+          "Heidi": 0.5199999999999998,
+          "Raj": 0.905,
+          "Anya": 0.365,
+          "Elena": 0.12000000000000004,
+          "Omar": 0.5199999999999998
+        },
+        "Elena": {
+          "Marcus": 0.79,
+          "Hiroshi": 0.745,
+          "Heidi": 0.9800000000000002,
+          "Raj": 0.5900000000000001,
+          "Anya": 0.5600000000000002,
+          "Yuki": 0.46499999999999997,
+          "Omar": 0.8800000000000001
+        },
+        "Omar": {
+          "Marcus": 0.38999999999999996,
+          "Hiroshi": 0.545,
+          "Heidi": 0.8800000000000001,
+          "Raj": 0.5900000000000001,
+          "Anya": 0.7600000000000001,
+          "Yuki": 0.8650000000000001,
+          "Elena": 0.8800000000000001
+        }
+      },
+      "norm_compliance": {
+        "cover_neglected": 0.5,
+        "no_free_riding": 0.5,
+        "mentor_newcomers": 1.0,
+        "rotate_reviews": 1.0,
+        "balance_workload": 1.0
+      },
+      "norm_strengths": {
+        "cover_neglected": 0.1,
+        "no_free_riding": 0.1,
+        "mentor_newcomers": 0.8,
+        "rotate_reviews": 0.8,
+        "balance_workload": 0.8
+      },
+      "burnout_snapshot": {
+        "Marcus": 0.47000000000000003,
+        "Hiroshi": 0.08,
+        "Heidi": 0.0,
+        "Raj": 0.13000000000000003,
+        "Anya": 0.36,
+        "Yuki": 0.27,
+        "Elena": 0.0,
+        "Omar": 0.09
+      }
+    },
+    {
+      "joint_action": {
+        "Marcus": "Fix: Memory leak in the connection pool when idle timeout expires.",
+        "Hiroshi": "Fix: Incorrect timezone handling in the scheduler module.",
+        "Heidi": "Docs: Update the architecture decision records.",
+        "Raj": "Docs: Update the architecture decision records.",
+        "Anya": "Docs: Update the architecture decision records.",
+        "Yuki": "Fix: Memory leak in the connection pool when idle timeout expires.",
+        "Elena": "Docs: Document the CI/CD pipeline and release process.",
+        "Omar": "Docs: Update the architecture decision records."
+      },
+      "scores": {
+        "Marcus": 3.0,
+        "Hiroshi": 3.0,
+        "Heidi": 3.0,
+        "Raj": -1.0,
+        "Anya": 1.0,
+        "Yuki": 1.0,
+        "Elena": 3.0,
+        "Omar": -1.0
+      },
+      "harmony_index": 0.6730769230769231,
+      "stress_type": "dependency_crisis",
+      "policy": "None",
+      "task_difficulties": {
+        "Marcus": "easy",
+        "Hiroshi": "easy",
+        "Heidi": "easy",
+        "Raj": "hard",
+        "Anya": "medium",
+        "Yuki": "medium",
+        "Elena": "easy",
+        "Omar": "easy"
+      },
+      "belief_snapshots": {
+        "Marcus": {
+          "name": "Marcus",
+          "role": "contributor",
+          "beliefs_health": {
+            "healthy": 0.010966348612466785,
+            "stressed": 0.9890336513874339,
+            "declining": 9.929435570160057e-14
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 2.567119580564867e-17,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.4,
+            "feature": 0.2,
+            "documentation": 0.1,
+            "code_review": 0.1,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Hiroshi": {
+          "name": "Hiroshi",
+          "role": "contributor",
+          "beliefs_health": {
+            "healthy": 1.0,
+            "stressed": 9.183673469402701e-18,
+            "declining": 1.0204081632671166e-18
+          },
+          "beliefs_urgency": {
+            "balanced": 8.03090963852796e-14,
+            "bugs_critical": 0.9999999999997589,
+            "docs_neglected": 8.03090963852796e-14,
+            "review_backlog": 8.03090963852796e-14
+          },
+          "habits": {
+            "bug_fix": 0.4,
+            "feature": 0.2,
+            "documentation": 0.1,
+            "code_review": 0.1,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Heidi": {
+          "name": "Heidi",
+          "role": "knowledge_curator",
+          "beliefs_health": {
+            "healthy": 0.3346891227412653,
+            "stressed": 0.6653108772587347,
+            "declining": 1.4021701979935448e-17
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333326592755,
+            "bugs_critical": 2.0221736411733627e-09,
+            "docs_neglected": 0.3333333326592755,
+            "review_backlog": 0.3333333326592755
+          },
+          "habits": {
+            "bug_fix": 0.1,
+            "feature": 0.1,
+            "documentation": 0.4,
+            "code_review": 0.2,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Raj": {
+          "name": "Raj",
+          "role": "maintainer",
+          "beliefs_health": {
+            "healthy": 1.4990562793142966e-16,
+            "stressed": 0.9999999999999936,
+            "declining": 6.32423277122533e-15
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 2.4999999999999938e-17,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.1,
+            "feature": 0.1,
+            "documentation": 0.2,
+            "code_review": 0.4,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Anya": {
+          "name": "Anya",
+          "role": "innovator",
+          "beliefs_health": {
+            "healthy": 9.933008904854297e-12,
+            "stressed": 0.9999999999900671,
+            "declining": 1.3888888888892748e-17
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 2.5000000000599814e-17,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.2,
+            "feature": 0.4,
+            "documentation": 0.1,
+            "code_review": 0.1,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Yuki": {
+          "name": "Yuki",
+          "role": "maintainer",
+          "beliefs_health": {
+            "healthy": 1.0,
+            "stressed": 9.183673469402701e-18,
+            "declining": 1.0204081632671166e-18
+          },
+          "beliefs_urgency": {
+            "balanced": 8.03090963852796e-14,
+            "bugs_critical": 0.9999999999997589,
+            "docs_neglected": 8.03090963852796e-14,
+            "review_backlog": 8.03090963852796e-14
+          },
+          "habits": {
+            "bug_fix": 0.1,
+            "feature": 0.1,
+            "documentation": 0.2,
+            "code_review": 0.4,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Elena": {
+          "name": "Elena",
+          "role": "knowledge_curator",
+          "beliefs_health": {
+            "healthy": 1.0,
+            "stressed": 9.183673469402701e-18,
+            "declining": 1.0204081632671166e-18
+          },
+          "beliefs_urgency": {
+            "balanced": 8.03090963852796e-14,
+            "bugs_critical": 0.9999999999997589,
+            "docs_neglected": 8.03090963852796e-14,
+            "review_backlog": 8.03090963852796e-14
+          },
+          "habits": {
+            "bug_fix": 0.1,
+            "feature": 0.1,
+            "documentation": 0.4,
+            "code_review": 0.2,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        },
+        "Omar": {
+          "name": "Omar",
+          "role": "knowledge_curator",
+          "beliefs_health": {
+            "healthy": 1.0416666664875607e-17,
+            "stressed": 0.9999999991402728,
+            "declining": 8.597272276002052e-10
+          },
+          "beliefs_urgency": {
+            "balanced": 0.3333333333333333,
+            "bugs_critical": 2.499999999520395e-17,
+            "docs_neglected": 0.3333333333333333,
+            "review_backlog": 0.3333333333333333
+          },
+          "habits": {
+            "bug_fix": 0.1,
+            "feature": 0.1,
+            "documentation": 0.4,
+            "code_review": 0.2,
+            "mentor": 0.1,
+            "skip": 0.1
+          },
+          "gamma": 1.0,
+          "alpha": 16.0
+        }
+      },
+      "trust_snapshot": {
+        "Marcus": {
+          "Hiroshi": 1.0,
+          "Heidi": 0.21000000000000002,
+          "Raj": 0.76,
+          "Anya": 0.3599999999999999,
+          "Yuki": 1.0,
+          "Elena": 0.6099999999999999,
+          "Omar": 0.21000000000000002
+        },
+        "Hiroshi": {
+          "Marcus": 1.0,
+          "Heidi": 0.455,
+          "Raj": 0.745,
+          "Anya": 0.5450000000000002,
+          "Yuki": 0.8950000000000001,
+          "Elena": 0.6549999999999999,
+          "Omar": 0.455
+        },
+        "Heidi": {
+          "Marcus": 0.38999999999999996,
+          "Hiroshi": 0.545,
+          "Raj": 0.8350000000000001,
+          "Anya": 0.6050000000000002,
+          "Yuki": 0.8950000000000001,
+          "Elena": 1.0,
+          "Omar": 0.9250000000000002
+        },
+        "Raj": {
+          "Marcus": 0.6849999999999999,
+          "Hiroshi": 0.5949999999999999,
+          "Heidi": 0.5649999999999998,
+          "Anya": 0.18999999999999995,
+          "Yuki": 1.0,
+          "Elena": 0.36500000000000005,
+          "Omar": 0.36500000000000005
+        },
+        "Anya": {
+          "Marcus": 0.24000000000000005,
+          "Hiroshi": 0.35000000000000003,
+          "Heidi": 0.2750000000000001,
+          "Raj": 0.14500000000000002,
+          "Yuki": 0.62,
+          "Elena": 0.2750000000000001,
+          "Omar": 0.4749999999999998
+        },
+        "Yuki": {
+          "Marcus": 0.7599999999999999,
+          "Hiroshi": 0.5649999999999998,
+          "Heidi": 0.4749999999999998,
+          "Raj": 1.0,
+          "Anya": 0.515,
+          "Elena": 0.07500000000000004,
+          "Omar": 0.4749999999999998
+        },
+        "Elena": {
+          "Marcus": 0.79,
+          "Hiroshi": 0.745,
+          "Heidi": 1.0,
+          "Raj": 0.6350000000000001,
+          "Anya": 0.6050000000000002,
+          "Yuki": 0.495,
+          "Omar": 0.9250000000000002
+        },
+        "Omar": {
+          "Marcus": 0.38999999999999996,
+          "Hiroshi": 0.545,
+          "Heidi": 0.9250000000000002,
+          "Raj": 0.6350000000000001,
+          "Anya": 0.8050000000000002,
+          "Yuki": 0.8950000000000001,
+          "Elena": 0.9250000000000002
+        }
+      },
+      "norm_compliance": {
+        "cover_neglected": 0.5,
+        "no_free_riding": 0.375,
+        "mentor_newcomers": 1.0,
+        "rotate_reviews": 1.0,
+        "balance_workload": 1.0
+      },
+      "norm_strengths": {
+        "cover_neglected": 0.2,
+        "no_free_riding": 0.0,
+        "mentor_newcomers": 1.0,
+        "rotate_reviews": 1.0,
+        "balance_workload": 1.0
+      },
+      "burnout_snapshot": {
+        "Marcus": 0.32000000000000006,
+        "Hiroshi": 0.0,
+        "Heidi": 0.0,
+        "Raj": 0.33000000000000007,
+        "Anya": 0.44,
+        "Yuki": 0.35000000000000003,
+        "Elena": 0.0,
+        "Omar": 0.21
+      }
+    }
+  ],
+  "narrative_history": [
+    {},
+    {},
+    {},
+    {},
+    {}
+  ],
+  "final_policy": "None",
+  "player_roles": {
+    "Marcus": "Contributor",
+    "Hiroshi": "Contributor",
+    "Heidi": "Knowledge Curator",
+    "Raj": "Maintainer",
+    "Anya": "Innovator",
+    "Yuki": "Maintainer",
+    "Elena": "Knowledge Curator",
+    "Omar": "Knowledge Curator"
+  },
+  "stress_schedule": {
+    "2": "contributor_dropout",
+    "3": "task_overload",
+    "4": "funding_cut",
+    "5": "dependency_crisis"
+  },
+  "dropout_name": "Hiroshi",
+  "relational_matrix": {
+    "Marcus": {
+      "Marcus": 1.0,
+      "Hiroshi": 1.0,
+      "Heidi": 0.3,
+      "Raj": 0.7,
+      "Anya": 0.3,
+      "Yuki": 0.7,
+      "Elena": 0.7,
+      "Omar": 0.3
+    },
+    "Hiroshi": {
+      "Marcus": 1.0,
+      "Hiroshi": 1.0,
+      "Heidi": 0.5,
+      "Raj": 0.7,
+      "Anya": 0.5,
+      "Yuki": 0.7,
+      "Elena": 0.7,
+      "Omar": 0.5
+    },
+    "Heidi": {
+      "Marcus": 0.3,
+      "Hiroshi": 0.5,
+      "Heidi": 1.0,
+      "Raj": 0.7,
+      "Anya": 0.5,
+      "Yuki": 0.7,
+      "Elena": 0.8,
+      "Omar": 0.7
+    },
+    "Raj": {
+      "Marcus": 0.7,
+      "Hiroshi": 0.7,
+      "Heidi": 0.7,
+      "Raj": 1.0,
+      "Anya": 0.1,
+      "Yuki": 0.8,
+      "Elena": 0.5,
+      "Omar": 0.5
+    },
+    "Anya": {
+      "Marcus": 0.3,
+      "Hiroshi": 0.5,
+      "Heidi": 0.5,
+      "Raj": 0.1,
+      "Anya": 1.0,
+      "Yuki": 0.2,
+      "Elena": 0.5,
+      "Omar": 0.7
+    },
+    "Yuki": {
+      "Marcus": 0.7,
+      "Hiroshi": 0.7,
+      "Heidi": 0.7,
+      "Raj": 0.8,
+      "Anya": 0.2,
+      "Yuki": 1.0,
+      "Elena": 0.3,
+      "Omar": 0.7
+    },
+    "Elena": {
+      "Marcus": 0.7,
+      "Hiroshi": 0.7,
+      "Heidi": 0.8,
+      "Raj": 0.5,
+      "Anya": 0.5,
+      "Yuki": 0.3,
+      "Elena": 1.0,
+      "Omar": 0.7
+    },
+    "Omar": {
+      "Marcus": 0.3,
+      "Hiroshi": 0.5,
+      "Heidi": 0.7,
+      "Raj": 0.5,
+      "Anya": 0.7,
+      "Yuki": 0.7,
+      "Elena": 0.7,
+      "Omar": 1.0
+    }
+  },
+  "seed": 2,
+  "governance": "free_choice",
+  "aif_final_states": {
+    "Marcus": {
+      "name": "Marcus",
+      "role": "contributor",
+      "beliefs_health": {
+        "healthy": 0.010966348612466785,
+        "stressed": 0.9890336513874339,
+        "declining": 9.929435570160057e-14
+      },
+      "beliefs_urgency": {
+        "balanced": 0.3333333333333333,
+        "bugs_critical": 2.567119580564867e-17,
+        "docs_neglected": 0.3333333333333333,
+        "review_backlog": 0.3333333333333333
+      },
+      "habits": {
+        "bug_fix": 0.4,
+        "feature": 0.2,
+        "documentation": 0.1,
+        "code_review": 0.1,
+        "mentor": 0.1,
+        "skip": 0.1
+      },
+      "gamma": 1.0,
+      "alpha": 16.0
+    },
+    "Hiroshi": {
+      "name": "Hiroshi",
+      "role": "contributor",
+      "beliefs_health": {
+        "healthy": 1.0,
+        "stressed": 9.183673469402701e-18,
+        "declining": 1.0204081632671166e-18
+      },
+      "beliefs_urgency": {
+        "balanced": 8.03090963852796e-14,
+        "bugs_critical": 0.9999999999997589,
+        "docs_neglected": 8.03090963852796e-14,
+        "review_backlog": 8.03090963852796e-14
+      },
+      "habits": {
+        "bug_fix": 0.4,
+        "feature": 0.2,
+        "documentation": 0.1,
+        "code_review": 0.1,
+        "mentor": 0.1,
+        "skip": 0.1
+      },
+      "gamma": 1.0,
+      "alpha": 16.0
+    },
+    "Heidi": {
+      "name": "Heidi",
+      "role": "knowledge_curator",
+      "beliefs_health": {
+        "healthy": 0.3346891227412653,
+        "stressed": 0.6653108772587347,
+        "declining": 1.4021701979935448e-17
+      },
+      "beliefs_urgency": {
+        "balanced": 0.3333333326592755,
+        "bugs_critical": 2.0221736411733627e-09,
+        "docs_neglected": 0.3333333326592755,
+        "review_backlog": 0.3333333326592755
+      },
+      "habits": {
+        "bug_fix": 0.1,
+        "feature": 0.1,
+        "documentation": 0.4,
+        "code_review": 0.2,
+        "mentor": 0.1,
+        "skip": 0.1
+      },
+      "gamma": 1.0,
+      "alpha": 16.0
+    },
+    "Raj": {
+      "name": "Raj",
+      "role": "maintainer",
+      "beliefs_health": {
+        "healthy": 1.4990562793142966e-16,
+        "stressed": 0.9999999999999936,
+        "declining": 6.32423277122533e-15
+      },
+      "beliefs_urgency": {
+        "balanced": 0.3333333333333333,
+        "bugs_critical": 2.4999999999999938e-17,
+        "docs_neglected": 0.3333333333333333,
+        "review_backlog": 0.3333333333333333
+      },
+      "habits": {
+        "bug_fix": 0.1,
+        "feature": 0.1,
+        "documentation": 0.2,
+        "code_review": 0.4,
+        "mentor": 0.1,
+        "skip": 0.1
+      },
+      "gamma": 1.0,
+      "alpha": 16.0
+    },
+    "Anya": {
+      "name": "Anya",
+      "role": "innovator",
+      "beliefs_health": {
+        "healthy": 9.933008904854297e-12,
+        "stressed": 0.9999999999900671,
+        "declining": 1.3888888888892748e-17
+      },
+      "beliefs_urgency": {
+        "balanced": 0.3333333333333333,
+        "bugs_critical": 2.5000000000599814e-17,
+        "docs_neglected": 0.3333333333333333,
+        "review_backlog": 0.3333333333333333
+      },
+      "habits": {
+        "bug_fix": 0.2,
+        "feature": 0.4,
+        "documentation": 0.1,
+        "code_review": 0.1,
+        "mentor": 0.1,
+        "skip": 0.1
+      },
+      "gamma": 1.0,
+      "alpha": 16.0
+    },
+    "Yuki": {
+      "name": "Yuki",
+      "role": "maintainer",
+      "beliefs_health": {
+        "healthy": 1.0,
+        "stressed": 9.183673469402701e-18,
+        "declining": 1.0204081632671166e-18
+      },
+      "beliefs_urgency": {
+        "balanced": 8.03090963852796e-14,
+        "bugs_critical": 0.9999999999997589,
+        "docs_neglected": 8.03090963852796e-14,
+        "review_backlog": 8.03090963852796e-14
+      },
+      "habits": {
+        "bug_fix": 0.1,
+        "feature": 0.1,
+        "documentation": 0.2,
+        "code_review": 0.4,
+        "mentor": 0.1,
+        "skip": 0.1
+      },
+      "gamma": 1.0,
+      "alpha": 16.0
+    },
+    "Elena": {
+      "name": "Elena",
+      "role": "knowledge_curator",
+      "beliefs_health": {
+        "healthy": 1.0,
+        "stressed": 9.183673469402701e-18,
+        "declining": 1.0204081632671166e-18
+      },
+      "beliefs_urgency": {
+        "balanced": 8.03090963852796e-14,
+        "bugs_critical": 0.9999999999997589,
+        "docs_neglected": 8.03090963852796e-14,
+        "review_backlog": 8.03090963852796e-14
+      },
+      "habits": {
+        "bug_fix": 0.1,
+        "feature": 0.1,
+        "documentation": 0.4,
+        "code_review": 0.2,
+        "mentor": 0.1,
+        "skip": 0.1
+      },
+      "gamma": 1.0,
+      "alpha": 16.0
+    },
+    "Omar": {
+      "name": "Omar",
+      "role": "knowledge_curator",
+      "beliefs_health": {
+        "healthy": 1.0416666664875607e-17,
+        "stressed": 0.9999999991402728,
+        "declining": 8.597272276002052e-10
+      },
+      "beliefs_urgency": {
+        "balanced": 0.3333333333333333,
+        "bugs_critical": 2.499999999520395e-17,
+        "docs_neglected": 0.3333333333333333,
+        "review_backlog": 0.3333333333333333
+      },
+      "habits": {
+        "bug_fix": 0.1,
+        "feature": 0.1,
+        "documentation": 0.4,
+        "code_review": 0.2,
+        "mentor": 0.1,
+        "skip": 0.1
+      },
+      "gamma": 1.0,
+      "alpha": 16.0
+    }
+  },
+  "aif_belief_trajectories": {
+    "Marcus": [
+      {
+        "health": [
+          5.952380952382208e-19,
+          2.911453230926689e-14,
+          0.9999999999999709
+        ],
+        "urgency": [
+          7.142857142857598e-18,
+          1.0,
+          7.142857142857598e-18,
+          7.142857142857598e-18
+        ]
+      },
+      {
+        "health": [
+          1.1779734925049393e-15,
+          2.9114457960867583e-14,
+          0.9999999999999698
+        ],
+        "urgency": [
+          1.5258090602539645e-05,
+          0.9999542257281924,
+          1.5258090602539645e-05,
+          1.5258090602539645e-05
+        ]
+      },
+      {
+        "health": [
+          8.333349075927105e-18,
+          3.6613951611525455e-15,
+          0.9999999999999962
+        ],
+        "urgency": [
+          0.3333332856114813,
+          1.43165556036991e-07,
+          0.3333332856114813,
+          0.3333332856114813
+        ]
+      },
+      {
+        "health": [
+          0.002782643852693679,
+          0.15990253292227566,
+          0.8373148232250307
+        ],
+        "urgency": [
+          0.3333333333333333,
+          2.0879275189587506e-17,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      },
+      {
+        "health": [
+          0.010966348612466785,
+          0.9890336513874339,
+          9.929435570160057e-14
+        ],
+        "urgency": [
+          0.3333333333333333,
+          2.567119580564867e-17,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      }
+    ],
+    "Hiroshi": [
+      {
+        "health": [
+          1.0,
+          6.555981158384496e-17,
+          1.020408163265304e-18
+        ],
+        "urgency": [
+          0.3333333333333333,
+          7.142857142857125e-18,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      },
+      {
+        "health": [
+          0.9999999999999998,
+          1.5694637955863563e-16,
+          1.4285714266495648e-17
+        ],
+        "urgency": [
+          0.3333333328575521,
+          1.4273434974294594e-09,
+          0.3333333328575521,
+          0.3333333328575521
+        ]
+      },
+      {
+        "health": [
+          0.9999999999999998,
+          2.397123440495979e-16,
+          1.4015960066298448e-17
+        ],
+        "urgency": [
+          0.32667789368371697,
+          0.019966318948849086,
+          0.32667789368371697,
+          0.32667789368371697
+        ]
+      },
+      {
+        "health": [
+          1.0,
+          9.183887103824903e-18,
+          1.0204340929127607e-18
+        ],
+        "urgency": [
+          1.1462827248302254e-06,
+          0.9999965611518257,
+          1.1462827248302254e-06,
+          1.1462827248302254e-06
+        ]
+      },
+      {
+        "health": [
+          1.0,
+          9.183673469402701e-18,
+          1.0204081632671166e-18
+        ],
+        "urgency": [
+          8.03090963852796e-14,
+          0.9999999999997589,
+          8.03090963852796e-14,
+          8.03090963852796e-14
+        ]
+      }
+    ],
+    "Heidi": [
+      {
+        "health": [
+          1.0,
+          6.555981158384496e-17,
+          1.020408163265304e-18
+        ],
+        "urgency": [
+          0.3333333333333333,
+          7.142857142857125e-18,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      },
+      {
+        "health": [
+          0.9999999999999998,
+          1.5694637955863563e-16,
+          1.4285714266495648e-17
+        ],
+        "urgency": [
+          0.3333333328575521,
+          1.4273434974294594e-09,
+          0.3333333328575521,
+          0.3333333328575521
+        ]
+      },
+      {
+        "health": [
+          0.04977515315245528,
+          0.04023819854131068,
+          0.909986648306234
+        ],
+        "urgency": [
+          0.3332555219019715,
+          0.00023343429408553864,
+          0.3332555219019715,
+          0.3332555219019715
+        ]
+      },
+      {
+        "health": [
+          0.44118780745567415,
+          0.5588121925440837,
+          2.4225600284078696e-13
+        ],
+        "urgency": [
+          0.3333322860477301,
+          3.141856809778783e-06,
+          0.3333322860477301,
+          0.3333322860477301
+        ]
+      },
+      {
+        "health": [
+          0.3346891227412653,
+          0.6653108772587347,
+          1.4021701979935448e-17
+        ],
+        "urgency": [
+          0.3333333326592755,
+          2.0221736411733627e-09,
+          0.3333333326592755,
+          0.3333333326592755
+        ]
+      }
+    ],
+    "Raj": [
+      {
+        "health": [
+          1.0,
+          6.555981158384496e-17,
+          1.020408163265304e-18
+        ],
+        "urgency": [
+          0.3333333333333333,
+          7.142857142857125e-18,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      },
+      {
+        "health": [
+          0.04997793774127742,
+          0.02600866495050786,
+          0.9240133973082147
+        ],
+        "urgency": [
+          0.33333333332784104,
+          1.6476876705831634e-11,
+          0.33333333332784104,
+          0.33333333332784104
+        ]
+      },
+      {
+        "health": [
+          0.5504323907734163,
+          0.4495676092262774,
+          3.0622121724950424e-13
+        ],
+        "urgency": [
+          0.333333333329938,
+          1.0186047731145572e-11,
+          0.333333333329938,
+          0.333333333329938
+        ]
+      },
+      {
+        "health": [
+          0.43823799545070274,
+          0.5617620045492973,
+          1.406279285532707e-17
+        ],
+        "urgency": [
+          0.33333333333319626,
+          4.111782545895182e-13,
+          0.33333333333319626,
+          0.33333333333319626
+        ]
+      },
+      {
+        "health": [
+          1.4990562793142966e-16,
+          0.9999999999999936,
+          6.32423277122533e-15
+        ],
+        "urgency": [
+          0.3333333333333333,
+          2.4999999999999938e-17,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      }
+    ],
+    "Anya": [
+      {
+        "health": [
+          1.0,
+          6.555981158384496e-17,
+          1.020408163265304e-18
+        ],
+        "urgency": [
+          0.3333333333333333,
+          7.142857142857125e-18,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      },
+      {
+        "health": [
+          0.9999999999999998,
+          1.5694637955863563e-16,
+          1.4285714266495648e-17
+        ],
+        "urgency": [
+          0.3333333328575521,
+          1.4273434974294594e-09,
+          0.3333333328575521,
+          0.3333333328575521
+        ]
+      },
+      {
+        "health": [
+          0.04977515315245528,
+          0.04023819854131068,
+          0.909986648306234
+        ],
+        "urgency": [
+          0.3332555219019715,
+          0.00023343429408553864,
+          0.3332555219019715,
+          0.3332555219019715
+        ]
+      },
+      {
+        "health": [
+          1.5589497805100233e-11,
+          0.9999999947193026,
+          5.265107825269411e-09
+        ],
+        "urgency": [
+          0.3333333333333188,
+          4.347572835859214e-14,
+          0.3333333333333188,
+          0.3333333333333188
+        ]
+      },
+      {
+        "health": [
+          9.933008904854297e-12,
+          0.9999999999900671,
+          1.3888888888892748e-17
+        ],
+        "urgency": [
+          0.3333333333333333,
+          2.5000000000599814e-17,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      }
+    ],
+    "Yuki": [
+      {
+        "health": [
+          1.0,
+          6.555981158384496e-17,
+          1.020408163265304e-18
+        ],
+        "urgency": [
+          0.3333333333333333,
+          7.142857142857125e-18,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      },
+      {
+        "health": [
+          0.9999999999999998,
+          1.5694637955863563e-16,
+          1.4285714266495648e-17
+        ],
+        "urgency": [
+          0.3333333328575521,
+          1.4273434974294594e-09,
+          0.3333333328575521,
+          0.3333333328575521
+        ]
+      },
+      {
+        "health": [
+          0.9999999999999998,
+          2.397123440495979e-16,
+          1.4015960066298448e-17
+        ],
+        "urgency": [
+          0.32667789368371697,
+          0.019966318948849086,
+          0.32667789368371697,
+          0.32667789368371697
+        ]
+      },
+      {
+        "health": [
+          1.0,
+          9.183887103824903e-18,
+          1.0204340929127607e-18
+        ],
+        "urgency": [
+          1.1462827248302254e-06,
+          0.9999965611518257,
+          1.1462827248302254e-06,
+          1.1462827248302254e-06
+        ]
+      },
+      {
+        "health": [
+          1.0,
+          9.183673469402701e-18,
+          1.0204081632671166e-18
+        ],
+        "urgency": [
+          8.03090963852796e-14,
+          0.9999999999997589,
+          8.03090963852796e-14,
+          8.03090963852796e-14
+        ]
+      }
+    ],
+    "Elena": [
+      {
+        "health": [
+          1.0,
+          6.555981158384496e-17,
+          1.020408163265304e-18
+        ],
+        "urgency": [
+          0.3333333333333333,
+          7.142857142857125e-18,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      },
+      {
+        "health": [
+          0.9999999999999998,
+          1.5694637955863563e-16,
+          1.4285714266495648e-17
+        ],
+        "urgency": [
+          0.3333333328575521,
+          1.4273434974294594e-09,
+          0.3333333328575521,
+          0.3333333328575521
+        ]
+      },
+      {
+        "health": [
+          0.9999999999999998,
+          2.397123440495979e-16,
+          1.4015960066298448e-17
+        ],
+        "urgency": [
+          0.32667789368371697,
+          0.019966318948849086,
+          0.32667789368371697,
+          0.32667789368371697
+        ]
+      },
+      {
+        "health": [
+          1.0,
+          9.183887103824903e-18,
+          1.0204340929127607e-18
+        ],
+        "urgency": [
+          1.1462827248302254e-06,
+          0.9999965611518257,
+          1.1462827248302254e-06,
+          1.1462827248302254e-06
+        ]
+      },
+      {
+        "health": [
+          1.0,
+          9.183673469402701e-18,
+          1.0204081632671166e-18
+        ],
+        "urgency": [
+          8.03090963852796e-14,
+          0.9999999999997589,
+          8.03090963852796e-14,
+          8.03090963852796e-14
+        ]
+      }
+    ],
+    "Omar": [
+      {
+        "health": [
+          1.0,
+          6.555981158384496e-17,
+          1.020408163265304e-18
+        ],
+        "urgency": [
+          0.3333333333333333,
+          7.142857142857125e-18,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      },
+      {
+        "health": [
+          0.04997793774127742,
+          0.02600866495050786,
+          0.9240133973082147
+        ],
+        "urgency": [
+          0.33333333332784104,
+          1.6476876705831634e-11,
+          0.33333333332784104,
+          0.33333333332784104
+        ]
+      },
+      {
+        "health": [
+          8.334982613358247e-18,
+          0.0007916544119552476,
+          0.9992083455880448
+        ],
+        "urgency": [
+          0.3333333333333333,
+          2.0003533363617617e-17,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      },
+      {
+        "health": [
+          8.048465019486283e-14,
+          0.9999999999757205,
+          2.4199170156845875e-11
+        ],
+        "urgency": [
+          0.3333333333333333,
+          2.499999999986973e-17,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      },
+      {
+        "health": [
+          1.0416666664875607e-17,
+          0.9999999991402728,
+          8.597272276002052e-10
+        ],
+        "urgency": [
+          0.3333333333333333,
+          2.499999999520395e-17,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      }
+    ]
+  },
+  "trust_final": {
+    "Marcus": {
+      "Hiroshi": 1.0,
+      "Heidi": 0.21000000000000002,
+      "Raj": 0.76,
+      "Anya": 0.3599999999999999,
+      "Yuki": 1.0,
+      "Elena": 0.6099999999999999,
+      "Omar": 0.21000000000000002
+    },
+    "Hiroshi": {
+      "Marcus": 1.0,
+      "Heidi": 0.455,
+      "Raj": 0.745,
+      "Anya": 0.5450000000000002,
+      "Yuki": 0.8950000000000001,
+      "Elena": 0.6549999999999999,
+      "Omar": 0.455
+    },
+    "Heidi": {
+      "Marcus": 0.38999999999999996,
+      "Hiroshi": 0.545,
+      "Raj": 0.8350000000000001,
+      "Anya": 0.6050000000000002,
+      "Yuki": 0.8950000000000001,
+      "Elena": 1.0,
+      "Omar": 0.9250000000000002
+    },
+    "Raj": {
+      "Marcus": 0.6849999999999999,
+      "Hiroshi": 0.5949999999999999,
+      "Heidi": 0.5649999999999998,
+      "Anya": 0.18999999999999995,
+      "Yuki": 1.0,
+      "Elena": 0.36500000000000005,
+      "Omar": 0.36500000000000005
+    },
+    "Anya": {
+      "Marcus": 0.24000000000000005,
+      "Hiroshi": 0.35000000000000003,
+      "Heidi": 0.2750000000000001,
+      "Raj": 0.14500000000000002,
+      "Yuki": 0.62,
+      "Elena": 0.2750000000000001,
+      "Omar": 0.4749999999999998
+    },
+    "Yuki": {
+      "Marcus": 0.7599999999999999,
+      "Hiroshi": 0.5649999999999998,
+      "Heidi": 0.4749999999999998,
+      "Raj": 1.0,
+      "Anya": 0.515,
+      "Elena": 0.07500000000000004,
+      "Omar": 0.4749999999999998
+    },
+    "Elena": {
+      "Marcus": 0.79,
+      "Hiroshi": 0.745,
+      "Heidi": 1.0,
+      "Raj": 0.6350000000000001,
+      "Anya": 0.6050000000000002,
+      "Yuki": 0.495,
+      "Omar": 0.9250000000000002
+    },
+    "Omar": {
+      "Marcus": 0.38999999999999996,
+      "Hiroshi": 0.545,
+      "Heidi": 0.9250000000000002,
+      "Raj": 0.6350000000000001,
+      "Anya": 0.8050000000000002,
+      "Yuki": 0.8950000000000001,
+      "Elena": 0.9250000000000002
+    }
+  },
+  "trust_reciprocity": 0.6453873796499164,
+  "trust_centralization": 0.09380831519646861,
+  "trust_history": [
+    {
+      "Marcus": {
+        "Hiroshi": 1.0,
+        "Heidi": 0.3,
+        "Raj": 0.7,
+        "Anya": 0.32999999999999996,
+        "Yuki": 0.73,
+        "Elena": 0.7,
+        "Omar": 0.3
+      },
+      "Hiroshi": {
+        "Marcus": 1.0,
+        "Heidi": 0.5,
+        "Raj": 0.7,
+        "Anya": 0.53,
+        "Yuki": 0.73,
+        "Elena": 0.7,
+        "Omar": 0.5
+      },
+      "Heidi": {
+        "Marcus": 0.3,
+        "Hiroshi": 0.5,
+        "Raj": 0.7,
+        "Anya": 0.545,
+        "Yuki": 0.745,
+        "Elena": 0.8450000000000001,
+        "Omar": 0.745
+      },
+      "Raj": {
+        "Marcus": 0.7,
+        "Hiroshi": 0.7,
+        "Heidi": 0.7,
+        "Anya": 0.13,
+        "Yuki": 0.8300000000000001,
+        "Elena": 0.5,
+        "Omar": 0.5
+      },
+      "Anya": {
+        "Marcus": 0.255,
+        "Hiroshi": 0.455,
+        "Heidi": 0.455,
+        "Raj": 0.05500000000000001,
+        "Yuki": 0.245,
+        "Elena": 0.455,
+        "Omar": 0.6549999999999999
+      },
+      "Yuki": {
+        "Marcus": 0.6549999999999999,
+        "Hiroshi": 0.6549999999999999,
+        "Heidi": 0.6549999999999999,
+        "Raj": 0.755,
+        "Anya": 0.245,
+        "Elena": 0.255,
+        "Omar": 0.6549999999999999
+      },
+      "Elena": {
+        "Marcus": 0.7,
+        "Hiroshi": 0.7,
+        "Heidi": 0.8450000000000001,
+        "Raj": 0.5,
+        "Anya": 0.545,
+        "Yuki": 0.345,
+        "Omar": 0.745
+      },
+      "Omar": {
+        "Marcus": 0.3,
+        "Hiroshi": 0.5,
+        "Heidi": 0.745,
+        "Raj": 0.5,
+        "Anya": 0.745,
+        "Yuki": 0.745,
+        "Elena": 0.745
+      }
+    },
+    {
+      "Marcus": {
+        "Hiroshi": 0.955,
+        "Heidi": 0.255,
+        "Raj": 0.745,
+        "Anya": 0.37499999999999994,
+        "Yuki": 0.88,
+        "Elena": 0.6549999999999999,
+        "Omar": 0.255
+      },
+      "Hiroshi": {
+        "Marcus": 1.0,
+        "Heidi": 0.5,
+        "Raj": 0.73,
+        "Anya": 0.56,
+        "Yuki": 0.775,
+        "Elena": 0.7,
+        "Omar": 0.5
+      },
+      "Heidi": {
+        "Marcus": 0.345,
+        "Hiroshi": 0.5,
+        "Raj": 0.745,
+        "Anya": 0.5900000000000001,
+        "Yuki": 0.775,
+        "Elena": 0.8900000000000001,
+        "Omar": 0.79
+      },
+      "Raj": {
+        "Marcus": 0.745,
+        "Hiroshi": 0.6549999999999999,
+        "Heidi": 0.6549999999999999,
+        "Anya": 0.175,
+        "Yuki": 0.9800000000000001,
+        "Elena": 0.455,
+        "Omar": 0.455
+      },
+      "Anya": {
+        "Marcus": 0.3,
+        "Hiroshi": 0.41000000000000003,
+        "Heidi": 0.41000000000000003,
+        "Raj": 0.1,
+        "Yuki": 0.395,
+        "Elena": 0.41000000000000003,
+        "Omar": 0.6099999999999999
+      },
+      "Yuki": {
+        "Marcus": 0.8049999999999999,
+        "Hiroshi": 0.6099999999999999,
+        "Heidi": 0.6099999999999999,
+        "Raj": 0.905,
+        "Anya": 0.395,
+        "Elena": 0.21000000000000002,
+        "Omar": 0.6099999999999999
+      },
+      "Elena": {
+        "Marcus": 0.745,
+        "Hiroshi": 0.7,
+        "Heidi": 0.8900000000000001,
+        "Raj": 0.545,
+        "Anya": 0.5900000000000001,
+        "Yuki": 0.375,
+        "Omar": 0.79
+      },
+      "Omar": {
+        "Marcus": 0.345,
+        "Hiroshi": 0.5,
+        "Heidi": 0.79,
+        "Raj": 0.545,
+        "Anya": 0.79,
+        "Yuki": 0.775,
+        "Elena": 0.79
+      }
+    },
+    {
+      "Marcus": {
+        "Hiroshi": 1.0,
+        "Heidi": 0.255,
+        "Raj": 0.775,
+        "Anya": 0.4049999999999999,
+        "Yuki": 0.91,
+        "Elena": 0.6549999999999999,
+        "Omar": 0.255
+      },
+      "Hiroshi": {
+        "Marcus": 1.0,
+        "Heidi": 0.5,
+        "Raj": 0.76,
+        "Anya": 0.5900000000000001,
+        "Yuki": 0.805,
+        "Elena": 0.7,
+        "Omar": 0.5
+      },
+      "Heidi": {
+        "Marcus": 0.345,
+        "Hiroshi": 0.5,
+        "Raj": 0.79,
+        "Anya": 0.6350000000000001,
+        "Yuki": 0.8200000000000001,
+        "Elena": 0.9350000000000002,
+        "Omar": 0.8350000000000001
+      },
+      "Raj": {
+        "Marcus": 0.7,
+        "Hiroshi": 0.6099999999999999,
+        "Heidi": 0.6099999999999999,
+        "Anya": 0.21999999999999997,
+        "Yuki": 1.0,
+        "Elena": 0.41000000000000003,
+        "Omar": 0.41000000000000003
+      },
+      "Anya": {
+        "Marcus": 0.255,
+        "Hiroshi": 0.36500000000000005,
+        "Heidi": 0.36500000000000005,
+        "Raj": 0.14500000000000002,
+        "Yuki": 0.44,
+        "Elena": 0.36500000000000005,
+        "Omar": 0.5649999999999998
+      },
+      "Yuki": {
+        "Marcus": 0.7599999999999999,
+        "Hiroshi": 0.5649999999999998,
+        "Heidi": 0.5649999999999998,
+        "Raj": 0.9500000000000001,
+        "Anya": 0.44,
+        "Elena": 0.16500000000000004,
+        "Omar": 0.5649999999999998
+      },
+      "Elena": {
+        "Marcus": 0.745,
+        "Hiroshi": 0.7,
+        "Heidi": 0.9350000000000002,
+        "Raj": 0.5900000000000001,
+        "Anya": 0.6350000000000001,
+        "Yuki": 0.42,
+        "Omar": 0.8350000000000001
+      },
+      "Omar": {
+        "Marcus": 0.345,
+        "Hiroshi": 0.5,
+        "Heidi": 0.8350000000000001,
+        "Raj": 0.5900000000000001,
+        "Anya": 0.8350000000000001,
+        "Yuki": 0.8200000000000001,
+        "Elena": 0.8350000000000001
+      }
+    },
+    {
+      "Marcus": {
+        "Hiroshi": 1.0,
+        "Heidi": 0.21000000000000002,
+        "Raj": 0.73,
+        "Anya": 0.3299999999999999,
+        "Yuki": 0.9550000000000001,
+        "Elena": 0.6099999999999999,
+        "Omar": 0.21000000000000002
+      },
+      "Hiroshi": {
+        "Marcus": 1.0,
+        "Heidi": 0.455,
+        "Raj": 0.715,
+        "Anya": 0.5150000000000001,
+        "Yuki": 0.8500000000000001,
+        "Elena": 0.6549999999999999,
+        "Omar": 0.455
+      },
+      "Heidi": {
+        "Marcus": 0.38999999999999996,
+        "Hiroshi": 0.545,
+        "Raj": 0.79,
+        "Anya": 0.5600000000000002,
+        "Yuki": 0.8650000000000001,
+        "Elena": 0.9800000000000002,
+        "Omar": 0.8800000000000001
+      },
+      "Raj": {
+        "Marcus": 0.73,
+        "Hiroshi": 0.6399999999999999,
+        "Heidi": 0.6099999999999999,
+        "Anya": 0.14499999999999996,
+        "Yuki": 1.0,
+        "Elena": 0.41000000000000003,
+        "Omar": 0.41000000000000003
+      },
+      "Anya": {
+        "Marcus": 0.28500000000000003,
+        "Hiroshi": 0.395,
+        "Heidi": 0.32000000000000006,
+        "Raj": 0.10000000000000002,
+        "Yuki": 0.47,
+        "Elena": 0.32000000000000006,
+        "Omar": 0.5199999999999998
+      },
+      "Yuki": {
+        "Marcus": 0.8049999999999999,
+        "Hiroshi": 0.6099999999999999,
+        "Heidi": 0.5199999999999998,
+        "Raj": 0.905,
+        "Anya": 0.365,
+        "Elena": 0.12000000000000004,
+        "Omar": 0.5199999999999998
+      },
+      "Elena": {
+        "Marcus": 0.79,
+        "Hiroshi": 0.745,
+        "Heidi": 0.9800000000000002,
+        "Raj": 0.5900000000000001,
+        "Anya": 0.5600000000000002,
+        "Yuki": 0.46499999999999997,
+        "Omar": 0.8800000000000001
+      },
+      "Omar": {
+        "Marcus": 0.38999999999999996,
+        "Hiroshi": 0.545,
+        "Heidi": 0.8800000000000001,
+        "Raj": 0.5900000000000001,
+        "Anya": 0.7600000000000001,
+        "Yuki": 0.8650000000000001,
+        "Elena": 0.8800000000000001
+      }
+    },
+    {
+      "Marcus": {
+        "Hiroshi": 1.0,
+        "Heidi": 0.21000000000000002,
+        "Raj": 0.76,
+        "Anya": 0.3599999999999999,
+        "Yuki": 1.0,
+        "Elena": 0.6099999999999999,
+        "Omar": 0.21000000000000002
+      },
+      "Hiroshi": {
+        "Marcus": 1.0,
+        "Heidi": 0.455,
+        "Raj": 0.745,
+        "Anya": 0.5450000000000002,
+        "Yuki": 0.8950000000000001,
+        "Elena": 0.6549999999999999,
+        "Omar": 0.455
+      },
+      "Heidi": {
+        "Marcus": 0.38999999999999996,
+        "Hiroshi": 0.545,
+        "Raj": 0.8350000000000001,
+        "Anya": 0.6050000000000002,
+        "Yuki": 0.8950000000000001,
+        "Elena": 1.0,
+        "Omar": 0.9250000000000002
+      },
+      "Raj": {
+        "Marcus": 0.6849999999999999,
+        "Hiroshi": 0.5949999999999999,
+        "Heidi": 0.5649999999999998,
+        "Anya": 0.18999999999999995,
+        "Yuki": 1.0,
+        "Elena": 0.36500000000000005,
+        "Omar": 0.36500000000000005
+      },
+      "Anya": {
+        "Marcus": 0.24000000000000005,
+        "Hiroshi": 0.35000000000000003,
+        "Heidi": 0.2750000000000001,
+        "Raj": 0.14500000000000002,
+        "Yuki": 0.62,
+        "Elena": 0.2750000000000001,
+        "Omar": 0.4749999999999998
+      },
+      "Yuki": {
+        "Marcus": 0.7599999999999999,
+        "Hiroshi": 0.5649999999999998,
+        "Heidi": 0.4749999999999998,
+        "Raj": 1.0,
+        "Anya": 0.515,
+        "Elena": 0.07500000000000004,
+        "Omar": 0.4749999999999998
+      },
+      "Elena": {
+        "Marcus": 0.79,
+        "Hiroshi": 0.745,
+        "Heidi": 1.0,
+        "Raj": 0.6350000000000001,
+        "Anya": 0.6050000000000002,
+        "Yuki": 0.495,
+        "Omar": 0.9250000000000002
+      },
+      "Omar": {
+        "Marcus": 0.38999999999999996,
+        "Hiroshi": 0.545,
+        "Heidi": 0.9250000000000002,
+        "Raj": 0.6350000000000001,
+        "Anya": 0.8050000000000002,
+        "Yuki": 0.8950000000000001,
+        "Elena": 0.9250000000000002
+      }
+    }
+  ],
+  "norm_emergence_rate": 0.6,
+  "norm_stability_index": 0.68,
+  "norm_compliance_rate": 0.75,
+  "active_norms": {
+    "mentor_newcomers": 1.0,
+    "rotate_reviews": 1.0,
+    "balance_workload": 1.0
+  },
+  "norm_history": [
+    {
+      "cover_neglected": 0.15000000000000002,
+      "no_free_riding": 0.0,
+      "mentor_newcomers": 0.2,
+      "rotate_reviews": 0.2,
+      "balance_workload": 0.2
+    },
+    {
+      "cover_neglected": 2.7755575615628914e-17,
+      "no_free_riding": 0.1,
+      "mentor_newcomers": 0.4,
+      "rotate_reviews": 0.4,
+      "balance_workload": 0.4
+    },
+    {
+      "cover_neglected": 0.0,
+      "no_free_riding": 0.0,
+      "mentor_newcomers": 0.6000000000000001,
+      "rotate_reviews": 0.6000000000000001,
+      "balance_workload": 0.6000000000000001
+    },
+    {
+      "cover_neglected": 0.1,
+      "no_free_riding": 0.1,
+      "mentor_newcomers": 0.8,
+      "rotate_reviews": 0.8,
+      "balance_workload": 0.8
+    },
+    {
+      "cover_neglected": 0.2,
+      "no_free_riding": 0.0,
+      "mentor_newcomers": 1.0,
+      "rotate_reviews": 1.0,
+      "balance_workload": 1.0
+    }
+  ],
+  "burnout_cascade_count": 0,
+  "mean_burnout": 0.20625000000000002,
+  "peak_burnout": 0.47000000000000003,
+  "burnout_cascades": [],
+  "burnout_history": [
+    {
+      "Marcus": 0.06999999999999999,
+      "Hiroshi": 0.0,
+      "Heidi": 0.0,
+      "Raj": 0.0,
+      "Anya": 0.03,
+      "Yuki": 0.03,
+      "Elena": 0.0,
+      "Omar": 0.0
+    },
+    {
+      "Marcus": 0.27,
+      "Hiroshi": 0.0,
+      "Heidi": 0.0,
+      "Raj": 0.2,
+      "Anya": 0.11,
+      "Yuki": 0.11,
+      "Elena": 0.0,
+      "Omar": 0.12
+    },
+    {
+      "Marcus": 0.39,
+      "Hiroshi": 0.0,
+      "Heidi": 0.12,
+      "Raj": 0.28,
+      "Anya": 0.31,
+      "Yuki": 0.19,
+      "Elena": 0.0,
+      "Omar": 0.24
+    },
+    {
+      "Marcus": 0.47000000000000003,
+      "Hiroshi": 0.08,
+      "Heidi": 0.0,
+      "Raj": 0.13000000000000003,
+      "Anya": 0.36,
+      "Yuki": 0.27,
+      "Elena": 0.0,
+      "Omar": 0.09
+    },
+    {
+      "Marcus": 0.32000000000000006,
+      "Hiroshi": 0.0,
+      "Heidi": 0.0,
+      "Raj": 0.33000000000000007,
+      "Anya": 0.44,
+      "Yuki": 0.35000000000000003,
+      "Elena": 0.0,
+      "Omar": 0.21
+    }
+  ]
+}

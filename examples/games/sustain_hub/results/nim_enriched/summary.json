@@ -1,0 +1,122 @@
+{
+  "per_run": {
+    "B1_free_seed0": {
+      "hi": 0.75,
+      "rq": 1.0,
+      "trust_reciprocity": 0.7148719569590565,
+      "trust_centralization": 0.09175439814571086,
+      "norm_emergence_rate": 0.4,
+      "norm_stability_index": 0.6799999999999999,
+      "norm_compliance_rate": 0.655,
+      "mean_burnout": 0.09500000000000001,
+      "peak_burnout": 0.5100000000000001,
+      "burnout_cascade_count": 0,
+      "num_aif_agents": 8,
+      "num_sprints": 5
+    },
+    "B1_free_seed1": {
+      "hi": 0.76,
+      "rq": 1.0,
+      "trust_reciprocity": 0.7691701605517145,
+      "trust_centralization": 0.0872430629953828,
+      "norm_emergence_rate": 0.6,
+      "norm_stability_index": 0.68,
+      "norm_compliance_rate": 0.675,
+      "mean_burnout": 0.12135000000000001,
+      "peak_burnout": 0.8,
+      "burnout_cascade_count": 2,
+      "num_aif_agents": 8,
+      "num_sprints": 5
+    },
+    "B1_free_seed2": {
+      "hi": 0.6730769230769231,
+      "rq": 1.0,
+      "trust_reciprocity": 0.6453873796499164,
+      "trust_centralization": 0.09380831519646861,
+      "norm_emergence_rate": 0.6,
+      "norm_stability_index": 0.68,
+      "norm_compliance_rate": 0.75,
+      "mean_burnout": 0.20625000000000002,
+      "peak_burnout": 0.47000000000000003,
+      "burnout_cascade_count": 0,
+      "num_aif_agents": 8,
+      "num_sprints": 5
+    },
+    "B1_free_seed3": {
+      "hi": 0.78,
+      "rq": 1.0,
+      "trust_reciprocity": 0.8359428010001394,
+      "trust_centralization": 0.08771838636296526,
+      "norm_emergence_rate": 0.8,
+      "norm_stability_index": 0.7163999999999999,
+      "norm_compliance_rate": 0.845,
+      "mean_burnout": 0.052500000000000005,
+      "peak_burnout": 0.4,
+      "burnout_cascade_count": 0,
+      "num_aif_agents": 8,
+      "num_sprints": 5
+    },
+    "B1_free_seed4": {
+      "hi": 0.77,
+      "rq": 1.0,
+      "trust_reciprocity": 0.9250451986963539,
+      "trust_centralization": 0.11726824599121939,
+      "norm_emergence_rate": 1.0,
+      "norm_stability_index": 0.7955199999999998,
+      "norm_compliance_rate": 0.835,
+      "mean_burnout": 0.04375,
+      "peak_burnout": 0.20999999999999996,
+      "burnout_cascade_count": 0,
+      "num_aif_agents": 8,
+      "num_sprints": 5
+    },
+    "B2_dictator_seed0": {
+      "hi": 0.76,
+      "rq": 1.0,
+      "trust_reciprocity": 0.7750045742508046,
+      "trust_centralization": 0.05518637254146821,
+      "norm_emergence_rate": 0.8,
+      "norm_stability_index": 0.7682,
+      "norm_compliance_rate": 0.845,
+      "mean_burnout": 0.10125000000000002,
+      "peak_burnout": 0.5100000000000001,
+      "burnout_cascade_count": 0,
+      "num_aif_agents": 8,
+      "num_sprints": 5
+    },
+    "B2_dictator_seed1": {
+      "hi": 0.8200000000000001,
+      "rq": 1.0,
+      "trust_reciprocity": 0.7789021060672197,
+      "trust_centralization": 0.0929983473081152,
+      "norm_emergence_rate": 0.6,
+      "norm_stability_index": 0.68,
+      "norm_compliance_rate": 0.66,
+      "mean_burnout": 0.0575,
+      "peak_burnout": 0.39,
+      "burnout_cascade_count": 0,
+      "num_aif_agents": 8,
+      "num_sprints": 5
+    }
+  },
+  "aggregated": {
+    "B1_free": {
+      "n": 5,
+      "hi_mean": 0.7466153846153847,
+      "hi_std": 0.03810480719490581,
+      "trust_reciprocity_mean": 0.7780834993714361,
+      "norm_emergence_rate_mean": 0.68,
+      "mean_burnout_mean": 0.10377,
+      "cascade_count_mean": 0.4
+    },
+    "B2_dictator": {
+      "n": 2,
+      "hi_mean": 0.79,
+      "hi_std": 0.030000000000000027,
+      "trust_reciprocity_mean": 0.7769533401590121,
+      "norm_emergence_rate_mean": 0.7,
+      "mean_burnout_mean": 0.07937500000000001,
+      "cascade_count_mean": 0.0
+    }
+  }
+}
