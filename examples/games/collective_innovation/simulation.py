@@ -455,7 +455,7 @@ class InnovationPayoff:
     }
 
     for player in self._player_names:
-      action_str = joint_action.get(player, "")
+      action_str = joint_action.get(player, "") or ""
       elem1, elem2 = self._parse_combination(action_str)
 
       if elem1 is None or elem2 is None:
