@@ -6,6 +6,13 @@ set -euo pipefail
 PYTHON=".venv/bin/python"
 NIM_URL="https://integrate.api.nvidia.com/v1"
 MODEL="qwen/qwen2.5-7b-instruct"
+
+# Ensure NVIDIA_API_KEY is set (fall back to NGC_API_KEY)
+export NVIDIA_API_KEY="${NVIDIA_API_KEY:-${NGC_API_KEY:-}}"
+if [[ -z "$NVIDIA_API_KEY" ]]; then
+    echo "ERROR: Neither NVIDIA_API_KEY nor NGC_API_KEY is set." >&2
+    exit 1
+fi
 BASE_DIR="/tmp/sustainhub_nim_$(date +%Y%m%d_%H%M%S)"
 SEEDS="0 1 2 3 4"
 FAIL_COUNT=0
