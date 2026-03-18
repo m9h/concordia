@@ -16,6 +16,7 @@
 """Runner script for the SustainHub simulation."""
 
 import os
+import sys
 from absl import app
 from absl import flags
 from examples.games.sustain_hub import simulation
@@ -58,8 +59,8 @@ def main(argv):
     from concordia.contrib.language_models.groq import groq_model
     groq_key = os.environ.get('GROQ_API_KEY', '')
     if not groq_key:
-      print('Error: GROQ_API_KEY not set.')
-      return
+      print('Error: GROQ_API_KEY not set.', file=sys.stderr)
+      sys.exit(1)
     model = groq_model.GroqModel(
         model_name=FLAGS.model_name,
         api_key=groq_key,
@@ -71,8 +72,9 @@ def main(argv):
     from concordia.contrib.language_models import vllm_remote
     nim_key = os.environ.get('NVIDIA_API_KEY', '')
     if not nim_key:
-      print('Error: NVIDIA_API_KEY not set. Get a free key at build.nvidia.com')
-      return
+      print('Error: NVIDIA_API_KEY not set. Get a free key at build.nvidia.com',
+            file=sys.stderr)
+      sys.exit(1)
     nim_model = FLAGS.model_name if '/' in FLAGS.model_name else 'meta/llama-3.1-8b-instruct'
     model = vllm_remote.VLLMModel(
         model_name=nim_model,
@@ -91,9 +93,21 @@ def main(argv):
     )
   elif FLAGS.vllm_url:
     from concordia.contrib.language_models import vllm_remote
+    # Auto-detect API key and chat mode for known hosted endpoints
+    vllm_api_key = FLAGS.api_key
+    vllm_chat_mode = False
+    if 'nvidia.com' in FLAGS.vllm_url:
+      vllm_api_key = vllm_api_key or os.environ.get('NVIDIA_API_KEY', '')
+      vllm_chat_mode = True
+      if not vllm_api_key:
+        print('Error: NVIDIA_API_KEY not set for NIM endpoint. '
+              'Get a free key at build.nvidia.com', file=sys.stderr)
+        sys.exit(1)
     model = vllm_remote.VLLMModel(
         model_name=FLAGS.model_name,
         api_base=FLAGS.vllm_url,
+        api_key=vllm_api_key or None,
+        chat_mode=vllm_chat_mode,
     )
     model = retry_wrapper.RetryLanguageModel(
         model, retry_tries=8, retry_delay=3.0, backoff_factor=2.0,
@@ -102,8 +116,8 @@ def main(argv):
     api_key = FLAGS.api_key or os.environ.get('GEMINI_API_KEY', '')
     if not api_key and not FLAGS.project:
       print('Error: Set GEMINI_API_KEY, or use --nvidia_nim, --together, '
-            '--vllm_url, or --use_mock.')
-      return
+            '--vllm_url, or --use_mock.', file=sys.stderr)
+      sys.exit(1)
 
     from concordia.contrib.language_models.google import gemini_model
     model = gemini_model.GeminiModel(
